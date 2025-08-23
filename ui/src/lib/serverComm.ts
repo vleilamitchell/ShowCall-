@@ -73,16 +73,23 @@ export type EventRecord = {
   endTime: string; // HH:mm
   description?: string | null;
   artists?: string | null;
+  ticketUrl?: string | null;
+  eventPageUrl?: string | null;
+  promoAssetsUrl?: string | null;
   updatedAt?: string;
 };
 
-export async function listEvents(params?: { q?: string; status?: string; includePast?: boolean; from?: string; to?: string }) {
+export async function listEvents(params?: { q?: string; status?: string; includePast?: boolean; from?: string; to?: string; areaId?: string | string[] }) {
   const query = new URLSearchParams();
   if (params?.q) query.set('q', params.q);
   if (params?.status) query.set('status', params.status);
   if (params?.includePast != null) query.set('includePast', params.includePast ? 'true' : 'false');
   if (params?.from) query.set('from', params.from);
   if (params?.to) query.set('to', params.to);
+  if (params?.areaId) {
+    const v = Array.isArray(params.areaId) ? params.areaId.join(',') : params.areaId;
+    query.set('areaId', v);
+  }
   const qs = query.toString();
   const response = await fetchWithAuth(`/api/v1/events${qs ? `?${qs}` : ''}`);
   return response.json() as Promise<EventRecord[]>;
@@ -113,6 +120,10 @@ export async function updateEvent(eventId: string, patch: Partial<EventRecord>) 
   return response.json() as Promise<EventRecord>;
 }
 
+export async function deleteEvent(eventId: string) {
+  await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}`, { method: 'DELETE' });
+}
+
 export async function listShiftsForEvent(eventId: string) {
   const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}/shifts`);
   return response.json() as Promise<ShiftRecord[]>;
@@ -133,6 +144,20 @@ export const api: {
   getEvent: typeof getEvent;
   updateEvent: typeof updateEvent;
   listEventShifts: typeof listEventShifts;
+  // Event Series
+  listEventSeries?: typeof listEventSeries;
+  createEventSeries?: typeof createEventSeries;
+  getEventSeries?: typeof getEventSeries;
+  updateEventSeries?: typeof updateEventSeries;
+  deleteEventSeries?: typeof deleteEventSeries;
+  getEventSeriesAreas?: typeof getEventSeriesAreas;
+  putEventSeriesAreas?: typeof putEventSeriesAreas;
+  addEventSeriesArea?: typeof addEventSeriesArea;
+  removeEventSeriesArea?: typeof removeEventSeriesArea;
+  previewEventSeries?: typeof previewEventSeries;
+  generateEventSeries?: typeof generateEventSeries;
+  getEventSeriesRule?: typeof getEventSeriesRule;
+  updateEventSeriesRule?: typeof updateEventSeriesRule;
   // Scheduling
   listSchedules?: typeof listSchedules;
   createSchedule?: typeof createSchedule;
@@ -188,6 +213,16 @@ export const api: {
   updateReservation?: typeof updateReservation;
   listInventoryLocations?: typeof listInventoryLocations;
   listInventorySchemas?: typeof listInventorySchemas;
+  // Areas
+  listAreas?: typeof listAreas;
+  createArea?: typeof createArea;
+  updateArea?: typeof updateArea;
+  deleteArea?: typeof deleteArea;
+  getEventAreas?: typeof getEventAreas;
+  replaceEventAreas?: typeof replaceEventAreas;
+  addEventArea?: typeof addEventArea;
+  removeEventArea?: typeof removeEventArea;
+  reorderAreas?: typeof reorderAreas;
 } = {
   getCurrentUser,
   listEvents,
@@ -392,6 +427,128 @@ api.listEmployeePositions = listEmployeePositions as any;
 api.createEmployeePosition = createEmployeePosition as any;
 api.updateEmployeePosition = updateEmployeePosition as any;
 api.deleteEmployeePosition = deleteEmployeePosition as any;
+
+// Event Series API helpers
+export type EventSeries = {
+  id: string;
+  name: string;
+  description?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  defaultStatus: string;
+  defaultStartTime: string;
+  defaultEndTime: string;
+  titleTemplate?: string | null;
+  promoterTemplate?: string | null;
+  artistsTemplate?: string | null;
+  templateJson?: any;
+  updatedAt?: string;
+};
+
+export type EventSeriesRule = {
+  id: string;
+  seriesId: string;
+  frequency: 'WEEKLY';
+  interval: number;
+  byWeekdayMask: number;
+  updatedAt?: string;
+};
+
+export async function listEventSeries(params?: { q?: string; from?: string; to?: string }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.from) query.set('from', params.from);
+  if (params?.to) query.set('to', params.to);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/event-series${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<EventSeries[]>;
+}
+
+export async function createEventSeries(payload: Partial<EventSeries> & { name: string; rule?: { frequency?: 'WEEKLY'; interval?: number; byWeekdayMask?: number } }) {
+  const response = await fetchWithAuth('/api/v1/event-series', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<EventSeries>;
+}
+
+export async function getEventSeries(seriesId: string) {
+  const response = await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}`);
+  return response.json() as Promise<EventSeries>;
+}
+
+export async function updateEventSeries(seriesId: string, patch: Partial<EventSeries>) {
+  const response = await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<EventSeries>;
+}
+
+export async function deleteEventSeries(seriesId: string) {
+  await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}`, { method: 'DELETE' });
+}
+
+export async function getEventSeriesAreas(seriesId: string) {
+  const response = await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}/areas`);
+  return response.json() as Promise<Area[]>;
+}
+
+export async function putEventSeriesAreas(seriesId: string, areaIds: string[]) {
+  const response = await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}/areas`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ areaIds }),
+  });
+  return response.json() as Promise<Area[]>;
+}
+
+export async function addEventSeriesArea(seriesId: string, areaId: string) {
+  const response = await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}/areas`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ areaId }),
+  });
+  return response.json() as Promise<Area[]>;
+}
+
+export async function removeEventSeriesArea(seriesId: string, areaId: string) {
+  await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}/areas/${encodeURIComponent(areaId)}`, { method: 'DELETE' });
+}
+
+export async function previewEventSeries(seriesId: string, payload: { fromDate?: string; untilDate: string }) {
+  const response = await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}/preview`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<{ dates: string[]; template: Partial<EventRecord> }>
+}
+
+export async function generateEventSeries(seriesId: string, payload: { fromDate?: string; untilDate: string; overwriteExisting?: boolean; setAreasMode?: 'replace' | 'skip' }) {
+  const response = await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}/generate`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<{ created: number; updated: number; skipped: number; eventIds: string[] }>;
+}
+
+export async function getEventSeriesRule(seriesId: string) {
+  const response = await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}/rule`);
+  return response.json() as Promise<EventSeriesRule>;
+}
+
+export async function updateEventSeriesRule(seriesId: string, patch: Partial<Pick<EventSeriesRule, 'frequency' | 'interval' | 'byWeekdayMask'>>) {
+  const response = await fetchWithAuth(`/api/v1/event-series/${encodeURIComponent(seriesId)}/rule`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<EventSeriesRule>;
+}
+
+api.listEventSeries = listEventSeries as any;
+api.createEventSeries = createEventSeries as any;
+api.getEventSeries = getEventSeries as any;
+api.updateEventSeries = updateEventSeries as any;
+api.deleteEventSeries = deleteEventSeries as any;
+api.getEventSeriesAreas = getEventSeriesAreas as any;
+api.putEventSeriesAreas = putEventSeriesAreas as any;
+api.addEventSeriesArea = addEventSeriesArea as any;
+api.removeEventSeriesArea = removeEventSeriesArea as any;
+api.previewEventSeries = previewEventSeries as any;
+api.generateEventSeries = generateEventSeries as any;
+api.getEventSeriesRule = getEventSeriesRule as any;
+api.updateEventSeriesRule = updateEventSeriesRule as any;
 
 // Eligibility API helper
 export type EligibleEmployee = { id: string; name: string; priority: number | null };
@@ -742,3 +899,92 @@ api.createReservation = createReservation as any;
 api.updateReservation = updateReservation as any;
 api.listInventoryLocations = listInventoryLocations as any;
 api.listInventorySchemas = listInventorySchemas as any;
+
+// Areas API helpers
+export type Area = {
+  id: string;
+  name: string;
+  description?: string | null;
+  color?: string | null;
+  active: boolean;
+  updatedAt?: string;
+};
+
+export async function listAreas(params?: { q?: string; active?: boolean }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.active != null) query.set('active', params.active ? 'true' : 'false');
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/areas${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<Area[]>;
+}
+
+export async function reorderAreas(ids: string[]) {
+  const response = await fetchWithAuth('/api/v1/areas/order', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  });
+  return response.json() as Promise<Area[]>;
+}
+
+export async function createArea(payload: { name: string; description?: string | null; color?: string | null; active?: boolean }) {
+  const response = await fetchWithAuth('/api/v1/areas', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<Area>;
+}
+
+export async function updateArea(areaId: string, patch: Partial<Area>) {
+  const response = await fetchWithAuth(`/api/v1/areas/${encodeURIComponent(areaId)}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<Area>;
+}
+
+export async function deleteArea(areaId: string) {
+  const response = await fetchWithAuth(`/api/v1/areas/${encodeURIComponent(areaId)}`, { method: 'DELETE' });
+  if (response.status === 204) return;
+  // If not 204, let the caller see the error body
+  const data = await response.json().catch(() => null);
+  if (data && (data as any).error) {
+    throw new APIError(response.status, (data as any).error);
+  }
+}
+
+export async function getEventAreas(eventId: string) {
+  const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}/areas`);
+  return response.json() as Promise<Area[]>;
+}
+
+export async function replaceEventAreas(eventId: string, areaIds: string[]) {
+  const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}/areas`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ areaIds }),
+  });
+  return response.json() as Promise<Area[]>;
+}
+
+export async function addEventArea(eventId: string, areaId: string) {
+  const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}/areas`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ areaId }),
+  });
+  return response.json() as Promise<Area[]>;
+}
+
+export async function removeEventArea(eventId: string, areaId: string) {
+  await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}/areas/${encodeURIComponent(areaId)}`, { method: 'DELETE' });
+}
+
+api.listAreas = listAreas as any;
+api.createArea = createArea as any;
+api.updateArea = updateArea as any;
+api.deleteArea = deleteArea as any;
+api.replaceEventAreas = replaceEventAreas as any;
+api.addEventArea = addEventArea as any;
+api.removeEventArea = removeEventArea as any;
+api.getEventAreas = getEventAreas as any;
+api.reorderAreas = reorderAreas as any;
+api.getEventAreas = getEventAreas as any;
+api.replaceEventAreas = replaceEventAreas as any;
+api.addEventArea = addEventArea as any;
+api.removeEventArea = removeEventArea as any;

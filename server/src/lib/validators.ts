@@ -45,4 +45,45 @@ export function isValidEventType(s?: unknown): boolean {
   return allowed.includes(s);
 }
 
+// URL validators
+export function isValidUrl(v?: unknown): boolean {
+  if (v == null || String(v).trim() === '') return true;
+  try {
+    const u = new URL(String(v));
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+
+// Areas validators
+export function isValidColor(v?: unknown): boolean {
+  if (v == null || String(v).trim() === '') return true;
+  const s = String(v).trim();
+  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(s);
+}
+
+export function validateAreaName(name: unknown): name is string {
+  if (typeof name !== 'string') return false;
+  const s = name.trim();
+  return s.length > 0 && s.length <= 120;
+}
+
+
+// Recurrence validators
+export function isValidWeekdayMask(n?: unknown): boolean {
+  if (n == null || String(n).trim() === '') return true;
+  const v = typeof n === 'number' ? n : Number(String(n));
+  if (!Number.isFinite(v)) return false;
+  if (!Number.isInteger(v)) return false;
+  return v >= 0 && v <= 127; // 7 bits for Sun..Sat
+}
+
+export function isValidFrequency(s?: unknown): boolean {
+  if (s == null || String(s).trim() === '') return false;
+  const v = String(s).trim().toUpperCase();
+  return v === 'WEEKLY';
+}
+
 

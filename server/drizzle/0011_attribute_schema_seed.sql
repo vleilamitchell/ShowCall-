@@ -51,6 +51,6 @@ VALUES
       "additionalProperties": true
     }'::jsonb
   )
-ON CONFLICT (item_type, department_id, version) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 

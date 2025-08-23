@@ -7,8 +7,10 @@ import { ConnectionStatus } from '@/components/connection-status';
 import { Home } from '@/pages/Home';
 import { Settings } from '@/pages/Settings';
 import Events from '@/pages/Events';
+import EventsRecurring from '@/pages/EventsRecurring';
 import Artists from '@/pages/Artists';
 import Departments from '@/pages/Departments';
+import Areas from '@/pages/Areas';
 import Inventory from '@/pages/Inventory';
 import Employees from '@/pages/Employees';
 import Scheduling from '@/pages/Scheduling';
@@ -41,11 +43,13 @@ function AppContent() {
           <div className="flex flex-1">
             <AppSidebar />
             <SidebarInset className="flex-1">
-              <main className="flex-1 content routeFadeWrapper">
+              <main className="flex-1 routeFadeWrapper">
                 <div key={(location.pathname.split('/')[1] || 'root')} className="routeFadeItem">
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/events" element={<Events />} />
+                    <Route path="/events/recurring" element={<EventsRecurring />} />
+                    <Route path="/events/recurring/:seriesId" element={<EventsRecurring />} />
                     <Route path="/events/calendar" element={<EventsCalendar />} />
                     <Route path="/events/:eventId" element={<Events />} />
                     <Route path="/events/artists" element={<Artists />} />
@@ -62,6 +66,8 @@ function AppContent() {
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/inventory/assets" element={<InventoryAssetsTable />} />
                     <Route path="/inventory/:itemId" element={<Inventory />} />
+                    <Route path="/areas" element={<Areas />} />
+                    <Route path="/areas/:areaId" element={<Areas />} />
                   </Routes>
                 </div>
               </main>

@@ -11,6 +11,10 @@ export const events = pgTable('events', {
   endTime: text('end_time').notNull(), // HH:mm
   description: text('description'),
   artists: text('artists'), // comma-separated for now
+  ticketUrl: text('ticket_url'),
+  eventPageUrl: text('event_page_url'),
+  promoAssetsUrl: text('promo_assets_url'),
+  seriesId: text('series_id'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

@@ -13,8 +13,8 @@ import {
   startOfWeek,
 } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { listEvents, type EventRecord } from '@/lib/serverComm';
-import { useNavigate } from 'react-router-dom';
+import { listEvents, type EventRecord, getEventAreas, listAreas, type Area } from '@/lib/serverComm';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { formatTimeTo12Hour } from '@/lib/time';
 
 function formatYmd(d: Date): string {
@@ -26,7 +26,36 @@ function formatYmd(d: Date): string {
 
 export default function EventsCalendar() {
   const navigate = useNavigate();
-  const [visibleMonth, setVisibleMonth] = useState<Date>(startOfMonth(new Date()));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [visibleMonth, setVisibleMonth] = useState<Date>(() => {
+    // Prefer URL
+    const yStr = typeof window !== 'undefined' ? searchParams.get('y') : null;
+    const mStr = typeof window !== 'undefined' ? searchParams.get('m') : null;
+    const yUrl = yStr ? Number(yStr) : NaN;
+    const mUrl = mStr ? Number(mStr) : NaN;
+    if (Number.isFinite(yUrl) && Number.isFinite(mUrl) && mUrl >= 1 && mUrl <= 12) {
+      return startOfMonth(new Date(yUrl, mUrl - 1, 1));
+    }
+    // Fallback to localStorage (store as YYYY-MM)
+    try {
+      const ym = localStorage.getItem('eventsCalendarVisibleYm');
+      if (ym && /^(\d{4})-(\d{2})$/.test(ym)) {
+        const [yy, mm] = ym.split('-').map(Number);
+        return startOfMonth(new Date(yy, mm - 1, 1));
+      }
+      // Back-compat: older key stored full date string which can be timezone-sensitive
+      const legacy = localStorage.getItem('eventsCalendarVisibleMonth');
+      if (legacy && /^(\d{4})-(\d{2})-\d{2}$/.test(legacy)) {
+        const [yy, mm] = legacy.split('-');
+        const yyN = Number(yy);
+        const mmN = Number(mm);
+        if (Number.isFinite(yyN) && Number.isFinite(mmN)) {
+          return startOfMonth(new Date(yyN, mmN - 1, 1));
+        }
+      }
+    } catch {}
+    return startOfMonth(new Date());
+  });
   const [events, setEvents] = useState<EventRecord[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +66,7 @@ export default function EventsCalendar() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const weekdayHeaderRef = useRef<HTMLDivElement | null>(null);
   const [rowHeightPx, setRowHeightPx] = useState<number>(110);
+  const [areaColors, setAreaColors] = useState<Map<string, string>>(new Map());
 
   const fromStr = useMemo(() => formatYmd(startOfMonth(visibleMonth)), [visibleMonth]);
   const toStr = useMemo(() => formatYmd(endOfMonth(visibleMonth)), [visibleMonth]);
@@ -70,6 +100,23 @@ export default function EventsCalendar() {
     return () => { aborted = true; };
   }, [fromStr, toStr]);
 
+  // Load authoritative area color mapping (ensures updated colors are reflected)
+  useEffect(() => {
+    let aborted = false;
+    (async () => {
+      try {
+        const all = await listAreas({ active: true });
+        if (aborted) return;
+        const map = new Map<string, string>();
+        for (const a of all || []) {
+          map.set(a.id, a.color || 'var(--secondary)');
+        }
+        setAreaColors(map);
+      } catch {}
+    })();
+    return () => { aborted = true; };
+  }, []);
+
   const onMonthChange = (next: Date) => {
     setVisibleMonth(startOfMonth(next));
   };
@@ -102,6 +149,36 @@ export default function EventsCalendar() {
   const onYearSelect = (y: number) => {
     setVisibleMonth(startOfMonth(setYear(visibleMonth, y)));
   };
+
+  // Sync from URL -> state when y/m params are present or change (e.g., back/forward nav)
+  useEffect(() => {
+    const yStr = searchParams.get('y');
+    const mStr = searchParams.get('m');
+    const y = yStr ? Number(yStr) : NaN;
+    const m = mStr ? Number(mStr) : NaN;
+    if (Number.isFinite(y) && Number.isFinite(m) && m >= 1 && m <= 12) {
+      const d = startOfMonth(new Date(y, m - 1, 1));
+      if (d.getTime() !== visibleMonth.getTime()) {
+        setVisibleMonth(d);
+      }
+    }
+  }, [searchParams]);
+
+  // Persist state -> localStorage and reflect in URL (y,m) for deep linking
+  useEffect(() => {
+    try {
+      const y = String(getYear(visibleMonth));
+      const m = String(getMonth(visibleMonth) + 1).padStart(2, '0');
+      localStorage.setItem('eventsCalendarVisibleYm', `${y}-${m}`);
+    } catch {}
+    const y = String(getYear(visibleMonth));
+    const m = String(getMonth(visibleMonth) + 1);
+    const curY = searchParams.get('y');
+    const curM = searchParams.get('m');
+    if (curY !== y || curM !== m) {
+      setSearchParams({ y, m }, { replace: true });
+    }
+  }, [visibleMonth, setSearchParams]);
 
   // Dynamically size each calendar row to fit the visible container height (accounting for toolbar, error, paddings, and gaps)
   useEffect(() => {
@@ -139,14 +216,14 @@ export default function EventsCalendar() {
   }, []);
 
   return (
-    <div ref={containerRef} className="routeFadeItem relative flex flex-col gap-3 p-0 min-h-0 -mx-[18px] -mb-[18px]">
-      <div ref={toolbarRef} className="pageHeader pageHeader--flush relative rounded-t-none attachedBelowTopbar">
+    <div ref={containerRef} className="routeFadeItem relative flex flex-col gap-3 px-2 pb-2 md:px-3 min-h-0">
+      <div ref={toolbarRef} className="pageHeader pageHeader--flush pageHeader--calendar relative rounded-t-none attachedBelowTopbar">
         <div className="toolbar">
           <div className="flex items-center gap-2">
             <Button
               size="sm"
               variant="outline"
-              className="h-8 px-2.5 text-foreground hover:bg-accent/20 shadow-xs"
+              className="h-8 px-2.5 py-0 leading-none text-foreground hover:bg-accent/20 shadow-xs"
               onClick={goPrev}
               aria-label="Previous month"
             >
@@ -155,7 +232,7 @@ export default function EventsCalendar() {
             <Button
               size="sm"
               variant="outline"
-              className="h-8 px-2.5 text-foreground hover:bg-accent/20 shadow-xs"
+              className="h-8 px-2.5 py-0 leading-none text-foreground hover:bg-accent/20 shadow-xs"
               onClick={goToday}
               aria-label="Go to today"
             >
@@ -164,7 +241,7 @@ export default function EventsCalendar() {
             <Button
               size="sm"
               variant="outline"
-              className="h-8 px-2.5 text-foreground hover:bg-accent/20 shadow-xs"
+              className="h-8 px-2.5 py-0 leading-none text-foreground hover:bg-accent/20 shadow-xs"
               onClick={goNext}
               aria-label="Next month"
             >
@@ -173,7 +250,7 @@ export default function EventsCalendar() {
           </div>
           <div className="spacer" />
           {editingCaption ? (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-8 flex items-center gap-2">
+            <div className="absolute left-1/2 bottom-[2px] -translate-x-1/2 h-8 flex items-center gap-2">
               <select
                 className="select h-8 text-sm min-w-24"
                 value={monthIndex}
@@ -196,13 +273,13 @@ export default function EventsCalendar() {
                   return <option key={y} value={y}>{y}</option>;
                 })}
               </select>
-              <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setEditingCaption(false)}>Done</Button>
+              <Button size="sm" variant="outline" className="h-8 px-2 py-0 leading-none" onClick={() => setEditingCaption(false)}>Done</Button>
             </div>
           ) : (
             <button
               type="button"
               onClick={() => setEditingCaption(true)}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-8 flex items-center text-base font-semibold leading-none px-1 py-0 rounded hover:bg-[color-mix(in_oklch,var(--foreground)_6%,transparent)]"
+              className="absolute left-1/2 bottom-[2px] -translate-x-1/2 h-8 flex items-center text-base font-semibold leading-none px-1 py-0 rounded hover:bg-[color-mix(in_oklch,var(--foreground)_6%,transparent)]"
               aria-label="Edit month and year"
             >
               <span className="align-middle">{format(visibleMonth, 'MMMM')}</span>
@@ -272,7 +349,7 @@ export default function EventsCalendar() {
                     <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full ${isToday ? 'bg-primary text-primary-foreground' : 'bg-black/70 text-white'} text-[11px] ml-1 mt-0.5`}>{day.getDate()}</span>
                   </div>
                 </div>
-                <div className="mt-1 space-y-1 overflow-auto pr-0.5">
+                <div className="mt-1 space-y-[1px] overflow-auto pr-0.5">
                   {dayEvents.map((ev) => {
                     const color = ev.status === 'cancelled' || ev.status === 'canceled'
                       ? 'bg-destructive/10 text-destructive hover:bg-destructive/15 focus:ring-destructive/40'
@@ -286,7 +363,7 @@ export default function EventsCalendar() {
                         key={ev.id}
                         type="button"
                         onClick={() => navigate(`/events/${encodeURIComponent(ev.id)}`)}
-                        className={`w-full text-left text-[11px] leading-tight truncate rounded px-[4px] py-0.5 focus:outline-none focus:ring-2 ${color}`}
+                        className={`relative w-full text-left text-[11px] leading-tight truncate rounded px-[4px] pt-0.5 pb-[3px] focus:outline-none focus:ring-2 ${color}`}
                         title={`${ev.title}`}
                       >
                         <span className="inline-flex items-center gap-1 w-full">
@@ -296,6 +373,7 @@ export default function EventsCalendar() {
                           ) : null}
                           <span className="inline-block size-1.5 rounded-full bg-current opacity-70 shrink-0" />
                         </span>
+                        <EventAreasGradientBar eventId={ev.id} areaColors={areaColors} />
                       </button>
                     );
                   })}
@@ -309,6 +387,74 @@ export default function EventsCalendar() {
         ) : null}
       </div>
     </div>
+  );
+}
+
+// Cache event areas to reduce duplicate fetches in calendar
+const eventAreasCache = new Map<string, Area[]>();
+
+function buildHardStopGradient(colors: string[]): string {
+  const palette = colors.length > 0 ? colors : ['var(--secondary)'];
+  const total = palette.length;
+  const stops: string[] = [];
+  for (let i = 0; i < total; i++) {
+    const start = (i / total) * 100;
+    const end = ((i + 1) / total) * 100;
+    const color = palette[i] || 'var(--secondary)';
+    stops.push(`${color} ${start}%`, `${color} ${end}%`);
+  }
+  return `linear-gradient(90deg, ${stops.join(', ')})`;
+}
+
+function EventAreasGradientBar({ eventId, areaColors }: { eventId: string; areaColors: Map<string, string> }) {
+  const [areaIds, setAreaIds] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    const onAreasUpdated = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as { eventId: string; areas: Area[] } | undefined;
+        if (detail && detail.eventId === eventId) {
+          eventAreasCache.set(eventId, detail.areas);
+          if (!ignore) setAreaIds((detail.areas || []).map(a => a.id));
+        }
+      } catch {}
+    };
+    window.addEventListener('event-areas-updated', onAreasUpdated as EventListener);
+
+    const cached = eventAreasCache.get(eventId);
+    if (cached) {
+      setAreaIds((cached || []).map(a => a.id));
+    } else {
+      getEventAreas(eventId)
+        .then((res) => {
+          if (ignore) return;
+          eventAreasCache.set(eventId, res);
+          setAreaIds((res || []).map(a => a.id));
+        })
+        .catch(() => {
+          if (ignore) return;
+          setAreaIds([]);
+        });
+    }
+    return () => {
+      ignore = true;
+      window.removeEventListener('event-areas-updated', onAreasUpdated as EventListener);
+    };
+  }, [eventId]);
+
+  const colors: string[] | null = useMemo(() => {
+    if (!areaIds) return null;
+    return areaIds.map(id => areaColors.get(id) || 'var(--secondary)');
+  }, [areaIds, areaColors]);
+
+  if (!colors || colors.length === 0) return null;
+  const gradient = buildHardStopGradient(colors);
+  return (
+    <span
+      className="pointer-events-none absolute left-0 right-0 bottom-0 h-[3px] rounded-b-[inherit]"
+      style={{ background: gradient }}
+    />
   );
 }
 

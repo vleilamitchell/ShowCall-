@@ -4,6 +4,7 @@ import {
   CalendarDays,
   CalendarRange,
   Building2,
+  MapPinned,
   Users2,
   Boxes,
   ChevronRight,
@@ -220,6 +221,17 @@ export function AppSidebar() {
                             </SidebarMenuButton>
                           </SidebarMenuItem>
                           <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={isActive('/events/recurring')}
+                              className={`relative px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary`}>
+                              <NavLink to="/events/recurring" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}`}>
+                                {isActive('/events/recurring') ? (
+                                  <span className="pointer-events-none absolute inset-0 bg-black/10" />
+                                ) : null}
+                                <span className="truncate">Recurring</span>
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                          <SidebarMenuItem>
                             <SidebarMenuButton asChild isActive={isActive('/events/artists')}
                               className={`relative px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary`}>
                               <NavLink to="/events/artists" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}`}>
@@ -250,6 +262,15 @@ export function AppSidebar() {
                     <NavLink to="/departments" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
                       <Building2 className="w-4 h-4" />
                       <span className="truncate">Departments</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/areas')}
+                    className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
+                    <NavLink to="/areas" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
+                      <MapPinned className="w-4 h-4" />
+                      <span className="truncate">Areas</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

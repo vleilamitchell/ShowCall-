@@ -6,13 +6,15 @@ import { authMiddleware } from './middleware/auth';
 import { getDatabase, testDatabaseConnection } from './lib/db';
 import { setEnvContext, clearEnvContext, getDatabaseUrl } from './lib/env';
 import * as schema from './schema';
-import { and, asc, desc, eq, gte, gt, ilike, or, lte, isNull, sql } from 'drizzle-orm';
-import { isValidEmail, isValidPhone, isValidState, isValidZip4, isValidZip5, normalizePhone, normalizeState, normalizeZip4, normalizeZip5, isValidDateStr, isValidTimeStr } from './lib/validators';
+import { and, asc, desc, eq, gte, gt, ilike, or, lte, isNull, sql, inArray } from 'drizzle-orm';
+import { isValidEmail, isValidPhone, isValidState, isValidZip4, isValidZip5, normalizePhone, normalizeState, normalizeZip4, normalizeZip5, isValidDateStr, isValidTimeStr, isValidUrl, isValidColor, validateAreaName, isValidWeekdayMask, isValidFrequency } from './lib/validators';
 import { listInventoryItems, createInventoryItem, getInventoryItem, patchInventoryItem } from './services/inventory/items';
 import { postTransaction } from './services/inventory/postTransaction';
 import { listTransactions } from './services/inventory/transactions';
 import { getItemSummary } from './services/inventory/projections';
 import { createReservation, listReservations, updateReservation } from './services/inventory/reservations';
+import { computeOccurrences, upsertEventsForSeries } from './services/events/recurrence';
+import { mountEventSeriesRoutes } from './routes/eventSeries';
 
 type Env = {
   RUNTIME?: string;
@@ -136,6 +138,7 @@ eventsRoutes.get('/', async (c) => {
     const status = c.req.query('status') || undefined;
     const q = c.req.query('q') || undefined;
     const includePast = (c.req.query('includePast') || 'false') === 'true';
+    const areaIdParam = c.req.query('areaId') || undefined; // comma-separated ids
     const from = c.req.query('from') || undefined;
     const to = c.req.query('to') || undefined;
 
@@ -178,11 +181,43 @@ eventsRoutes.get('/', async (c) => {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const rows = await db
-      .select()
-      .from(schema.events)
-      .where(whereClause as any)
-      .orderBy(desc(schema.events.date), desc(schema.events.startTime));
+    let rows;
+    if (areaIdParam) {
+      const areaIds = String(areaIdParam).split(',').map((s) => s.trim()).filter(Boolean);
+      if (areaIds.length === 1) {
+        // Join to event_areas for single id
+        const idRows = await db
+          .select({ id: schema.events.id })
+          .from(schema.events)
+          .innerJoin(schema.eventAreas, eq(schema.eventAreas.eventId, schema.events.id))
+          .where(and((whereClause as any) || and(), eq(schema.eventAreas.areaId, areaIds[0]!)) as any);
+        const ids = idRows.map((r: any) => r.id);
+        rows = await db
+          .select()
+          .from(schema.events)
+          .where(ids.length > 0 ? (inArray as any)(schema.events.id, ids) : (sql`false`) )
+          .orderBy(desc(schema.events.date), desc(schema.events.startTime));
+      } else {
+        const idRows = await db
+          .select({ id: schema.events.id })
+          .from(schema.events)
+          .innerJoin(schema.eventAreas, eq(schema.eventAreas.eventId, schema.events.id))
+          .where(and((whereClause as any) || and(), (inArray as any)(schema.eventAreas.areaId, areaIds)) as any);
+        const idsSet = new Set(idRows.map((r: any) => r.id));
+        const ids = Array.from(idsSet);
+        rows = await db
+          .select()
+          .from(schema.events)
+          .where(ids.length > 0 ? (inArray as any)(schema.events.id, ids) : (sql`false`) )
+          .orderBy(desc(schema.events.date), desc(schema.events.startTime));
+      }
+    } else {
+      rows = await db
+        .select()
+        .from(schema.events)
+        .where(whereClause as any)
+        .orderBy(desc(schema.events.date), desc(schema.events.startTime));
+    }
 
     return c.json(rows);
   } catch (error) {
@@ -245,7 +280,15 @@ eventsRoutes.post('/', async (c) => {
       endTime: (typeof body.endTime === 'string' && body.endTime.trim()) || '23:59',
       description: normalize(body.description),
       artists: normalize(body.artists),
+      ticketUrl: normalize(body.ticketUrl),
+      eventPageUrl: normalize(body.eventPageUrl),
+      promoAssetsUrl: normalize(body.promoAssetsUrl),
     } as const;
+
+    // Validate URLs if provided
+    if (!isValidUrl(record.ticketUrl)) return c.json({ error: 'invalid ticketUrl: must be http(s) URL' }, 400);
+    if (!isValidUrl(record.eventPageUrl)) return c.json({ error: 'invalid eventPageUrl: must be http(s) URL' }, 400);
+    if (!isValidUrl(record.promoAssetsUrl)) return c.json({ error: 'invalid promoAssetsUrl: must be http(s) URL' }, 400);
 
     const inserted = await db.insert(schema.events).values(record).returning();
     return c.json(inserted[0]);
@@ -299,7 +342,15 @@ eventsRoutes.patch('/:eventId', async (c) => {
     if (typeof body.endTime === 'string') patch.endTime = body.endTime.trim();
     if (body.description !== undefined) patch.description = normalize(body.description);
     if (body.artists !== undefined) patch.artists = normalize(body.artists);
+    if ('ticketUrl' in body) patch.ticketUrl = normalize(body.ticketUrl);
+    if ('eventPageUrl' in body) patch.eventPageUrl = normalize(body.eventPageUrl);
+    if ('promoAssetsUrl' in body) patch.promoAssetsUrl = normalize(body.promoAssetsUrl);
     patch.updatedAt = new Date();
+
+    // Validate URLs on patch if present
+    if ('ticketUrl' in patch && !isValidUrl(patch.ticketUrl)) return c.json({ error: 'invalid ticketUrl: must be http(s) URL' }, 400);
+    if ('eventPageUrl' in patch && !isValidUrl(patch.eventPageUrl)) return c.json({ error: 'invalid eventPageUrl: must be http(s) URL' }, 400);
+    if ('promoAssetsUrl' in patch && !isValidUrl(patch.promoAssetsUrl)) return c.json({ error: 'invalid promoAssetsUrl: must be http(s) URL' }, 400);
 
     const updated = await db
       .update(schema.events)
@@ -315,6 +366,28 @@ eventsRoutes.patch('/:eventId', async (c) => {
   } catch (error) {
     console.error('Update event error:', error);
     return c.json({ error: 'Failed to update event' }, 500);
+  }
+});
+
+eventsRoutes.delete('/:eventId', async (c) => {
+  try {
+    const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
+    const dbUrl = getDatabaseUrl() || defaultLocalConnection;
+    const db = await getDatabase(dbUrl);
+    const eventId = c.req.param('eventId');
+
+    // Delete shifts associated with this event first (assignments cascade on shift delete)
+    await db.delete(schema.shifts).where(eq(schema.shifts.eventId, eventId));
+
+    // Then delete the event itself
+    const deleted = await db.delete(schema.events).where(eq(schema.events.id, eventId)).returning();
+    if (deleted.length === 0) {
+      return c.json({ error: 'Not found' }, 404);
+    }
+    return c.body(null, 204);
+  } catch (error) {
+    console.error('Delete event error:', error);
+    return c.json({ error: 'Failed to delete event' }, 500);
   }
 });
 
@@ -339,6 +412,297 @@ eventsRoutes.get('/:eventId/shifts', async (c) => {
 });
 
 api.route('/events', eventsRoutes);
+
+// Areas routes (protected under /api/v1/areas)
+const areasRoutes = new Hono();
+areasRoutes.use('*', authMiddleware);
+
+// Reorder areas: PATCH /areas/order { ids: string[] }
+areasRoutes.patch('/order', async (c) => {
+  try {
+    const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
+    const dbUrl = getDatabaseUrl() || defaultLocalConnection;
+    const db = await getDatabase(dbUrl);
+    const body = await c.req.json();
+    const ids: string[] = Array.isArray(body.ids) ? body.ids.map((s: any) => String(s || '').trim()).filter(Boolean) : [];
+    if (ids.length === 0) return c.json({ error: 'ids required' }, 400);
+
+    // Validate all exist
+    const existing = await db.select({ id: schema.areas.id }).from(schema.areas).where((inArray as any)(schema.areas.id, ids));
+    const existsSet = new Set(existing.map((r: any) => r.id));
+    const missing = ids.filter((id) => !existsSet.has(id));
+    if (missing.length > 0) return c.json({ error: 'Unknown ids', details: missing }, 400);
+
+    // Apply order
+    for (let i = 0; i < ids.length; i++) {
+      await db.update(schema.areas).set({ sortOrder: i, updatedAt: new Date() }).where(eq(schema.areas.id, ids[i]!));
+    }
+    const rows = await db.select().from(schema.areas).orderBy(asc(schema.areas.sortOrder), asc(schema.areas.name));
+    return c.json(rows);
+  } catch (error) {
+    console.error('Reorder areas error:', error);
+    return c.json({ error: 'Failed to reorder areas' }, 500);
+  }
+});
+
+// GET /areas
+areasRoutes.get('/', async (c) => {
+  try {
+    const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
+    const dbUrl = getDatabaseUrl() || defaultLocalConnection;
+    const db = await getDatabase(dbUrl);
+
+    const q = c.req.query('q') || undefined;
+    const activeParam = c.req.query('active');
+    const conditions: any[] = [];
+    if (q) conditions.push(ilike(schema.areas.name, `%${q}%`));
+    if (activeParam != null) conditions.push(eq(schema.areas.active, activeParam === 'true'));
+
+    const rows = await db
+      .select()
+      .from(schema.areas)
+      .where(conditions.length > 0 ? and(...conditions) : undefined as any)
+      .orderBy(asc(schema.areas.sortOrder), asc(schema.areas.name));
+    return c.json(rows);
+  } catch (error) {
+    console.error('List areas error:', error);
+    return c.json({ error: 'Failed to list areas' }, 500);
+  }
+});
+
+// POST /areas
+areasRoutes.post('/', async (c) => {
+  try {
+    const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
+    const dbUrl = getDatabaseUrl() || defaultLocalConnection;
+    const db = await getDatabase(dbUrl);
+    const body = await c.req.json();
+
+    const nameRaw = typeof body.name === 'string' ? body.name : '';
+    if (!validateAreaName(nameRaw)) return c.json({ error: 'invalid name' }, 400);
+    const name = nameRaw.trim();
+    const description = (typeof body.description === 'string' ? body.description.trim() : '') || null;
+    const color = (typeof body.color === 'string' ? body.color.trim() : '') || null;
+    const active = body.active == null ? true : Boolean(body.active);
+    if (!isValidColor(color)) return c.json({ error: 'invalid color' }, 400);
+
+    let generatedId: string | undefined;
+    const g: any = globalThis as any;
+    if (typeof g !== 'undefined' && g.crypto && typeof g.crypto.randomUUID === 'function') {
+      generatedId = g.crypto.randomUUID();
+    } else {
+      try { const nodeCrypto = await import('node:crypto'); if (typeof nodeCrypto.randomUUID === 'function') { generatedId = nodeCrypto.randomUUID(); } } catch {}
+    }
+    if (!generatedId) generatedId = `area_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+
+    try {
+      const inserted = await db.insert(schema.areas).values({ id: generatedId, name, description, color, active }).returning();
+      return c.json(inserted[0], 201);
+    } catch (e: any) {
+      const msg = String(e?.message || '');
+      if (msg.includes('areas_name_unique')) return c.json({ error: 'Name must be unique' }, 409);
+      throw e;
+    }
+  } catch (error) {
+    console.error('Create area error:', error);
+    return c.json({ error: 'Failed to create area' }, 500);
+  }
+});
+
+// PATCH /areas/:areaId
+areasRoutes.patch('/:areaId', async (c) => {
+  try {
+    const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
+    const dbUrl = getDatabaseUrl() || defaultLocalConnection;
+    const db = await getDatabase(dbUrl);
+    const areaId = c.req.param('areaId');
+    const body = await c.req.json();
+
+    const patch: any = {};
+    if (typeof body.name === 'string') {
+      if (!validateAreaName(body.name)) return c.json({ error: 'invalid name' }, 400);
+      patch.name = body.name.trim();
+    }
+    if ('description' in body) patch.description = (typeof body.description === 'string' ? body.description.trim() : null);
+    if ('color' in body) {
+      const color = (typeof body.color === 'string' ? body.color.trim() : '');
+      if (!isValidColor(color)) return c.json({ error: 'invalid color' }, 400);
+      patch.color = color || null;
+    }
+    if ('active' in body) patch.active = Boolean(body.active);
+    patch.updatedAt = new Date();
+
+    try {
+      const updated = await db.update(schema.areas).set(patch).where(eq(schema.areas.id, areaId)).returning();
+      if (updated.length === 0) return c.json({ error: 'Not found' }, 404);
+      return c.json(updated[0]);
+    } catch (e: any) {
+      const msg = String(e?.message || '');
+      if (msg.includes('areas_name_unique')) return c.json({ error: 'Name must be unique' }, 409);
+      throw e;
+    }
+  } catch (error) {
+    console.error('Patch area error:', error);
+    return c.json({ error: 'Failed to update area' }, 500);
+  }
+});
+
+// DELETE /areas/:areaId
+areasRoutes.delete('/:areaId', async (c) => {
+  try {
+    const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
+    const dbUrl = getDatabaseUrl() || defaultLocalConnection;
+    const db = await getDatabase(dbUrl);
+    const areaId = c.req.param('areaId');
+    try {
+      await db.delete(schema.areas).where(eq(schema.areas.id, areaId));
+      return c.body(null, 204);
+    } catch (e: any) {
+      const msg = String(e?.message || '');
+      if (msg.includes('event_areas_area_fk') || msg.includes('delete restrict')) {
+        return c.json({ error: 'AreaInUse' }, 409);
+      }
+      throw e;
+    }
+  } catch (error) {
+    console.error('Delete area error:', error);
+    return c.json({ error: 'Failed to delete area' }, 500);
+  }
+});
+
+// Note: mount moved to below, after defining reorder route
+
+// Event-Areas nested routes under /events/:eventId/areas
+const eventAreasRoutes = new Hono();
+eventAreasRoutes.use('*', authMiddleware);
+
+// GET /events/:eventId/areas
+eventAreasRoutes.get('/:eventId/areas', async (c) => {
+  try {
+    const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
+    const dbUrl = getDatabaseUrl() || defaultLocalConnection;
+    const db = await getDatabase(dbUrl);
+    const eventId = c.req.param('eventId');
+    const rows = await db
+      .select({ id: schema.areas.id, name: schema.areas.name, description: schema.areas.description, color: schema.areas.color, active: schema.areas.active, updatedAt: schema.areas.updatedAt })
+      .from(schema.eventAreas)
+      .innerJoin(schema.areas, eq(schema.eventAreas.areaId, schema.areas.id))
+      .where(eq(schema.eventAreas.eventId, eventId))
+      .orderBy(asc(schema.areas.sortOrder), asc(schema.areas.name));
+    return c.json(rows);
+  } catch (error) {
+    console.error('List event areas error:', error);
+    return c.json({ error: 'Failed to list event areas' }, 500);
+  }
+});
+
+// PUT /events/:eventId/areas { areaIds: string[] }
+eventAreasRoutes.put('/:eventId/areas', async (c) => {
+  try {
+    const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
+    const dbUrl = getDatabaseUrl() || defaultLocalConnection;
+    const db = await getDatabase(dbUrl);
+    const eventId: string = String(c.req.param('eventId'));
+    const body = await c.req.json();
+    const incomingIds: string[] = Array.isArray(body.areaIds)
+      ? Array.from(new Set((body.areaIds as unknown[]).map((s) => String(s ?? '').trim()).filter((s) => Boolean(s)))) as string[]
+      : [];
+
+    // Verify all exist
+    if (incomingIds.length > 0) {
+      const existing = await db.select({ id: schema.areas.id }).from(schema.areas).where((inArray as any)(schema.areas.id, incomingIds));
+      const existingIds = new Set(existing.map((r: any) => r.id));
+      const missing: string[] = incomingIds.filter((id) => !existingIds.has(id));
+      if (missing.length > 0) return c.json({ error: 'Unknown areaIds', details: missing }, 400);
+    }
+
+    const current = await db.select({ areaId: schema.eventAreas.areaId }).from(schema.eventAreas).where(eq(schema.eventAreas.eventId, eventId));
+    const currentIds: Set<string> = new Set(current.map((r: any) => String(r.areaId)));
+
+    const toAdd: string[] = incomingIds.filter((id) => !currentIds.has(id));
+    const currentIdList: string[] = Array.from(currentIds);
+    const toRemove: string[] = currentIdList.filter((id) => !incomingIds.includes(id));
+
+    if (toRemove.length > 0) {
+      await db.delete(schema.eventAreas).where(and(eq(schema.eventAreas.eventId, eventId), (inArray as any)(schema.eventAreas.areaId, toRemove)));
+    }
+    for (const areaId of toAdd) {
+      await db.insert(schema.eventAreas).values({ eventId, areaId });
+    }
+
+    // Return updated list
+    const rows = await db
+      .select({ id: schema.areas.id, name: schema.areas.name, description: schema.areas.description, color: schema.areas.color, active: schema.areas.active, updatedAt: schema.areas.updatedAt })
+      .from(schema.eventAreas)
+      .innerJoin(schema.areas, eq(schema.eventAreas.areaId, schema.areas.id))
+      .where(eq(schema.eventAreas.eventId, eventId))
+      .orderBy(asc(schema.areas.sortOrder), asc(schema.areas.name));
+    return c.json(rows);
+  } catch (error) {
+    console.error('Replace event areas error:', error);
+    return c.json({ error: 'Failed to replace event areas' }, 500);
+  }
+});
+
+// POST /events/:eventId/areas { areaId }
+eventAreasRoutes.post('/:eventId/areas', async (c) => {
+  try {
+    const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
+    const dbUrl = getDatabaseUrl() || defaultLocalConnection;
+    const db = await getDatabase(dbUrl);
+    const eventId = c.req.param('eventId');
+    const body = await c.req.json();
+    const areaId = String(body.areaId || '').trim();
+    if (!areaId) return c.json({ error: 'areaId required' }, 400);
+    const exists = await db.select({ id: schema.areas.id }).from(schema.areas).where(eq(schema.areas.id, areaId)).limit(1);
+    if (exists.length === 0) return c.json({ error: 'Area not found' }, 404);
+
+    // Idempotent insert
+    const already = await db.select().from(schema.eventAreas).where(and(eq(schema.eventAreas.eventId, eventId), eq(schema.eventAreas.areaId, areaId))).limit(1);
+    if (already.length === 0) {
+      await db.insert(schema.eventAreas).values({ eventId, areaId });
+    }
+    const rows = await db
+      .select({ id: schema.areas.id, name: schema.areas.name, description: schema.areas.description, color: schema.areas.color, active: schema.areas.active, updatedAt: schema.areas.updatedAt })
+      .from(schema.eventAreas)
+      .innerJoin(schema.areas, eq(schema.eventAreas.areaId, schema.areas.id))
+      .where(eq(schema.eventAreas.eventId, eventId))
+      .orderBy(asc(schema.areas.sortOrder), asc(schema.areas.name));
+
+// (reorder route moved below, outside of nested handlers)
+    return c.json(rows, 201);
+  } catch (error) {
+    console.error('Add event area error:', error);
+    return c.json({ error: 'Failed to add event area' }, 500);
+  }
+});
+
+// DELETE /events/:eventId/areas/:areaId
+eventAreasRoutes.delete('/:eventId/areas/:areaId', async (c) => {
+  try {
+    const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
+    const dbUrl = getDatabaseUrl() || defaultLocalConnection;
+    const db = await getDatabase(dbUrl);
+    const eventId = c.req.param('eventId');
+    const areaId = c.req.param('areaId');
+    await db.delete(schema.eventAreas).where(and(eq(schema.eventAreas.eventId, eventId), eq(schema.eventAreas.areaId, areaId)));
+    return c.body(null, 204);
+  } catch (error) {
+    console.error('Remove event area error:', error);
+    return c.json({ error: 'Failed to remove event area' }, 500);
+  }
+});
+
+// Mount nested under /events
+api.route('/events', eventAreasRoutes);
+
+// (order route defined above to avoid capture by :areaId)
+
+// Now that all area routes (including /order) are defined, mount them
+api.route('/areas', areasRoutes);
+
+// Mount extracted event-series routes
+mountEventSeriesRoutes(api);
 
 // Departments routes (protected under /api/v1/departments)
 const departmentsRoutes = new Hono();
@@ -966,7 +1330,7 @@ positionsRoutes.patch('/:positionId/employee-positions', async (c) => {
 
     // Validate all items belong to the same positionId
     const ids = items.map((i: any) => String(i.id || ''));
-    const rows = await db.select().from(schema.employeePositions).where((schema as any).inArray(schema.employeePositions.id, ids));
+    const rows = await db.select().from(schema.employeePositions).where((inArray as any)(schema.employeePositions.id, ids));
     const invalid = rows.some((r: any) => r.positionId !== positionId);
     if (invalid) return c.json({ error: 'Items must belong to the position' }, 400);
 
@@ -1169,9 +1533,9 @@ schedulesRoutes.post('/:scheduleId/generate-shifts', async (c) => {
       const shiftIds = existingShifts.map((s: any) => s.id);
       if (shiftIds.length > 0) {
         // Delete assignments referencing these shifts
-        await db.delete(schema.assignments).where(((schema as any).inArray)(schema.assignments.shiftId, shiftIds));
+        await db.delete(schema.assignments).where((inArray as any)(schema.assignments.shiftId, shiftIds));
         // Delete shifts
-        await db.delete(schema.shifts).where(((schema as any).inArray)(schema.shifts.id, shiftIds));
+        await db.delete(schema.shifts).where((inArray as any)(schema.shifts.id, shiftIds));
       }
     }
 
@@ -1445,7 +1809,7 @@ api.get('/shifts', async (c) => {
         conditions.push(eq(schema.shifts.departmentId, ids[0]!));
       } else if (ids.length > 1) {
         // Drizzle inArray helper via (schema as any)
-        conditions.push(((schema as any).inArray)(schema.shifts.departmentId, ids));
+        conditions.push((inArray as any)(schema.shifts.departmentId, ids));
       }
     }
     if (q) conditions.push(or(ilike(schema.shifts.title, `%${q}%`), ilike(schema.shifts.notes, `%${q}%`)));

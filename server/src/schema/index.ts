@@ -8,10 +8,13 @@ import { employeePositions } from './employeePositions';
 import { schedules } from './schedules';
 import { shifts } from './shifts';
 import { assignments } from './assignments';
+import { areas } from './areas';
+import { eventAreas } from './eventAreas';
+import { eventSeries, eventSeriesRules, eventSeriesAreas } from './recurringSeries';
 // Inventory modules
 import { attributeSchema, items as inventoryItems, assetSpecs, locations, inventoryTxn, reservations, policies, unitConversions, valuationAvg } from './inventory/items';
 
-export { users, events, departments, employees, positions, employeePositions, schedules, shifts, assignments };
+export { users, events, departments, employees, positions, employeePositions, schedules, shifts, assignments, areas, eventAreas, eventSeries, eventSeriesRules, eventSeriesAreas };
 export {
   attributeSchema,
   inventoryItems,

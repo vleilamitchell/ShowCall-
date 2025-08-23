@@ -6,5 +6,6 @@ export * from './components/ListDetailLayout';
 export * from './components/List';
 export * from './components/FilterBar';
 export * from './components/CreateInline';
+export * from './components/SortableList';
 
 

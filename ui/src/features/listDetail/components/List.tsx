@@ -7,6 +7,7 @@ type Props<TItem extends ListItem> = {
   selectedId: TItem['id'] | null;
   onSelect: (id: TItem['id']) => void;
   renderItem: RenderItemFn<TItem>;
+  renderActions?: (item: TItem) => React.ReactNode;
   loading?: boolean;
   emptyText?: string;
   header?: React.ReactNode;
@@ -14,7 +15,7 @@ type Props<TItem extends ListItem> = {
 };
 
 export function List<TItem extends ListItem>(props: Props<TItem>) {
-  const { items, selectedId, onSelect, renderItem, loading, emptyText = 'No items' } = props;
+  const { items, selectedId, onSelect, renderItem, renderActions, loading, emptyText = 'No items' } = props;
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const { indicatorTop, indicatorHeight, hasActive, measure } = useSlidingActiveIndicator(listContainerRef as any, '.listRowActive');
 
@@ -38,15 +39,22 @@ export function List<TItem extends ListItem>(props: Props<TItem>) {
           ) : null}
           <div ref={listContainerRef as any} style={{ position: 'relative' }}>
             <div className="listActiveIndicator" style={{ transform: `translateY(${indicatorTop}px)`, height: indicatorHeight, opacity: hasActive ? 1 : 0 }} />
-            <ul className="p-1">
+            <ul className="p-2">
               {items.map(item => (
                 <li key={String(item.id)}>
-                  <button
-                    className={`relative z-[1] w-full text-left px-3 py-2 rounded border transition-all listRow ${item.id === selectedId ? 'listRowActive' : ''}`}
-                    onClick={() => onSelect(item.id)}
-                  >
-                    {renderItem(item, item.id === selectedId)}
-                  </button>
+                  <div className="relative">
+                    <button
+                      className={`relative z-[1] w-full text-left pr-10 pl-3 py-2 rounded border transition-all listRow ${item.id === selectedId ? 'listRowActive' : ''}`}
+                      onClick={() => onSelect(item.id)}
+                    >
+                      {renderItem(item, item.id === selectedId)}
+                    </button>
+                    {renderActions ? (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 z-[2]" onClick={(e) => e.stopPropagation()}>
+                        {renderActions(item)}
+                      </div>
+                    ) : null}
+                  </div>
                 </li>
               ))}
               {!items.length && (

@@ -1,12 +1,109 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
 import { Button } from '@/components/ui/button';
-import { listEvents, createEvent, updateEvent, type EventRecord, getEvent } from '@/lib/serverComm';
+import { Switch } from '@/components/ui/switch';
+import { listEvents, createEvent, updateEvent, deleteEvent, type EventRecord, getEvent, getEventAreas, type Area } from '@/lib/serverComm';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { EventShiftsPanel } from '@/features/events/EventShiftsPanel';
+import { EventAreasPanel } from '@/features/events/EventAreasPanel';
+import { EventMarketingPanel } from '@/features/events/EventMarketingPanel';
 import { ListDetailLayout, List, FilterBar, useListDetail, useDebouncedPatch, type ResourceAdapter } from '@/features/listDetail';
-import { formatTimeTo12Hour } from '@/lib/time';
+// removed time formatting from list row
+
+// Cache event areas in-memory to avoid repeated fetches while navigating
+const eventAreasCache = new Map<string, Area[]>();
+
+function formatDateMMDD(dateStr: string): string {
+  // Expecting YYYY-MM-DD; fallback to original if unexpected
+  if (!dateStr || dateStr.length < 10 || dateStr[4] !== '-' || dateStr[7] !== '-') return dateStr;
+  const mm = dateStr.slice(5, 7);
+  const dd = dateStr.slice(8, 10);
+  return `${mm}/${dd}`;
+}
+
+function EventAreaChips({ eventId }: { eventId: string }) {
+  const [areas, setAreas] = useState<Area[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    const onAreasUpdated = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as { eventId: string; areas: Area[] } | undefined;
+        if (detail && detail.eventId === eventId) {
+          eventAreasCache.set(eventId, detail.areas);
+          if (!ignore) setAreas(detail.areas);
+        }
+      } catch {}
+    };
+    window.addEventListener('event-areas-updated', onAreasUpdated as EventListener);
+    const cached = eventAreasCache.get(eventId);
+    if (cached) {
+      setAreas(cached);
+      return () => {
+        ignore = true;
+        window.removeEventListener('event-areas-updated', onAreasUpdated as EventListener);
+      };
+    }
+    setLoading(true);
+    getEventAreas(eventId)
+      .then((res) => {
+        if (ignore) return;
+        eventAreasCache.set(eventId, res);
+        setAreas(res);
+      })
+      .catch(() => {
+        if (ignore) return;
+        setAreas([]);
+      })
+      .finally(() => {
+        if (ignore) return;
+        setLoading(false);
+      });
+    return () => {
+      ignore = true;
+      window.removeEventListener('event-areas-updated', onAreasUpdated as EventListener);
+    };
+  }, [eventId]);
+
+  if (loading && !areas) {
+    return (
+      <span className="inline-flex h-4 w-4 animate-pulse rounded-full bg-muted" />
+    );
+  }
+
+  if (!areas || areas.length === 0) return null;
+
+  const visible = areas.slice(0, 5);
+  const remaining = areas.length - visible.length;
+
+  return (
+    <>
+      {visible.map((a) => {
+        const initial = (a.name || '').trim().charAt(0).toUpperCase();
+        const bg = a.color || 'var(--secondary)';
+        return (
+          <span
+            key={a.id}
+            className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-1 ring-black/10 shadow-sm"
+            style={{ backgroundColor: bg }}
+            title={a.name}
+          >
+            {initial || '?'}
+          </span>
+        );
+      })}
+      {remaining > 0 ? (
+        <span className="inline-flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-foreground/70 ring-1 ring-black/5">
+          +{remaining}
+        </span>
+      ) : null}
+    </>
+  );
+}
 
 type CreateForm = {
   title: string;
@@ -155,22 +252,62 @@ export function Events() {
           <FilterBar<{ includePast: boolean}>
             q={queryState.q}
             onQChange={(v) => setQueryState(prev => ({ ...prev, q: v }))}
-          >
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={!!filterState.includePast} onChange={(e) => setFilterState(prev => ({ ...prev, includePast: e.target.checked }))} />
-              Show past
-            </label>
-          </FilterBar>
+            actions={(
+              <div className="flex items-center justify-between rounded-md border bg-card/50 px-3 py-2">
+                <div>
+                  <div className="text-sm font-medium">Show past events</div>
+                </div>
+                <Switch
+                  checked={!!filterState.includePast}
+                  onCheckedChange={(checked) => setFilterState(prev => ({ ...prev, includePast: !!checked }))}
+                />
+              </div>
+            )}
+          />
           {/* Removed inline roll-down create UI */}
           <List<EventRecord>
             items={items}
             selectedId={selectedId}
             onSelect={select}
             loading={loading}
+            renderActions={(ev) => (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="size-6 inline-flex items-center justify-center rounded hover:bg-accent">
+                    <MoreHorizontal className="size-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={async () => {
+                      const confirmed = window.confirm('Delete this event and all associated shifts?');
+                      if (!confirmed) return;
+                      try {
+                        await deleteEvent(ev.id);
+                        mutateItems(prev => prev.filter(i => i.id !== ev.id));
+                      } catch (err) {
+                        console.error('Delete event failed', err);
+                        alert('Failed to delete event');
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-4" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             renderItem={(ev) => (
               <>
-                <div className="text-sm font-medium truncate">{ev.title}</div>
-                <div className="text-xs text-muted-foreground">{ev.date} • {formatTimeTo12Hour(ev.startTime)}-{formatTimeTo12Hour(ev.endTime)}</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-primary/10 text-white border border-primary/30 shadow-sm">
+                    {formatDateMMDD(ev.date)}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <EventAreaChips eventId={ev.id} />
+                  </div>
+                </div>
+                <div className="mt-1 text-sm font-medium truncate">{ev.title}</div>
               </>
             )}
           />
@@ -307,6 +444,12 @@ export function Events() {
                     <Input value={selected.description || ''} onChange={(e) => { mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, description: e.target.value } : i))); onDescriptionChange({ description: e.target.value || undefined }); }} onBlur={() => onDescriptionBlur()} />
                   </div>
                 </div>
+                <EventMarketingPanel
+                  event={selected}
+                  onPatch={async (patch) => updateEvent(selected.id, patch)}
+                  mutateItems={mutateItems as any}
+                />
+                <EventAreasPanel eventId={selected.id} />
                 <EventShiftsPanel eventId={selected.id} />
               </>
             ) : null}
