@@ -1,0 +1,421 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --radius: 0.5rem;
+  
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  /* Warm pastel day-mode */
+  --primary: oklch(0.88 0.06 180); /* soft teal */
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.92 0.04 300); /* lavender */
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.97 0.01 95);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.95 0.06 70); /* light orange */
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+  /* Warmer chart palette for day-mode */
+  --chart-1: oklch(0.86 0.12 70);  /* orange */
+  --chart-2: oklch(0.88 0.08 180); /* teal */
+  --chart-3: oklch(0.92 0.06 300); /* lavender */
+  --chart-4: oklch(0.9 0.08 140);  /* mint */
+  --chart-5: oklch(0.88 0.09 30);  /* coral */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.21 0.006 285.885);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.705 0.015 286.067);
+  /* Readable accent text on light backgrounds */
+  --accent-text: color-mix(in oklch, var(--accent) 35%, black);
+  /* Headers use the same readable accent */
+  --section-header-color: var(--accent-text);
+}
+
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.474 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.552 0.016 285.938);
+  /* In dark mode, keep accent text/headers bright */
+  --accent-text: var(--accent);
+  --section-header-color: var(--accent);
+}
+
+/* Smooth theme transitions - only on specific elements that need it */
+html {
+  transition: background-color 0.2s ease;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+button {
+  cursor: pointer;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* --- v1 design tokens (aliases) ------------------------------------------------ */
+/* These map v1 variable names to the current theme variables to enable
+   v1-style utility classes without breaking ShadCN/Tailwind integration. */
+:root {
+  /* Light theme defaults kept readable */
+  --content-bg: var(--background);
+  --content-surface: var(--card);
+  --input-bg: var(--input);
+  --list-bg: var(--card);
+  --list-surface: var(--popover);
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+}
+
+.dark {
+  /* v1 dark palette */
+  --background: #0a0f1c;
+  --foreground: #f1f5f9;
+  --card: #1a2332;
+  --card-foreground: #f1f5f9;
+  --popover: #152238;
+  --popover-foreground: #f1f5f9;
+  --primary: #00d4ff;
+  --primary-foreground: #0b132b;
+  --secondary: #7c3aed;
+  --secondary-foreground: #ffffff;
+  --muted: #1e2d47;
+  --muted-foreground: #94a3b8;
+  --accent: #00ff88;
+  --accent-foreground: #0b132b;
+  --destructive: #ef4444;
+  --border: #223148;
+  --input: #1e293b;
+  --ring: #5bc0be;
+  --chart-1: #f59e0b;
+  --chart-2: #22c55e;
+  --chart-3: #06b6d4;
+  --chart-4: #7c3aed;
+  --chart-5: #e11d48;
+  --sidebar: #0a0f1c;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #00d4ff;
+  --sidebar-primary-foreground: #113557;
+  --sidebar-accent: #003891a8;
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: #1f2a3a;
+  --sidebar-ring: #5bc0be;
+
+  /* v1 aliases */
+  --content-bg: #0f1629;
+  --content-surface: #1a2332;
+  --input-bg: #1e293b;
+  --list-bg: #0f172a;
+  --list-surface: #1e293b;
+  --success: #22c55e;
+  --warning: #eab308;
+  --danger: #ef4444;
+}
+
+/* --- v1 global utilities ------------------------------------------------------- */
+/* Route/content fade transition */
+.routeFadeWrapper { position: relative; }
+.routeFadeItem {
+  opacity: 0;
+  animation: routeFadeIn 540ms ease-out forwards;
+}
+@keyframes routeFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Drawer overlay fade and panel slide-in */
+.drawerOverlay { background: rgba(0,0,0,0); animation: overlayIn 200ms ease-out forwards; }
+.drawerOverlay--closing { animation: overlayOut 160ms ease-in forwards; }
+@keyframes overlayIn { from { background: rgba(0,0,0,0); } to { background: rgba(0,0,0,0.4); } }
+@keyframes overlayOut { from { background: rgba(0,0,0,0.4); } to { background: rgba(0,0,0,0); } }
+.drawerPanel { transform: translateX(24px); opacity: 0; animation: drawerIn 200ms ease-out forwards; }
+.drawerPanel--closing { animation: drawerOut 160ms ease-in forwards; }
+@keyframes drawerIn { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes drawerOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(24px); opacity: 0; } }
+
+/* Page chrome */
+.pageHeader {
+  background: linear-gradient(135deg, var(--content-surface), color-mix(in oklch, var(--secondary) 8%, transparent));
+  border: 1px solid color-mix(in oklch, var(--secondary) 20%, transparent);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.15);
+  position: relative;
+}
+.pageHeader::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+  opacity: 0.5;
+}
+
+.section {
+  background: linear-gradient(135deg, var(--content-surface), color-mix(in oklch, var(--primary) 6%, transparent));
+  border: 1px solid color-mix(in oklch, var(--primary) 15%, transparent);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.section::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+  opacity: 0.6;
+}
+.sectionHeader { margin: 0 0 10px; font-size: 16px; letter-spacing: 0.3px; color: var(--section-header-color); }
+
+/* Toolbar */
+.toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.toolbar .spacer { margin-left: auto; display: flex; gap: 8px; }
+
+/* Inputs */
+.select, .input {
+  background: var(--input-bg);
+  color: var(--foreground);
+  border: 1px solid color-mix(in oklch, var(--foreground) 12%, transparent);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+select.select {
+  padding-right: 32px;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aab3c2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat; background-position: right 8px center; background-size: 16px;
+  cursor: pointer;
+}
+.select:hover, .input:hover { border-color: color-mix(in oklch, var(--foreground) 18%, transparent); }
+.select:focus, .input:focus { outline: none; border-color: color-mix(in oklch, var(--primary) 60%, transparent); box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary) 20%, transparent); }
+textarea.input { width: 100%; resize: vertical; }
+
+/* Chips */
+.chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; letter-spacing: 0.2px; border: 1px solid color-mix(in oklch, var(--foreground) 14%, transparent); }
+.chip--success { background: color-mix(in oklch, var(--success) 15%, transparent); color: var(--success); border-color: color-mix(in oklch, var(--success) 35%, transparent); }
+.chip--primary { background: color-mix(in oklch, var(--primary) 15%, transparent); color: var(--primary); border-color: color-mix(in oklch, var(--primary) 35%, transparent); }
+.chip--secondary { background: color-mix(in oklch, var(--secondary) 15%, transparent); color: var(--secondary); border-color: color-mix(in oklch, var(--secondary) 35%, transparent); }
+.chip--accent { background: color-mix(in oklch, var(--accent) 15%, transparent); color: var(--accent-text); border-color: color-mix(in oklch, var(--accent) 35%, transparent); }
+.chip--warning { background: color-mix(in oklch, var(--warning) 15%, transparent); color: var(--warning); border-color: color-mix(in oklch, var(--warning) 35%, transparent); }
+.chip--muted { background: color-mix(in oklch, var(--foreground) 6%, transparent); color: color-mix(in oklch, var(--foreground) 60%, transparent); }
+
+/* Tables */
+.table { width: 100%; border-collapse: collapse; }
+.table thead tr { background: color-mix(in oklch, var(--foreground) 5%, transparent); border-bottom: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent); }
+.table tbody tr { border-bottom: 1px solid color-mix(in oklch, var(--foreground) 6%, transparent); }
+.table tbody tr:nth-child(odd) { background: color-mix(in oklch, var(--foreground) 2%, transparent); }
+.table tbody tr:hover { background: color-mix(in oklch, var(--primary) 8%, transparent); border-color: color-mix(in oklch, var(--primary) 25%, transparent); transform: translateX(2px); }
+.table th, .table td { text-align: left; padding: 8px 6px; }
+
+/* Content surface background with subtle accents */
+.content {
+  padding: 18px;
+  overflow: auto;
+  position: relative;
+  background: var(--content-bg);
+  background-image:
+    radial-gradient(circle at 20% 80%, color-mix(in oklch, var(--primary) 3%, transparent) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, color-mix(in oklch, var(--secondary) 3%, transparent) 0%, transparent 50%);
+}
+
+/* Left nav (visuals only; wiring done in components) */
+.leftnav { width: 260px; background: linear-gradient(180deg, var(--card), color-mix(in oklch, var(--foreground) 6%, transparent)); color: var(--foreground); padding: 0; border-right: 1px solid color-mix(in oklch, var(--primary) 15%, transparent);
+  /* nav color tokens */
+  --nav-indicator-left: color-mix(in oklch, var(--primary) 14%, transparent);
+  --nav-indicator-right: color-mix(in oklch, var(--secondary) 8%, transparent);
+  --nav-button-left: var(--nav-indicator-left);
+  --nav-button-right: color-mix(in oklch, var(--nav-indicator-left) 85%, black 15%);
+}
+
+/* global button gradient tokens derived from nav indicator left color */
+:root {
+  /* In day-mode, use accent-derived warm gradient */
+  --btn-left: color-mix(in oklch, var(--accent) 22%, transparent);
+  --btn-right: color-mix(in oklch, var(--btn-left) 85%, black 15%);
+}
+.dark {
+  --btn-left: color-mix(in oklch, var(--primary) 22%, transparent);
+  --btn-right: color-mix(in oklch, var(--btn-left) 82%, black 18%);
+}
+.brand { font-weight: 800; letter-spacing: 0.5px; font-size: 18px; color: var(--accent-text); }
+.sectionTitle { margin: 16px 0 6px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: color-mix(in oklch, var(--foreground) 70%, transparent); }
+[data-slot="sidebar-group-label"].sectionTitle { font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: color-mix(in oklch, var(--foreground) 70%, transparent); }
+.navList { list-style: none; padding: 0; margin: 0; }
+.navList li { margin: 6px 0; }
+.navLink { display: flex; align-items: center; }
+.navActiveIndicator { position: absolute; top: 0; left: 0; right: 0; border-radius: calc(var(--radius) + 4px); background: linear-gradient(90deg, var(--nav-indicator-left), var(--nav-indicator-right)); border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent); box-shadow: 0 10px 24px rgb(0 0 0 / 0.12), 0 1px 0 0 color-mix(in oklch, var(--primary) 22%, transparent) inset; transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), height 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease-out; pointer-events: none; z-index: 0; }
+.leftnav [data-slot="sidebar-menu-item"] { background: transparent; }
+.leftnav [data-slot="sidebar-menu-button"] { background: transparent; border: 1px solid transparent; }
+.leftnav [data-slot="sidebar-menu-button"]:hover,
+.leftnav [data-slot="sidebar-menu-button"][data-active="true"] { background: transparent; }
+.leftnav .navLink { position: relative; z-index: 1; }
+.navActiveIndicator::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(60% 140% at 0% 50%, color-mix(in oklch, var(--accent) 12%, transparent), transparent); opacity: 0.5; mix-blend-mode: screen; }
+.leftnavStatus { position: absolute; left: 16px; right: 16px; bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: color-mix(in oklch, var(--foreground) 60%, transparent); opacity: 0.9; }
+.statusDot { width: 8px; height: 8px; border-radius: 50%; background: color-mix(in oklch, var(--foreground) 35%, transparent); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25) inset; }
+.statusDot--ok { background: var(--success); }
+.statusDot--bad { background: var(--danger); }
+.statusDot--pending { background: var(--warning); }
+.statusText { user-select: none; }
+
+/* Active list row styling to match sidebar indicator */
+.listRowActive {
+  position: relative;
+  background: linear-gradient(90deg, var(--btn-left), var(--btn-right));
+  border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.12), 0 1px 0 0 color-mix(in oklch, var(--primary) 18%, transparent) inset;
+}
+.listRowActive::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(60% 140% at 0% 50%, color-mix(in oklch, var(--accent) 12%, transparent), transparent);
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* Non-active hover state: purple gradient derived from --secondary */
+.listRow { border: 1px solid transparent; transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease; border-radius: calc(var(--radius) + 4px); }
+.listRow:not(.listRowActive):hover {
+  background: linear-gradient(90deg,
+    color-mix(in oklch, var(--secondary) 18%, transparent),
+    color-mix(in oklch, var(--secondary) 10%, black 15%)
+  );
+  border-color: color-mix(in oklch, var(--secondary) 28%, transparent);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.10);
+}
+
+/* Sliding active indicator for event list (mirrors nav indicator visuals) */
+.listActiveIndicator {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  border-radius: calc(var(--radius) + 4px);
+  background: linear-gradient(90deg, var(--nav-indicator-left), var(--nav-indicator-right));
+  border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.12), 0 1px 0 0 color-mix(in oklch, var(--primary) 22%, transparent) inset;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), height 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease-out;
+  pointer-events: none;
+  z-index: 0;
+}
+.eventItem { position: relative; z-index: 1; }
+.eventItem--active { /* no-op; background handled by indicator */ }
+
+/* Login layout */
+.loginLayout { min-height: 100vh; display: grid; place-items: center; background: radial-gradient(1200px 600px at 20% -10%, color-mix(in oklch, var(--primary) 12%, transparent), transparent), var(--background); }
+.loginCard { width: 360px; background: linear-gradient(180deg, color-mix(in oklch, var(--foreground) 6%, transparent), color-mix(in oklch, var(--foreground) 2%, transparent)); border: 1px solid color-mix(in oklch, var(--foreground) 16%, transparent); border-radius: calc(var(--radius) + 4px); padding: 22px 20px 18px; box-shadow: 0 20px 60px rgb(0 0 0 / 0.35); }
+.loginBrand { font-weight: 800; letter-spacing: 0.5px; color: var(--accent-text); margin-bottom: 8px; }
+.loginTitle { font-size: 20px; margin-bottom: 12px; }
+.loginForm { display: grid; gap: 8px; }
+.loginLabel { font-size: 13px; color: color-mix(in oklch, var(--foreground) 60%, transparent); }
+.loginInput { background: var(--input-bg); color: var(--foreground); border: 1px solid color-mix(in oklch, var(--foreground) 18%, transparent); border-radius: calc(var(--radius) + 2px); padding: 10px 12px; }
+.loginInput:focus { outline: none; border-color: color-mix(in oklch, var(--primary) 60%, transparent); box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary) 20%, transparent); }
+.loginError { color: oklch(0.72 0.21 23); background: color-mix(in oklch, var(--danger) 8%, transparent); border: 1px solid color-mix(in oklch, var(--danger) 20%, transparent); border-radius: 8px; padding: 8px 10px; }
+.loginButton { background: var(--primary); color: var(--primary-foreground); border: 1px solid color-mix(in oklch, var(--primary) 60%, transparent); border-radius: calc(var(--radius) + 2px); padding: 10px 12px; font-weight: 600; cursor: pointer; }
+.loginButton:hover { filter: brightness(1.05); }
+.loginButton:disabled { opacity: 0.7; cursor: default; }
+.loginHelp { margin-top: 6px; font-size: 12px; color: color-mix(in oklch, var(--foreground) 60%, transparent); }
+

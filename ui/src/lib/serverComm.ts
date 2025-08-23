@@ -1,0 +1,574 @@
+import { getAuth } from 'firebase/auth';
+import { app } from './firebase';
+
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+
+class APIError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'APIError';
+  }
+}
+
+async function getAuthToken(): Promise<string | null> {
+  const auth = getAuth(app);
+  const user = auth.currentUser;
+  if (!user) {
+    return null;
+  }
+  return user.getIdToken();
+}
+
+async function fetchWithAuth(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const token = await getAuthToken();
+  const headers = new Headers(options.headers);
+  
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    if (import.meta && (import.meta as any).env && (import.meta as any).env.DEV) {
+      console.warn('API request failed', {
+        url: `${API_BASE_URL}${endpoint}`,
+        status: response.status,
+        statusText: response.statusText,
+        method: options.method || 'GET'
+      });
+    }
+    let details: string | undefined;
+    try {
+      const data = await response.clone().json();
+      if (data && typeof data.error === 'string') details = data.error;
+    } catch {}
+    const message = details ? `${response.statusText} - ${details}` : response.statusText;
+    throw new APIError(response.status, `API request failed: ${message}`);
+  }
+
+  return response;
+}
+
+// API endpoints
+export async function getCurrentUser() {
+  const response = await fetchWithAuth('/api/v1/protected/me');
+  return response.json();
+}
+
+// Events API helpers
+export type EventRecord = {
+  id: string;
+  title: string;
+  promoter?: string | null;
+  status: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
+  endTime: string; // HH:mm
+  description?: string | null;
+  artists?: string | null;
+  updatedAt?: string;
+};
+
+export async function listEvents(params?: { q?: string; status?: string; includePast?: boolean }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.status) query.set('status', params.status);
+  if (params?.includePast != null) query.set('includePast', params.includePast ? 'true' : 'false');
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/events${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<EventRecord[]>;
+}
+
+export async function createEvent(payload: Partial<EventRecord> & { title: string }) {
+  const response = await fetchWithAuth('/api/v1/events', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<EventRecord>;
+}
+
+export async function getEvent(eventId: string) {
+  const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}`);
+  return response.json() as Promise<EventRecord>;
+}
+
+export async function updateEvent(eventId: string, patch: Partial<EventRecord>) {
+  const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<EventRecord>;
+}
+
+export async function listEventShifts(eventId: string, params?: { departmentId?: string }) {
+  const query = new URLSearchParams();
+  if (params?.departmentId) query.set('departmentId', params.departmentId);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}/shifts${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<any[]>;
+}
+
+export const api: {
+  getCurrentUser: typeof getCurrentUser;
+  listEvents: typeof listEvents;
+  createEvent: typeof createEvent;
+  getEvent: typeof getEvent;
+  updateEvent: typeof updateEvent;
+  listEventShifts: typeof listEventShifts;
+  // Scheduling
+  listSchedules?: typeof listSchedules;
+  createSchedule?: typeof createSchedule;
+  getSchedule?: typeof getSchedule;
+  updateSchedule?: typeof updateSchedule;
+  publishSchedule?: typeof publishSchedule;
+  unpublishSchedule?: typeof unpublishSchedule;
+  listShifts?: typeof listShifts;
+  listAllShifts?: typeof listAllShifts;
+  createShift?: typeof createShift;
+  getShift?: typeof getShift;
+  updateShift?: typeof updateShift;
+  deleteShift?: typeof deleteShift;
+  listAssignments?: typeof listAssignments;
+  createAssignment?: typeof createAssignment;
+  updateAssignment?: typeof updateAssignment;
+  deleteAssignment?: typeof deleteAssignment;
+  // Generation
+  generateShiftsForSchedule?: (scheduleId: string, payload: { departmentId: string; regenerate?: boolean }) => Promise<{ created: number; skipped: number; shifts: ShiftRecord[] }>;
+  listDepartments?: typeof listDepartments;
+  getDepartment?: typeof getDepartment;
+  createDepartment?: typeof createDepartment;
+  updateDepartment?: typeof updateDepartment;
+  // Employees (assigned after declaration)
+  listEmployees?: (departmentId: string) => Promise<any[]>;
+  createEmployee?: (departmentId: string, payload: any) => Promise<any>;
+  updateEmployee?: (employeeId: string, patch: any) => Promise<any>;
+  deleteEmployee?: (employeeId: string) => Promise<void>;
+  // Positions
+  listPositions?: (departmentId: string, params?: { q?: string }) => Promise<PositionRecord[]>;
+  createPosition?: (departmentId: string, payload: { name: string }) => Promise<PositionRecord>;
+  updatePosition?: (positionId: string, patch: Partial<PositionRecord>) => Promise<PositionRecord>;
+  deletePosition?: (positionId: string) => Promise<void>;
+  // EmployeePositions
+  listEmployeePositions?: (departmentId: string) => Promise<EmployeePositionRecord[]>;
+  createEmployeePosition?: (payload: CreateEmployeePositionPayload) => Promise<EmployeePositionRecord>;
+  updateEmployeePosition?: (id: string, patch: Partial<EmployeePositionRecord>) => Promise<EmployeePositionRecord>;
+  deleteEmployeePosition?: (id: string) => Promise<void>;
+  // Batch update priorities
+  updateEmployeePositionsBatch?: (positionId: string, items: Array<{ id: string; priority: number; isLead?: boolean }>) => Promise<EmployeePositionRecord[]>;
+  // Eligibility
+  listEligibleEmployeesForPosition?: (departmentId: string, positionId: string) => Promise<EligibleEmployee[]>;
+} = {
+  getCurrentUser,
+  listEvents,
+  createEvent,
+  getEvent,
+  updateEvent,
+  listEventShifts,
+}; 
+
+// Departments API helpers
+export type DepartmentRecord = {
+  id: string;
+  name: string;
+  description?: string | null;
+  updatedAt?: string;
+};
+
+export async function listDepartments(params?: { q?: string }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/departments${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<DepartmentRecord[]>;
+}
+
+export async function getDepartment(id: string) {
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(id)}`);
+  return response.json() as Promise<DepartmentRecord>;
+}
+
+export async function createDepartment(payload: { name: string; description?: string | null }) {
+  const response = await fetchWithAuth('/api/v1/departments', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<DepartmentRecord>; 
+}
+
+export async function updateDepartment(id: string, patch: Partial<DepartmentRecord>) {
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<DepartmentRecord>;
+}
+
+api.listDepartments = listDepartments;
+api.getDepartment = getDepartment;
+api.createDepartment = createDepartment;
+api.updateDepartment = updateDepartment;
+
+// Employees API helpers
+export type EmployeeRecord = {
+  id: string;
+  departmentId: string;
+  name: string;
+  priority?: number | null;
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
+  address1?: string | null;
+  address2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  postalCode4?: string | null;
+  primaryPhone?: string | null;
+  email?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  fullName?: string;
+};
+
+export async function listEmployees(departmentId: string) {
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/employees`);
+  return response.json() as Promise<EmployeeRecord[]>;
+}
+
+export async function createEmployee(departmentId: string, payload: Partial<EmployeeRecord> & { name?: string }) {
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/employees`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<EmployeeRecord>;
+}
+
+export async function updateEmployee(employeeId: string, patch: Partial<EmployeeRecord>) {
+  const response = await fetchWithAuth(`/api/v1/employees/${encodeURIComponent(employeeId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<EmployeeRecord>;
+}
+
+export async function deleteEmployee(employeeId: string) {
+  await fetchWithAuth(`/api/v1/employees/${encodeURIComponent(employeeId)}`, { method: 'DELETE' });
+}
+
+api.listEmployees = listEmployees as any;
+api.createEmployee = createEmployee as any;
+api.updateEmployee = updateEmployee as any;
+api.deleteEmployee = deleteEmployee as any;
+
+// Positions API helpers
+export type PositionRecord = {
+  id: string;
+  departmentId: string;
+  name: string;
+  updatedAt?: string;
+};
+
+export async function listPositions(departmentId: string, params?: { q?: string }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/positions${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<PositionRecord[]>;
+}
+
+export async function createPosition(departmentId: string, payload: { name: string }) {
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/positions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<PositionRecord>;
+}
+
+export async function updatePosition(positionId: string, patch: Partial<PositionRecord>) {
+  const response = await fetchWithAuth(`/api/v1/positions/${encodeURIComponent(positionId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<PositionRecord>;
+}
+
+export async function deletePosition(positionId: string) {
+  await fetchWithAuth(`/api/v1/positions/${encodeURIComponent(positionId)}`, { method: 'DELETE' });
+}
+
+api.listPositions = listPositions as any;
+api.createPosition = createPosition as any;
+api.updatePosition = updatePosition as any;
+api.deletePosition = deletePosition as any;
+
+// EmployeePositions API helpers
+export type EmployeePositionRecord = {
+  id: string;
+  departmentId: string;
+  employeeId: string;
+  positionId: string;
+  priority?: number | null;
+  isLead: boolean;
+  updatedAt?: string;
+};
+
+export type CreateEmployeePositionPayload = {
+  departmentId: string;
+  employeeId: string;
+  positionId: string;
+  priority?: number | null;
+  isLead?: boolean;
+};
+
+export async function listEmployeePositions(departmentId: string) {
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/employee-positions`);
+  return response.json() as Promise<EmployeePositionRecord[]>;
+}
+
+export async function createEmployeePosition(payload: CreateEmployeePositionPayload) {
+  const response = await fetchWithAuth('/api/v1/employee-positions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<EmployeePositionRecord>;
+}
+
+export async function updateEmployeePosition(id: string, patch: Partial<EmployeePositionRecord>) {
+  const response = await fetchWithAuth(`/api/v1/employee-positions/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<EmployeePositionRecord>;
+}
+
+export async function deleteEmployeePosition(id: string) {
+  await fetchWithAuth(`/api/v1/employee-positions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+api.listEmployeePositions = listEmployeePositions as any;
+api.createEmployeePosition = createEmployeePosition as any;
+api.updateEmployeePosition = updateEmployeePosition as any;
+api.deleteEmployeePosition = deleteEmployeePosition as any;
+
+// Eligibility API helper
+export type EligibleEmployee = { id: string; name: string; priority: number | null };
+
+export async function listEligibleEmployeesForPosition(departmentId: string, positionId: string) {
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/positions/${encodeURIComponent(positionId)}/eligible`);
+  return response.json() as Promise<EligibleEmployee[]>;
+}
+
+api.listEligibleEmployeesForPosition = listEligibleEmployeesForPosition as any;
+
+// Batch priorities update
+export async function updateEmployeePositionsBatch(positionId: string, items: Array<{ id: string; priority: number; isLead?: boolean }>) {
+  const response = await fetchWithAuth(`/api/v1/positions/${encodeURIComponent(positionId)}/employee-positions`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items }),
+  });
+  return response.json() as Promise<EmployeePositionRecord[]>;
+}
+
+api.updateEmployeePositionsBatch = updateEmployeePositionsBatch as any;
+
+// Scheduling API helpers
+export type ScheduleRecord = {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  isPublished: boolean;
+  publishedAt?: string | null;
+  updatedAt?: string;
+};
+
+export async function listSchedules(params?: { q?: string; isPublished?: boolean; from?: string; to?: string }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.isPublished != null) query.set('isPublished', params.isPublished ? 'true' : 'false');
+  if (params?.from) query.set('from', params.from);
+  if (params?.to) query.set('to', params.to);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/schedules${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<ScheduleRecord[]>;
+}
+
+export async function createSchedule(payload: { name: string; startDate: string; endDate: string }) {
+  const response = await fetchWithAuth('/api/v1/schedules', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<ScheduleRecord>;
+}
+
+export async function getSchedule(id: string) {
+  const response = await fetchWithAuth(`/api/v1/schedules/${encodeURIComponent(id)}`);
+  return response.json() as Promise<ScheduleRecord>;
+}
+
+export async function updateSchedule(id: string, patch: Partial<ScheduleRecord>) {
+  const response = await fetchWithAuth(`/api/v1/schedules/${encodeURIComponent(id)}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<ScheduleRecord>;
+}
+
+export async function publishSchedule(id: string) {
+  const response = await fetchWithAuth(`/api/v1/schedules/${encodeURIComponent(id)}/publish`, { method: 'POST' });
+  return response.json() as Promise<ScheduleRecord>;
+}
+
+export async function unpublishSchedule(id: string) {
+  const response = await fetchWithAuth(`/api/v1/schedules/${encodeURIComponent(id)}/unpublish`, { method: 'POST' });
+  return response.json() as Promise<ScheduleRecord>;
+}
+
+export type ShiftRecord = {
+  id: string;
+  departmentId: string;
+  scheduleId?: string | null;
+  date: string;
+  startTime: string;
+  endTime: string;
+  title?: string | null;
+  notes?: string | null;
+  eventId?: string | null;
+  updatedAt?: string;
+  derivedPublished?: boolean;
+};
+
+export async function listShifts(departmentId: string, params?: { q?: string; scheduleId?: string; from?: string; to?: string; published?: boolean }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.scheduleId) query.set('scheduleId', params.scheduleId);
+  if (params?.from) query.set('from', params.from);
+  if (params?.to) query.set('to', params.to);
+  if (params?.published != null) query.set('published', params.published ? 'true' : 'false');
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/shifts${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<ShiftRecord[]>;
+}
+
+export async function listAllShifts(params?: { departmentId?: string; q?: string; scheduleId?: string; from?: string; to?: string; published?: boolean }) {
+  const query = new URLSearchParams();
+  if (params?.departmentId) query.set('departmentId', params.departmentId);
+  if (params?.q) query.set('q', params.q);
+  if (params?.scheduleId) query.set('scheduleId', params.scheduleId);
+  if (params?.from) query.set('from', params.from);
+  if (params?.to) query.set('to', params.to);
+  if (params?.published != null) query.set('published', params.published ? 'true' : 'false');
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/shifts${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<ShiftRecord[]>;
+}
+
+// Generate shifts for a schedule
+export async function generateShiftsForSchedule(scheduleId: string, payload: { departmentId: string; regenerate?: boolean }) {
+  const response = await fetchWithAuth(`/api/v1/schedules/${encodeURIComponent(scheduleId)}/generate-shifts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<{ created: number; skipped: number; shifts: ShiftRecord[] }>;
+}
+
+export async function createShift(departmentId: string, payload: Partial<ShiftRecord> & { date: string; startTime: string; endTime: string }) {
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/shifts`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<ShiftRecord & { warnings?: string[] }>;
+}
+
+export async function getShift(id: string) {
+  const response = await fetchWithAuth(`/api/v1/shifts/${encodeURIComponent(id)}`);
+  return response.json() as Promise<ShiftRecord>;
+}
+
+export async function updateShift(id: string, patch: Partial<ShiftRecord>) {
+  const response = await fetchWithAuth(`/api/v1/shifts/${encodeURIComponent(id)}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<ShiftRecord>;
+}
+
+export async function deleteShift(id: string) {
+  await fetchWithAuth(`/api/v1/shifts/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export type AssignmentRecord = {
+  id: string;
+  departmentId: string;
+  shiftId: string;
+  requiredPositionId: string;
+  assigneeEmployeeId?: string | null;
+  updatedAt?: string;
+};
+
+export async function listAssignments(departmentId: string, shiftId?: string) {
+  const query = new URLSearchParams();
+  if (shiftId) query.set('shiftId', shiftId);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/assignments${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<AssignmentRecord[]>;
+}
+
+export async function createAssignment(departmentId: string, payload: { shiftId: string; requiredPositionId: string; assigneeEmployeeId?: string | null }) {
+  const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/assignments`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<AssignmentRecord>;
+}
+
+export async function updateAssignment(id: string, patch: Partial<AssignmentRecord>) {
+  const response = await fetchWithAuth(`/api/v1/assignments/${encodeURIComponent(id)}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<AssignmentRecord>;
+}
+
+export async function deleteAssignment(id: string) {
+  await fetchWithAuth(`/api/v1/assignments/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+api.listSchedules = listSchedules;
+api.createSchedule = createSchedule;
+api.getSchedule = getSchedule;
+api.updateSchedule = updateSchedule;
+api.publishSchedule = publishSchedule;
+api.unpublishSchedule = unpublishSchedule;
+api.listShifts = listShifts as any;
+api.listAllShifts = listAllShifts as any;
+api.generateShiftsForSchedule = generateShiftsForSchedule as any;
+api.createShift = createShift as any;
+api.getShift = getShift as any;
+api.updateShift = updateShift as any;
+api.deleteShift = deleteShift as any;
+api.listAssignments = listAssignments as any;
+api.createAssignment = createAssignment as any;
+api.updateAssignment = updateAssignment as any;
+api.deleteAssignment = deleteAssignment as any;
