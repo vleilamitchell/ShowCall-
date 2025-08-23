@@ -7,12 +7,14 @@ import { ConnectionStatus } from '@/components/connection-status';
 import { Home } from '@/pages/Home';
 import { Settings } from '@/pages/Settings';
 import Events from '@/pages/Events';
+import Artists from '@/pages/Artists';
 import Departments from '@/pages/Departments';
 import Inventory from '@/pages/Inventory';
 import Employees from '@/pages/Employees';
 import Scheduling from '@/pages/Scheduling';
 // Inventory UI removed
 import InventoryAssetsTable from '@/pages/InventoryAssetsTable';
+import EventsCalendar from '@/pages/EventsCalendar';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import {
   SidebarProvider,
@@ -44,7 +46,9 @@ function AppContent() {
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/events" element={<Events />} />
+                    <Route path="/events/calendar" element={<EventsCalendar />} />
                     <Route path="/events/:eventId" element={<Events />} />
+                    <Route path="/events/artists" element={<Artists />} />
                     <Route path="/scheduling" element={<Scheduling />} />
                     <Route path="/scheduling/:shiftId" element={<Scheduling />} />
                     <Route path="/departments" element={<Departments />} />

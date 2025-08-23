@@ -136,6 +136,8 @@ eventsRoutes.get('/', async (c) => {
     const status = c.req.query('status') || undefined;
     const q = c.req.query('q') || undefined;
     const includePast = (c.req.query('includePast') || 'false') === 'true';
+    const from = c.req.query('from') || undefined;
+    const to = c.req.query('to') || undefined;
 
     const now = new Date();
     const today = formatDate(now);
@@ -165,6 +167,13 @@ eventsRoutes.get('/', async (c) => {
           ilike(schema.events.artists, pattern)
         )
       );
+    }
+
+    if (from) {
+      conditions.push(gte(schema.events.date, from));
+    }
+    if (to) {
+      conditions.push(lte(schema.events.date, to));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

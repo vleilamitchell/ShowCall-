@@ -76,11 +76,13 @@ export type EventRecord = {
   updatedAt?: string;
 };
 
-export async function listEvents(params?: { q?: string; status?: string; includePast?: boolean }) {
+export async function listEvents(params?: { q?: string; status?: string; includePast?: boolean; from?: string; to?: string }) {
   const query = new URLSearchParams();
   if (params?.q) query.set('q', params.q);
   if (params?.status) query.set('status', params.status);
   if (params?.includePast != null) query.set('includePast', params.includePast ? 'true' : 'false');
+  if (params?.from) query.set('from', params.from);
+  if (params?.to) query.set('to', params.to);
   const qs = query.toString();
   const response = await fetchWithAuth(`/api/v1/events${qs ? `?${qs}` : ''}`);
   return response.json() as Promise<EventRecord[]>;

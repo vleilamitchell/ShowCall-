@@ -6,6 +6,7 @@ import {
   Building2,
   Users2,
   Boxes,
+  ChevronRight,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -26,10 +27,48 @@ export function AppSidebar() {
   const [indicatorTop, setIndicatorTop] = useState(0);
   const [indicatorHeight, setIndicatorHeight] = useState(0);
   const [hasActive, setHasActive] = useState(false);
+  const [hoverInventory, setHoverInventory] = useState(false);
+  const [hoverEvents, setHoverEvents] = useState(false);
+  const [expandInventory, setExpandInventory] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem('sc_sidebar_expand_inventory');
+      return v === 'true';
+    } catch { return false; }
+  });
+  const [expandEvents, setExpandEvents] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem('sc_sidebar_expand_events');
+      return v === 'true';
+    } catch { return false; }
+  });
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
+
+  const inventoryOpen = isActive('/inventory');
+  const eventsOpen = isActive('/events');
+  const inventoryIsOpen = inventoryOpen || hoverInventory || expandInventory;
+  const eventsIsOpen = eventsOpen || hoverEvents || expandEvents;
+
+  const onToggleInventory = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpandInventory((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('sc_sidebar_expand_inventory', String(next)); } catch {}
+      return next;
+    });
+  };
+  const onToggleEvents = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpandEvents((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('sc_sidebar_expand_events', String(next)); } catch {}
+      return next;
+    });
   };
 
   const measureActive = (doNotHide?: boolean) => {
@@ -92,35 +131,110 @@ export function AppSidebar() {
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/inventory')}
-                    className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
-                    <NavLink to="/inventory" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
-                      <Boxes className="w-4 h-4" />
-                      <span className="truncate">Inventory</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                {/* Nested/indented item under Inventory */}
-                <div className="pl-6">
+                <div className="group" onMouseEnter={() => setHoverInventory(true)} onMouseLeave={() => setHoverInventory(false)}>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/inventory/assets')}
+                    <SidebarMenuButton asChild isActive={isActive('/inventory')}
                       className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
-                      <NavLink to="/inventory/assets" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
-                        <span className="truncate">Assets Table</span>
+                      <NavLink to="/inventory" className={({isActive}) => `navLink flex items-center gap-1.5 justify-between w-full${isActive ? ' navLink--active' : ''}` }>
+                        <span className="flex items-center gap-1.5">
+                          <Boxes className="w-4 h-4" />
+                          <span className="truncate">Inventory</span>
+                        </span>
+                        <button
+                          aria-label={inventoryIsOpen ? 'Collapse' : 'Expand'}
+                          onClick={onToggleInventory}
+                          className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded hover:bg-sidebar-accent/40"
+                        >
+                          <ChevronRight className={`w-3.5 h-3.5 transition-transform ${inventoryIsOpen ? 'rotate-90' : ''}`} />
+                        </button>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                  {/* Nested/indented item under Inventory */}
+                  <div className={`pl-0 pr-2 transition-all duration-200 ease-out ${inventoryIsOpen ? 'grid grid-rows-[1fr] opacity-100 translate-y-0' : 'grid grid-rows-[0fr] opacity-0 -translate-y-1'}`}>
+                    <div className="overflow-hidden">
+                      <div
+                        className={`ml-6 rounded-b-md rounded-t-none ${inventoryOpen ? 'border' : ''}`}
+                        style={{
+                          background: inventoryOpen ? 'linear-gradient(90deg, var(--nav-indicator-left), var(--nav-indicator-right))' : 'transparent',
+                          borderColor: inventoryOpen ? 'color-mix(in oklch, var(--primary) 25%, transparent)' : 'transparent'
+                        }}
+                      >
+                        <div className="py-1">
+                          <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={isActive('/inventory/assets')}
+                              className="relative px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
+                              <NavLink to="/inventory/assets" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}`}>
+                                {isActive('/inventory/assets') ? (
+                                  <span className="pointer-events-none absolute inset-0 bg-black/10" />
+                                ) : null}
+                                <span className="truncate">Assets Table</span>
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/events')}
-                    className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
-                    <NavLink to="/events" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
-                      <CalendarDays className="w-4 h-4" />
-                      <span className="truncate">Events</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <div className="group" onMouseEnter={() => setHoverEvents(true)} onMouseLeave={() => setHoverEvents(false)}>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/events')}
+                      className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
+                      <NavLink to="/events" className={({isActive}) => `navLink flex items-center gap-1.5 justify-between w-full${isActive ? ' navLink--active' : ''}` }>
+                        <span className="flex items-center gap-1.5">
+                          <CalendarDays className="w-4 h-4" />
+                          <span className="truncate">Events</span>
+                        </span>
+                        <button
+                          aria-label={eventsIsOpen ? 'Collapse' : 'Expand'}
+                          onClick={onToggleEvents}
+                          className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded hover:bg-sidebar-accent/40"
+                        >
+                          <ChevronRight className={`w-3.5 h-3.5 transition-transform ${eventsIsOpen ? 'rotate-90' : ''}`} />
+                        </button>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  {/* Nested/indented item under Events */}
+                  <div className={`pl-0 pr-2 transition-all duration-200 ease-out ${eventsIsOpen ? 'grid grid-rows-[1fr] opacity-100 translate-y-0' : 'grid grid-rows-[0fr] opacity-0 -translate-y-1'}`}>
+                    <div className="overflow-hidden">
+                      <div
+                        className={`ml-6 rounded-b-md rounded-t-none ${eventsOpen ? 'border' : ''}`}
+                        style={{
+                          background: eventsOpen ? 'linear-gradient(90deg, var(--nav-indicator-left), var(--nav-indicator-right))' : 'transparent',
+                          borderColor: eventsOpen ? 'color-mix(in oklch, var(--primary) 25%, transparent)' : 'transparent'
+                        }}
+                      >
+                        <div className="py-1">
+                          <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={isActive('/events/calendar')}
+                              className={`relative px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary`}>
+                              <NavLink to="/events/calendar" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}`}>
+                                {/* Active stripe overlay */}
+                                {isActive('/events/calendar') ? (
+                                  <span className="pointer-events-none absolute inset-0 bg-black/10" />
+                                ) : null}
+                                <span className="truncate">Calendar</span>
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                          <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={isActive('/events/artists')}
+                              className={`relative px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary`}>
+                              <NavLink to="/events/artists" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}`}>
+                                {isActive('/events/artists') ? (
+                                  <span className="pointer-events-none absolute inset-0 bg-black/10" />
+                                ) : null}
+                                <span className="truncate">Artists</span>
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive('/scheduling')}
                     className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
