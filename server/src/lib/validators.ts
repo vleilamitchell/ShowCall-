@@ -30,4 +30,19 @@ export function isValidTimeStr(s?: unknown): boolean {
   return /^\d{2}:\d{2}$/.test(s);
 }
 
+// Inventory validators
+export function isValidUnit(s?: unknown): boolean {
+  if (s == null) return false;
+  const v = String(s).trim();
+  return v.length > 0 && v.length <= 32; // basic sanity; specific units validated against DB where needed
+}
+
+export function isValidEventType(s?: unknown): boolean {
+  if (typeof s !== 'string') return false;
+  const allowed = [
+    'RECEIPT','TRANSFER_OUT','TRANSFER_IN','CONSUMPTION','WASTE','COUNT_ADJUST','RESERVATION_HOLD','RESERVATION_RELEASE','MOVE_OUT','MOVE_IN','MAINTENANCE_START','MAINTENANCE_END'
+  ];
+  return allowed.includes(s);
+}
+
 

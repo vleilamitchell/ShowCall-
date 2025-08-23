@@ -5,6 +5,7 @@ import {
   CalendarRange,
   Building2,
   Users2,
+  Boxes,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -88,6 +89,15 @@ export function AppSidebar() {
                     <NavLink to="/" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
                       <Home className="w-4 h-4" />
                       <span className="truncate">Home</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/inventory')}
+                    className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
+                    <NavLink to="/inventory" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
+                      <Boxes className="w-4 h-4" />
+                      <span className="truncate">Inventory</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

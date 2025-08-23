@@ -170,6 +170,16 @@ export const api: {
   updateEmployeePositionsBatch?: (positionId: string, items: Array<{ id: string; priority: number; isLead?: boolean }>) => Promise<EmployeePositionRecord[]>;
   // Eligibility
   listEligibleEmployeesForPosition?: (departmentId: string, positionId: string) => Promise<EligibleEmployee[]>;
+  // Inventory
+  listInventoryItems?: typeof listInventoryItems;
+  createInventoryItem?: typeof createInventoryItem;
+  getInventoryItem?: typeof getInventoryItem;
+  patchInventoryItem?: typeof patchInventoryItem;
+  postInventoryTransaction?: typeof postInventoryTransaction;
+  listReservations?: typeof listReservations;
+  createReservation?: typeof createReservation;
+  updateReservation?: typeof updateReservation;
+  listInventoryLocations?: typeof listInventoryLocations;
 } = {
   getCurrentUser,
   listEvents,
@@ -572,3 +582,116 @@ api.listAssignments = listAssignments as any;
 api.createAssignment = createAssignment as any;
 api.updateAssignment = updateAssignment as any;
 api.deleteAssignment = deleteAssignment as any;
+
+// Inventory API helpers
+export type InventoryItemRecord = {
+  itemId: string;
+  sku: string;
+  name: string;
+  itemType: string;
+  baseUnit: string;
+  categoryId?: string | null;
+  schemaId: string;
+  attributes: any;
+  active: boolean;
+};
+
+export async function listInventoryItems(params?: { q?: string; itemType?: string; active?: boolean }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.itemType) query.set('item_type', params.itemType);
+  if (params?.active != null) query.set('active', params.active ? 'true' : 'false');
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/inventory/items${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<InventoryItemRecord[]>;
+}
+
+export async function createInventoryItem(payload: Omit<InventoryItemRecord, 'itemId' | 'active'> & { active?: boolean }) {
+  const response = await fetchWithAuth('/api/v1/inventory/items', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<InventoryItemRecord>;
+}
+
+export async function getInventoryItem(id: string) {
+  const response = await fetchWithAuth(`/api/v1/inventory/items/${encodeURIComponent(id)}`);
+  return response.json() as Promise<InventoryItemRecord>;
+}
+
+export async function patchInventoryItem(id: string, patch: Partial<InventoryItemRecord>) {
+  const response = await fetchWithAuth(`/api/v1/inventory/items/${encodeURIComponent(id)}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<InventoryItemRecord>;
+}
+
+export type InventoryTxnInput = {
+  itemId: string;
+  locationId: string;
+  eventType: string;
+  qtyBase: number;
+  lotId?: string | null;
+  serialNo?: string | null;
+  costPerBase?: number | null;
+  sourceDoc?: any;
+  postedBy: string;
+  transfer?: { destinationLocationId: string } | null;
+};
+
+export async function postInventoryTransaction(payload: InventoryTxnInput) {
+  const response = await fetchWithAuth('/api/v1/inventory/transactions', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<any[]>;
+}
+
+export type ReservationRecord = {
+  resId: string;
+  itemId: string;
+  locationId: string;
+  eventId: string;
+  qtyBase: number;
+  startTs: string;
+  endTs: string;
+  status: 'HELD' | 'RELEASED' | 'FULFILLED';
+};
+
+export async function listReservations(params?: { itemId?: string; eventId?: string }) {
+  const query = new URLSearchParams();
+  if (params?.itemId) query.set('itemId', params.itemId);
+  if (params?.eventId) query.set('eventId', params.eventId);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/inventory/reservations${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<ReservationRecord[]>;
+}
+
+export async function createReservation(payload: Omit<ReservationRecord, 'resId' | 'status'>) {
+  const response = await fetchWithAuth('/api/v1/inventory/reservations', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<ReservationRecord>;
+}
+
+export async function updateReservation(resId: string, action: 'RELEASE' | 'FULFILL') {
+  const response = await fetchWithAuth(`/api/v1/inventory/reservations/${encodeURIComponent(resId)}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }),
+  });
+  return response.json() as Promise<ReservationRecord>;
+}
+
+export type InventoryLocationRecord = { locationId: string; name: string; departmentId: string };
+
+export async function listInventoryLocations() {
+  const response = await fetchWithAuth('/api/v1/inventory/locations');
+  return response.json() as Promise<InventoryLocationRecord[]>;
+}
+
+api.listInventoryItems = listInventoryItems as any;
+api.createInventoryItem = createInventoryItem as any;
+api.getInventoryItem = getInventoryItem as any;
+api.patchInventoryItem = patchInventoryItem as any;
+api.postInventoryTransaction = postInventoryTransaction as any;
+api.listReservations = listReservations as any;
+api.createReservation = createReservation as any;
+api.updateReservation = updateReservation as any;
+api.listInventoryLocations = listInventoryLocations as any;

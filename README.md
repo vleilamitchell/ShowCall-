@@ -326,5 +326,4 @@ pnpm install
 ---
 
 **Happy coding!** 🚀
-
 Need help? Check the detailed documentation in each workspace (`server/README.md`, `ui/README.md`) or visit the [community discussions](https://github.com/VoloBuilds/create-volo-app/discussions). 

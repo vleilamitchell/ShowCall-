@@ -8,6 +8,9 @@ import { setEnvContext, clearEnvContext, getDatabaseUrl } from './lib/env';
 import * as schema from './schema';
 import { and, asc, desc, eq, gte, gt, ilike, or, lte, isNull, sql } from 'drizzle-orm';
 import { isValidEmail, isValidPhone, isValidState, isValidZip4, isValidZip5, normalizePhone, normalizeState, normalizeZip4, normalizeZip5, isValidDateStr, isValidTimeStr } from './lib/validators';
+import { listInventoryItems, createInventoryItem, getInventoryItem, patchInventoryItem } from './services/inventory/items';
+import { postTransaction } from './services/inventory/postTransaction';
+import { createReservation, listReservations, updateReservation } from './services/inventory/reservations';
 
 type Env = {
   RUNTIME?: string;
@@ -1564,3 +1567,108 @@ api.route('/departments', departmentsRoutes);
 app.route('/api/v1', api);
 
 export default app; 
+
+// -------------------- Inventory Routes (protected under /api/v1/inventory) --------------------
+const inventoryRoutes = new Hono();
+inventoryRoutes.use('*', authMiddleware);
+
+// Items
+inventoryRoutes.get('/items', async (c) => {
+  const q = c.req.query('q') || undefined;
+  const itemType = c.req.query('item_type') || undefined;
+  const activeParam = c.req.query('active');
+  const active = activeParam == null ? undefined : activeParam === 'true';
+  const rows = await listInventoryItems({ q, itemType, active });
+  return c.json(rows);
+});
+
+inventoryRoutes.post('/items', async (c) => {
+  const body = await c.req.json();
+  const rec = await createInventoryItem({
+    sku: String(body.sku || '').trim(),
+    name: String(body.name || '').trim(),
+    itemType: String(body.itemType || '').trim(),
+    baseUnit: String(body.baseUnit || '').trim(),
+    schemaId: String(body.schemaId || '').trim(),
+    attributes: body.attributes ?? {},
+    categoryId: body.categoryId ?? null,
+  });
+  return c.json(rec, 201);
+});
+
+inventoryRoutes.get('/items/:itemId', async (c) => {
+  const item = await getInventoryItem(c.req.param('itemId'));
+  if (!item) return c.json({ error: 'Not found' }, 404);
+  return c.json(item);
+});
+
+inventoryRoutes.patch('/items/:itemId', async (c) => {
+  const body = await c.req.json();
+  const updated = await patchInventoryItem(c.req.param('itemId'), {
+    name: typeof body.name === 'string' ? body.name : undefined,
+    baseUnit: typeof body.baseUnit === 'string' ? body.baseUnit : undefined,
+    attributes: 'attributes' in body ? body.attributes : undefined,
+    active: typeof body.active === 'boolean' ? body.active : undefined,
+  });
+  if (!updated) return c.json({ error: 'Not found' }, 404);
+  return c.json(updated);
+});
+
+// Transactions
+inventoryRoutes.post('/transactions', async (c) => {
+  const body = await c.req.json();
+  const entries = await postTransaction({
+    itemId: String(body.itemId || '').trim(),
+    locationId: String(body.locationId || '').trim(),
+    eventType: String(body.eventType || '').trim(),
+    qtyBase: Number(body.qtyBase),
+    lotId: body.lotId ?? null,
+    serialNo: body.serialNo ?? null,
+    costPerBase: body.costPerBase == null ? null : Number(body.costPerBase),
+    sourceDoc: body.sourceDoc ?? null,
+    postedBy: String(body.postedBy || '').trim(),
+    transfer: body.transfer || null,
+  });
+  return c.json(entries, 201);
+});
+
+// Reservations
+inventoryRoutes.post('/reservations', async (c) => {
+  const body = await c.req.json();
+  const res = await createReservation({
+    itemId: String(body.itemId || '').trim(),
+    locationId: String(body.locationId || '').trim(),
+    eventId: String(body.eventId || '').trim(),
+    qtyBase: Number(body.qtyBase),
+    startTs: String(body.startTs || '').trim(),
+    endTs: String(body.endTs || '').trim(),
+  });
+  return c.json(res, 201);
+});
+
+inventoryRoutes.get('/reservations', async (c) => {
+  const rows = await listReservations({
+    itemId: c.req.query('itemId') || undefined,
+    eventId: c.req.query('eventId') || undefined,
+  });
+  return c.json(rows);
+});
+
+inventoryRoutes.patch('/reservations/:resId', async (c) => {
+  const body = await c.req.json();
+  const action = String(body.action || '').trim();
+  if (!['RELEASE', 'FULFILL'].includes(action)) return c.json({ error: 'action must be RELEASE or FULFILL' }, 400);
+  const updated = await updateReservation(c.req.param('resId'), action as any);
+  if (!updated) return c.json({ error: 'Not found' }, 404);
+  return c.json(updated);
+});
+
+// Locations list (basic)
+inventoryRoutes.get('/locations', async (c) => {
+  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const rows = await db.select().from(schema.locations);
+  return c.json(rows);
+});
+
+// Mount inventory under /inventory
+api.route('/inventory', inventoryRoutes);

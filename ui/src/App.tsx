@@ -10,6 +10,7 @@ import Events from '@/pages/Events';
 import Departments from '@/pages/Departments';
 import Employees from '@/pages/Employees';
 import Scheduling from '@/pages/Scheduling';
+import Inventory from '@/pages/Inventory';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import {
   SidebarProvider,
@@ -52,6 +53,7 @@ function AppContent() {
                     <Route path="/employees" element={<Employees />} />
                     <Route path="/employees/:employeeId" element={<Employees />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/inventory" element={<Inventory />} />
                   </Routes>
                 </div>
               </main>
