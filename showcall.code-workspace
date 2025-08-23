@@ -5,6 +5,9 @@
     },
     {
       "path": "../AzureCredTester/Command Prompts"
+    },
+    {
+      "path": "../devbutler/projects/showcall_v1"
     }
   ]
 }

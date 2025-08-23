@@ -185,7 +185,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden relative before:absolute before:inset-0 before:pointer-events-none before:bg-[linear-gradient(to_bottom,_rgba(0,0,0,0)_0%,_rgba(0,0,0,0.14)_100%)]"
+          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden relative before:absolute before:inset-0 before:pointer-events-none before:bg-gradient-to-b before:from-sky-500/10 before:to-blue-500/18 dark:before:from-sky-500/6 dark:before:to-blue-500/14"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -241,7 +241,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="bg-sidebar group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col overflow-hidden group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm relative before:absolute before:inset-0 before:pointer-events-none before:bg-[linear-gradient(to_bottom,_rgba(0,0,0,0)_0%,_rgba(0,0,0,0.14)_100%)]"
+          className="bg-sidebar group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col overflow-hidden group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm relative before:absolute before:inset-0 before:pointer-events-none before:bg-gradient-to-b before:from-sky-500/10 before:to-blue-500/18 dark:before:from-sky-500/6 dark:before:to-blue-500/14"
         >
           {children}
         </div>

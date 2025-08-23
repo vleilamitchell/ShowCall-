@@ -33,6 +33,8 @@ export function Events() {
   const [form, setForm] = useState<CreateForm>(defaultCreate);
   const [submitting, setSubmitting] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
 
   const eventsAdapter: ResourceAdapter<EventRecord, { includePast: boolean }, { q?: string }> = {
     list: async (query, filters) => listEvents({ q: query?.q, includePast: filters?.includePast }),
@@ -197,14 +199,39 @@ export function Events() {
         </>
       )}
       right={(
-        <div key={selected?.id || 'none'} className="routeFadeItem">
+        <div key={selected?.id || 'none'} className="routeFadeItem detailPaneAccent">
           {!selected ? (
             <div className="text-sm text-muted-foreground">Select an event to view details</div>
           ) : (
-            <div className="max-w-3xl space-y-3">
+            <div className="max-w-3xl space-y-6">
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Title</label>
-                <Input value={selected.title} onChange={(e) => { mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, title: e.target.value } : i))); onTitleChange({ title: e.target.value }); }} onBlur={() => onTitleBlur()} />
+                {!editingTitle ? (
+                  <h2
+                    className="text-xl font-semibold cursor-text hover:opacity-90"
+                    onClick={() => { setEditingTitle(true); setTitleDraft(selected.title as string); }}
+                  >
+                    {selected.title || 'Untitled Event'}
+                  </h2>
+                ) : (
+                  <Input
+                    autoFocus
+                    value={titleDraft}
+                    onChange={(e) => {
+                      setTitleDraft(e.target.value);
+                      mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, title: e.target.value } : i)));
+                      onTitleChange({ title: e.target.value });
+                    }}
+                    onBlur={() => { onTitleBlur(); setEditingTitle(false); }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        (e.target as HTMLInputElement).blur();
+                      } else if (e.key === 'Escape') {
+                        setEditingTitle(false);
+                      }
+                    }}
+                    className="text-xl font-semibold"
+                  />
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

@@ -338,7 +338,7 @@ function ShiftDetail({ selectedId, schedules, onClose }: { selectedId: string | 
   if (!record) return <div className="p-4 text-sm text-muted-foreground">Loading…</div>;
 
   return (
-    <div className="p-4 space-y-3">
+    <div className="routeFadeItem detailPaneAccent space-y-3">
       {error ? <div className="text-sm text-red-600">{error}</div> : null}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>

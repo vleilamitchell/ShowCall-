@@ -148,11 +148,11 @@ export default function Employees() {
             <div className="mb-2">
               <Input placeholder="Search employees" value={queryState.q || ''} onChange={(e) => setQueryState(prev => ({ ...prev, q: e.target.value }))} />
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <label className="flex items-center gap-2 text-sm shrink-0">
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm">
                 <span>Department</span>
                 <select
-                  className="border rounded px-2 py-1"
+                  className="border rounded px-2 py-1 max-w-[180px]"
                   value={(filterState as EmployeeFilters).departmentId || ''}
                   onChange={(e) => setFilterState(prev => ({ ...prev, departmentId: e.target.value }))}
                 >
@@ -160,6 +160,8 @@ export default function Employees() {
                   {departments.map(d => (<option key={d.id} value={d.id}>{d.name}</option>))}
                 </select>
               </label>
+            </div>
+            <div className="flex justify-end mt-2">
               <Button size="sm" onClick={() => setCreating(v => !v)} disabled={!selectedDeptId} className="gap-1">
                 <Plus className="w-4 h-4" />
                 {creating ? 'Close' : 'New'}
@@ -208,9 +210,6 @@ export default function Employees() {
                 </DropdownMenu>
               </div>
             )}
-            footer={(
-              <div>{items.length} {items.length === 1 ? 'employee' : 'employees'}</div>
-            )}
             renderItem={(emp) => (
               <>
                 <div className="text-sm font-medium truncate">{emp.fullName || emp.name}</div>
@@ -221,7 +220,7 @@ export default function Employees() {
         </>
       )}
       right={(
-        <div key={selected?.id || 'none'} className="routeFadeItem">
+        <div key={selected?.id || 'none'} className="routeFadeItem detailPaneAccent">
           {!selected ? (
             <div className="text-sm text-muted-foreground">Select an employee to view details</div>
           ) : (

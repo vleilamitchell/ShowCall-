@@ -201,7 +201,7 @@ export function Inventory() {
         </>
       )}
       right={(
-        <div key={(creating ? 'creating' : selected?.id) || 'none'} className="routeFadeItem">
+        <div key={(creating ? 'creating' : selected?.id) || 'none'} className="routeFadeItem detailPaneAccent">
           {creating ? (
             <div className="max-w-3xl space-y-6">
               <h2 className="text-xl font-semibold">New Inventory Item</h2>

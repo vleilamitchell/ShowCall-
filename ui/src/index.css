@@ -252,6 +252,43 @@ button {
   opacity: 0.5;
 }
 
+/* Detail pane accent block (matches PageHeader visual language) */
+.detailPaneAccent {
+  background: linear-gradient(135deg,
+    var(--content-surface),
+    color-mix(in oklch, var(--primary) 6%, transparent)
+  );
+  border: 1px solid color-mix(in oklch, var(--primary) 18%, transparent);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
+  position: relative;
+  max-width: 48rem; /* 3xl */
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+.dark .detailPaneAccent {
+  background: linear-gradient(135deg,
+    color-mix(in oklch, var(--card) 60%, black 40%),
+    color-mix(in oklch, var(--secondary) 8%, black 40%)
+  );
+  border: 1px solid color-mix(in oklch, var(--secondary) 24%, transparent);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.15);
+}
+.detailPaneAccent::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), var(--accent), transparent);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .section {
   background: linear-gradient(135deg, var(--content-surface), color-mix(in oklch, var(--primary) 6%, transparent));
   border: 1px solid color-mix(in oklch, var(--primary) 15%, transparent);
@@ -269,6 +306,19 @@ button {
   opacity: 0.6;
 }
 .sectionHeader { margin: 0 0 10px; font-size: 16px; letter-spacing: 0.3px; color: var(--section-header-color); }
+
+/* Application header bottom gradient to match section top gradient */
+.topbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+  opacity: 0.6;
+  pointer-events: none;
+}
 
 /* Toolbar */
 .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }

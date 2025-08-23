@@ -128,7 +128,7 @@ export function Departments() {
         </>
       )}
       right={(
-        <div key={selected?.id || 'none'} className="routeFadeItem">
+        <div key={selected?.id || 'none'} className="routeFadeItem detailPaneAccent">
           {!selected ? (
             <div className="text-sm text-muted-foreground">Select a department to view details</div>
           ) : (
