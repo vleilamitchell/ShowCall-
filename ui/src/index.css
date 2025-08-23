@@ -97,6 +97,11 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* Theme fade helper: temporarily applied to html element during theme toggle */
+.theme-transition *, .theme-transition {
+  transition: background-color 400ms ease, color 400ms ease, border-color 400ms ease, fill 400ms ease, stroke 400ms ease, box-shadow 400ms ease, outline-color 400ms ease;
+}
+
 button {
   cursor: pointer;
 }
@@ -221,14 +226,15 @@ button {
 }
 
 /* Drawer overlay fade and panel slide-in */
-.drawerOverlay { background: rgba(0,0,0,0); animation: overlayIn 200ms ease-out forwards; }
-.drawerOverlay--closing { animation: overlayOut 160ms ease-in forwards; }
-@keyframes overlayIn { from { background: rgba(0,0,0,0); } to { background: rgba(0,0,0,0.4); } }
-@keyframes overlayOut { from { background: rgba(0,0,0,0.4); } to { background: rgba(0,0,0,0); } }
-.drawerPanel { transform: translateX(24px); opacity: 0; animation: drawerIn 200ms ease-out forwards; }
-.drawerPanel--closing { animation: drawerOut 160ms ease-in forwards; }
-@keyframes drawerIn { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes drawerOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(24px); opacity: 0; } }
+.drawerOverlay { background: rgba(0,0,0,0.4); opacity: 0; animation: overlayIn 120ms ease-out forwards; will-change: opacity; }
+.drawerOverlay--closing { background: rgba(0,0,0,0.4); animation: overlayOut 120ms ease-in forwards; will-change: opacity; pointer-events: none; }
+.drawerOverlayStatic { background: rgba(0,0,0,0.4); opacity: 1; will-change: auto; transform: translateZ(0); }
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes overlayOut { from { opacity: 1; } to { opacity: 0; } }
+.drawerPanel { transform: translate3d(24px,0,0); opacity: 0; animation: drawerIn 180ms ease-out forwards; will-change: transform, opacity; backface-visibility: hidden; contain: paint; }
+.drawerPanel--closing { animation: drawerOut 180ms ease-in forwards; will-change: transform, opacity; backface-visibility: hidden; contain: paint; pointer-events: none; }
+@keyframes drawerIn { from { transform: translate3d(24px,0,0); opacity: 0; } to { transform: translate3d(0,0,0); opacity: 1; } }
+@keyframes drawerOut { from { transform: translate3d(0,0,0); opacity: 1; } to { transform: translate3d(24px,0,0); opacity: 0; } }
 
 /* Page chrome */
 .pageHeader {
@@ -283,7 +289,7 @@ button {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 4px;
+  height: 2px;
   background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), var(--accent), transparent);
   opacity: 0.55;
   pointer-events: none;

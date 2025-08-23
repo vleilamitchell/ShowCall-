@@ -105,12 +105,15 @@ export async function getEvent(eventId: string) {
 export async function updateEvent(eventId: string, patch: Partial<EventRecord>) {
   const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   });
   return response.json() as Promise<EventRecord>;
+}
+
+export async function listShiftsForEvent(eventId: string) {
+  const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}/shifts`);
+  return response.json() as Promise<ShiftRecord[]>;
 }
 
 export async function listEventShifts(eventId: string, params?: { departmentId?: string }) {

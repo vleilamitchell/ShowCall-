@@ -77,7 +77,6 @@ function App() {
         attribute="class" 
         defaultTheme="system" 
         enableSystem
-        disableTransitionOnChange
         storageKey="volo-app-theme"
       >
         <Router>

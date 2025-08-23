@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -25,19 +25,39 @@ export function AssetsFilters(props: {
     { value: 'false', label: 'Inactive' },
   ] as const, []);
 
+  // Smooth open/close using CSS keyframe classes defined in index.css
+  const [closing, setClosing] = useState(false);
+  const [overlayStatic, setOverlayStatic] = useState(false);
+  const prevOpen = useRef(open);
+  useEffect(() => {
+    if (prevOpen.current && !open) {
+      setClosing(true);
+      setOverlayStatic(true);
+      const id = setTimeout(() => { setClosing(false); setOverlayStatic(false); }, 180);
+      return () => clearTimeout(id);
+    }
+    prevOpen.current = open;
+  }, [open]);
+
+  const visible = open || closing;
+
   return (
     <div className="z-30">
+      {/* Overlay */}
       <div
         className={
-          "fixed left-[var(--sidebar-width)] right-0 top-12 bottom-0 bg-black/50 transition-opacity duration-300 z-30 " +
-          (open ? "opacity-100" : "opacity-0 pointer-events-none")
+          visible
+            ? `fixed left-[var(--sidebar-width)] right-0 top-12 bottom-0 z-30 ${overlayStatic ? 'drawerOverlayStatic' : (closing ? 'drawerOverlay--closing' : 'drawerOverlay')}`
+            : 'hidden'
         }
         onClick={() => onOpenChange(false)}
       />
+      {/* Panel */}
       <div
         className={
-          "fixed left-[var(--sidebar-width)] top-12 h-[calc((100vh-3rem)/2)] w-full max-w-sm bg-background shadow transition-transform transition-opacity duration-300 z-30 " +
-          (open ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0")
+          visible
+            ? `fixed left-[var(--sidebar-width)] top-12 z-30 h-[calc((100vh-3rem)/2)] w-full max-w-sm bg-background shadow ${closing ? 'drawerPanel--closing' : 'drawerPanel'}`
+            : 'hidden'
         }
         role="dialog"
         aria-label="Filters"

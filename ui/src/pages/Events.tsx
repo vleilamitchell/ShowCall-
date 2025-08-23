@@ -4,6 +4,7 @@ import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
 import { Button } from '@/components/ui/button';
 import { listEvents, createEvent, updateEvent, type EventRecord, getEvent } from '@/lib/serverComm';
+import { EventShiftsPanel } from '@/features/events/EventShiftsPanel';
 import { ListDetailLayout, List, FilterBar, CreateInline, useListDetail, useDebouncedPatch, type ResourceAdapter } from '@/features/listDetail';
 
 type CreateForm = {
@@ -265,6 +266,7 @@ export function Events() {
                   <Input value={selected.description || ''} onChange={(e) => { mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, description: e.target.value } : i))); onDescriptionChange({ description: e.target.value || undefined }); }} onBlur={() => onDescriptionBlur()} />
                 </div>
               </div>
+              <EventShiftsPanel eventId={selected.id} />
             </div>
           )}
         </div>

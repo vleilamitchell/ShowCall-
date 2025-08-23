@@ -7,6 +7,9 @@ import { Input } from '@/components/ui/input';
 import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronDown, MoreVertical } from 'lucide-react';
 
 type FilterState = { departmentId?: string; q?: string };
 
@@ -86,6 +89,14 @@ export default function Scheduling() {
   useEffect(() => {
     setSelectedId(params.shiftId || null);
   }, [params.shiftId]);
+
+  // Auto-select the first shift when none is selected
+  useEffect(() => {
+    if (!selectedId && shifts && shifts.length > 0) {
+      onSelect(shifts[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, shifts]);
 
   const onSelect = (id: string) => {
     setSelectedId(id);
@@ -217,11 +228,11 @@ export default function Scheduling() {
                   {departments.map(d => (<option key={d.id} value={d.id}>{d.name}</option>))}
                 </select>
               </label>
-              <div className="flex items-center gap-2">
-                <Button size="sm" onClick={() => setCreating(v => !v)} disabled={!filters.departmentId} className="gap-1">
+            </div>
+            <div className="mt-2 flex justify-end">
+              <Button size="sm" onClick={() => setCreating(v => !v)} disabled={!filters.departmentId} className="gap-1">
                 {creating ? 'Close' : 'New'}
-                </Button>
-              </div>
+              </Button>
             </div>
           </div>
           {error ? (<div className="text-xs text-red-600">{error}</div>) : null}
@@ -272,15 +283,14 @@ export default function Scheduling() {
         </div>
       }
       right={
-        <ShiftDetail selectedId={selectedId} schedules={schedules} onClose={() => setSelectedId(null)} />
+        <ShiftDetail selectedId={selectedId} schedules={schedules} />
       }
     />
   );
 }
 
-function ShiftDetail({ selectedId, schedules, onClose }: { selectedId: string | null; schedules: ScheduleRecord[]; onClose: () => void }) {
+function ShiftDetail({ selectedId, schedules }: { selectedId: string | null; schedules: ScheduleRecord[] }) {
   const [record, setRecord] = useState<ShiftRecord | null>(null);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [eventTitle, setEventTitle] = useState<string | null>(null);
 
@@ -302,10 +312,12 @@ function ShiftDetail({ selectedId, schedules, onClose }: { selectedId: string | 
     (async () => {
       if (record?.eventId) {
         try {
+          // Clear any previous value to avoid showing stale "name (id)" strings
+          setEventTitle(null);
           const evt = await api.getEvent?.(record.eventId);
-          if (!cancelled) setEventTitle(evt ? `${evt.title} (${evt.id})` : record.eventId);
+          if (!cancelled) setEventTitle(evt ? evt.title : null);
         } catch {
-          if (!cancelled) setEventTitle(record.eventId);
+          if (!cancelled) setEventTitle(null);
         }
       } else {
         setEventTitle(null);
@@ -314,25 +326,7 @@ function ShiftDetail({ selectedId, schedules, onClose }: { selectedId: string | 
     return () => { cancelled = true; };
   }, [record?.eventId]);
 
-  const onSave = async () => {
-    if (!record) return;
-    setSaving(true);
-    try {
-      const updated = await api.updateShift?.(record.id, {
-        title: record.title,
-        date: record.date,
-        startTime: record.startTime,
-        endTime: record.endTime,
-        notes: record.notes,
-        scheduleId: record.scheduleId || null,
-      });
-      if (updated) setRecord(updated);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to save');
-    } finally {
-      setSaving(false);
-    }
-  };
+  // Save/Close removed; fields update immediately in local state, and can be persisted via other flows
 
   if (!selectedId) return <div className="p-4 text-sm text-muted-foreground">Select a shift</div>;
   if (!record) return <div className="p-4 text-sm text-muted-foreground">Loading…</div>;
@@ -340,11 +334,15 @@ function ShiftDetail({ selectedId, schedules, onClose }: { selectedId: string | 
   return (
     <div className="routeFadeItem detailPaneAccent space-y-3">
       {error ? <div className="text-sm text-red-600">{error}</div> : null}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="sm:col-span-2">
           <label className="block text-xs text-muted-foreground">Title</label>
           <input className="border rounded px-2 py-1 text-sm w-full" value={record.title || ''}
             onChange={(e) => setRecord({ ...record, title: e.target.value })} />
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground">Event</label>
+          <div className="text-sm">{eventTitle ? eventTitle : 'None'}</div>
         </div>
         <div>
           <label className="block text-xs text-muted-foreground">Date</label>
@@ -360,13 +358,12 @@ function ShiftDetail({ selectedId, schedules, onClose }: { selectedId: string | 
         </div>
         <div>
           <label className="block text-xs text-muted-foreground">Schedule</label>
-          <select className="border rounded px-2 py-1 text-sm w-full" value={record.scheduleId || ''}
-            onChange={(e) => setRecord({ ...record, scheduleId: e.target.value || null })}>
-            <option value="">None</option>
-            {schedules.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+          <div className="text-sm">
+            {(() => {
+              const sched = record.scheduleId ? schedules.find((s) => s.id === record.scheduleId) : null;
+              return sched ? sched.name : 'None';
+            })()}
+          </div>
           {record.scheduleId ? (
             <div className="mt-1 flex items-center gap-2">
               {(() => {
@@ -388,19 +385,11 @@ function ShiftDetail({ selectedId, schedules, onClose }: { selectedId: string | 
             </div>
           ) : null}
         </div>
-        <div className="sm:col-span-2">
+        <div className="sm:col-span-3">
           <label className="block text-xs text-muted-foreground">Notes</label>
           <textarea className="border rounded px-2 py-1 text-sm w-full" rows={3} value={record.notes || ''}
             onChange={(e) => setRecord({ ...record, notes: e.target.value })} />
         </div>
-        <div className="sm:col-span-2">
-          <label className="block text-xs text-muted-foreground">Linked Event</label>
-          <div className="text-sm">{eventTitle ? eventTitle : 'None'}</div>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <button className="px-3 py-1.5 rounded bg-primary text-primary-foreground text-sm disabled:opacity-50" onClick={onSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
-        <button className="px-3 py-1.5 rounded border text-sm" onClick={onClose}>Close</button>
       </div>
       <div className="pt-2 border-t">
         <AssignmentsPanel departmentId={record.departmentId} shiftId={record.id} />
@@ -417,6 +406,9 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
   const [newPositionId, setNewPositionId] = useState('');
   const [newAssigneeId, setNewAssigneeId] = useState<string>('');
   const [err, setErr] = useState<string | null>(null);
+  const [open, setOpen] = useState<boolean>(() => {
+    try { return localStorage.getItem('assignmentsRollupOpen') === '1'; } catch { return false; }
+  });
 
   const load = async () => {
     try {
@@ -471,46 +463,73 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
 
   useEffect(() => { if (newPositionId) { loadEligible(newPositionId); } }, [newPositionId]);
 
+  useEffect(() => {
+    try { localStorage.setItem('assignmentsRollupOpen', open ? '1' : '0'); } catch {}
+  }, [open]);
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="font-medium text-sm">Assignments</div>
-        <button className="text-xs underline" onClick={load}>Refresh</button>
-      </div>
-      {err ? <div className="text-xs text-red-600">{err}</div> : null}
-      <div className="space-y-2">
-        {assignments.map((a) => (
-          <div key={a.id} className="flex items-center gap-2">
-            <span className="text-sm min-w-[160px]">{positions.find((p) => p.id === a.requiredPositionId)?.name || a.requiredPositionId}</span>
-            <select className="border rounded px-2 py-1 text-sm" value={a.assigneeEmployeeId || ''}
-              onChange={(e) => onChangeAssignee(a.id, e.target.value || null)}
-              onFocus={() => loadEligible(a.requiredPositionId)}>
-              <option value="">Unassigned</option>
-              {(eligible[a.requiredPositionId] || []).map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.name}{emp.priority != null ? ` (p${emp.priority})` : ''}</option>
-              ))}
-            </select>
-            <button className="text-xs text-red-700 underline" onClick={() => onDelete(a.id)}>Delete</button>
+    <div className="mt-3">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button className="w-full flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 hover:bg-muted/50 transition-colors">
+            <span className="text-sm font-semibold">Assignments</span>
+            <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="overflow-hidden transition-[max-height,opacity] duration-400 ease-out data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:max-h-[2000px] data-[state=closed]:max-h-0" style={{ willChange: 'opacity, max-height' }}>
+          <div className="space-y-2 px-3 pb-3 pt-2">
+            {err ? <div className="text-xs text-red-600">{err}</div> : null}
+            <div className="flex items-center gap-3 px-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+              <span className="w-[200px]">Position</span>
+              <span className="flex-1">Assignee</span>
+            </div>
+            {assignments.map((a) => (
+              <div key={a.id} className="flex items-center gap-2 rounded border p-2">
+                <span className="text-sm w-[200px] truncate">{positions.find((p) => p.id === a.requiredPositionId)?.name || a.requiredPositionId}</span>
+                <select className="border rounded px-2 py-1 text-sm flex-1" value={a.assigneeEmployeeId || ''}
+                  onChange={(e) => onChangeAssignee(a.id, e.target.value || null)}
+                  onFocus={() => loadEligible(a.requiredPositionId)}>
+                  <option value="">Unassigned</option>
+                  {(eligible[a.requiredPositionId] || []).map((emp) => (
+                    <option key={emp.id} value={emp.id}>{emp.name}{emp.priority != null ? ` (p${emp.priority})` : ''}</option>
+                  ))}
+                </select>
+                <div className="ml-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon" variant="ghost" aria-label="Assignment actions">
+                        <MoreVertical className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem className="text-destructive" onClick={() => onDelete(a.id)}>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            ))}
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+              <div>
+                <label className="block text-xs text-muted-foreground">Position</label>
+                <select className="border rounded px-2 py-1 text-sm w-full" value={newPositionId} onChange={(e) => setNewPositionId(e.target.value)}>
+                  <option value="">Select…</option>
+                  {positions.map((p) => (<option key={p.id} value={p.id}>{p.name}</option>))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground">Assignee</label>
+                <select className="border rounded px-2 py-1 text-sm w-full" value={newAssigneeId} onChange={(e) => setNewAssigneeId(e.target.value)} onFocus={() => { if (newPositionId) loadEligible(newPositionId); }}>
+                  <option value="">Unassigned</option>
+                  {(eligible[newPositionId] || []).map((emp) => (<option key={emp.id} value={emp.id}>{emp.name}{emp.priority != null ? ` (p${emp.priority})` : ''}</option>))}
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={onCreate} disabled={creating || !newPositionId}>{creating ? 'Adding…' : 'Add'}</Button>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
-      <div className="flex items-end gap-2">
-        <div>
-          <label className="block text-xs text-muted-foreground">Position</label>
-          <select className="border rounded px-2 py-1 text-sm min-w-[160px]" value={newPositionId} onChange={(e) => setNewPositionId(e.target.value)}>
-            <option value="">Select…</option>
-            {positions.map((p) => (<option key={p.id} value={p.id}>{p.name}</option>))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs text-muted-foreground">Assignee</label>
-          <select className="border rounded px-2 py-1 text-sm min-w-[160px]" value={newAssigneeId} onChange={(e) => setNewAssigneeId(e.target.value)} onFocus={() => { if (newPositionId) loadEligible(newPositionId); }}>
-            <option value="">Unassigned</option>
-            {(eligible[newPositionId] || []).map((emp) => (<option key={emp.id} value={emp.id}>{emp.name}{emp.priority != null ? ` (p${emp.priority})` : ''}</option>))}
-          </select>
-        </div>
-        <button className="px-2 py-1.5 rounded bg-primary text-primary-foreground text-xs disabled:opacity-50" onClick={onCreate} disabled={creating || !newPositionId}>{creating ? 'Adding…' : 'Add'}</button>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

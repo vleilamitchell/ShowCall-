@@ -7,13 +7,15 @@ import { ChevronDown } from 'lucide-react';
 export function PositionsPanel({ departmentId }: { departmentId: string }) {
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(() => {
+    try { return localStorage.getItem('positionsRollupOpen') === '1'; } catch { return false; }
+  });
 
   const notifyChanged = () => setRefreshSignal((v) => v + 1);
 
   return (
     <div className="mt-6">
-      <Collapsible open={open} onOpenChange={setOpen}>
+      <Collapsible open={open} onOpenChange={(v) => { setOpen(v); try { localStorage.setItem('positionsRollupOpen', v ? '1' : '0'); } catch {} }}>
         <CollapsibleTrigger asChild>
           <button
             className="w-full flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 hover:bg-muted/50 transition-colors"

@@ -113,7 +113,7 @@ export default function InventoryAssetsTable() {
   const empty = useMemo(() => (rows && rows.length === 0 && !loading), [rows, loading]);
 
   return (
-    <div className="relative flex flex-col gap-3 p-3 min-h-[calc(100vh-3rem)]">
+    <div className="routeFadeItem relative flex flex-col gap-3 p-3 min-h-[calc(100vh-3rem)]">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Input
