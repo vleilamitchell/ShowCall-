@@ -22,7 +22,6 @@ type CreateForm = {
   name: string;
   itemType: string;
   baseUnit: string;
-  attributesText: string;
   categoryId?: string;
   active: boolean;
 };
@@ -32,7 +31,6 @@ const defaultCreate: CreateForm = {
   name: '',
   itemType: '',
   baseUnit: '',
-  attributesText: '{\n  \n}',
   categoryId: undefined,
   active: true,
 };
@@ -99,17 +97,7 @@ export function Inventory() {
     setSubmitting(true);
     setCreateError(null);
     try {
-      let attributes: any = {};
-      const text = form.attributesText.trim();
-      if (text) {
-        try {
-          attributes = JSON.parse(text);
-        } catch (e: any) {
-          setCreateError('Attributes must be valid JSON');
-          setSubmitting(false);
-          return;
-        }
-      }
+      const attributes: any = {};
       const trimmedType = form.itemType.trim();
       const allowed = (schemaItemTypes && schemaItemTypes.length ? schemaItemTypes : (allowedItemTypes as unknown as string[]));
       if (!allowed.includes(trimmedType)) {
@@ -166,13 +154,7 @@ export function Inventory() {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
 
-  const attributesPretty = useMemo(() => {
-    try {
-      return JSON.stringify(selected?.attributes ?? {}, null, 2);
-    } catch {
-      return '' + (selected?.attributes ?? '');
-    }
-  }, [selected]);
+  
 
   return (
     <ListDetailLayout
@@ -182,9 +164,6 @@ export function Inventory() {
           <FilterBar<{ }>
             q={queryState.q}
             onQChange={(v) => setQueryState((prev) => ({ ...prev, q: v }))}
-            actions={(
-              <Button size="sm" onClick={() => { setCreating(true); setForm(defaultCreate); setCreateError(null); }}>+ New</Button>
-            )}
           />
           <List<InventoryListItem>
             items={items}
@@ -202,6 +181,11 @@ export function Inventory() {
       )}
       right={(
         <div key={(creating ? 'creating' : selected?.id) || 'none'} className="routeFadeItem detailPaneAccent">
+          {!creating ? (
+            <div className="flex justify-end">
+              <Button size="sm" onClick={() => { setCreating(true); setForm(defaultCreate); setCreateError(null); }}>New</Button>
+            </div>
+          ) : null}
           {creating ? (
             <div className="max-w-3xl space-y-6">
               <h2 className="text-xl font-semibold">New Inventory Item</h2>
@@ -218,13 +202,6 @@ export function Inventory() {
                 </div>
                 <Input placeholder="Base Unit" value={form.baseUnit} onChange={(e) => setForm({ ...form, baseUnit: e.target.value })} />
                 <Input placeholder="Category ID (optional)" value={form.categoryId || ''} onChange={(e) => setForm({ ...form, categoryId: e.target.value || undefined })} />
-              </div>
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Attributes (JSON)</label>
-                <textarea className="w-full h-48 border rounded px-2 py-1 font-mono text-xs"
-                  value={form.attributesText}
-                  onChange={(e) => setForm({ ...form, attributesText: e.target.value })}
-                />
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: !!v })} />
@@ -287,17 +264,8 @@ export function Inventory() {
                   <label className="block text-xs text-muted-foreground mb-1">SKU</label>
                   <Input value={String(selected.sku || '')} readOnly />
                 </div>
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Schema ID</label>
-                  <Input value={String(selected.schemaId || '')} readOnly />
-                </div>
               </div>
-
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Attributes</label>
-                <textarea className="w-full h-48 border rounded px-2 py-1 font-mono text-xs" readOnly value={attributesPretty} />
-              </div>
-
+              
               <div className="flex items-center gap-2">
                 <Switch checked={!!selected.active} onCheckedChange={onToggleActive} />
                 <span className="text-sm">Active</span>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Filter as FilterIcon } from 'lucide-react';
+import { Filter as FilterIcon, Pencil, X } from 'lucide-react';
 import { AssetsFilters, type AssetsFiltersValue } from '@/features/inventory/components/AssetsFilters';
 import { AssetsTable, type SortState } from '@/features/inventory/components/AssetsTable';
 import { listInventoryItems, listInventorySchemas, type InventoryItemRecord } from '@/lib/serverComm';
@@ -46,6 +46,7 @@ export default function InventoryAssetsTable() {
   const [rows, setRows] = useState<InventoryItemRecord[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editable, setEditable] = useState(false);
 
   const [sort, setSort] = useState<SortState>({ by: 'name', dir: 'asc' });
   const [page, setPage] = useState(1);
@@ -111,6 +112,7 @@ export default function InventoryAssetsTable() {
   };
 
   const empty = useMemo(() => (rows && rows.length === 0 && !loading), [rows, loading]);
+  const AssetsTableAny = AssetsTable as any;
 
   return (
     <div className="routeFadeItem relative flex flex-col gap-3 p-3 min-h-[calc(100vh-3rem)]">
@@ -126,7 +128,17 @@ export default function InventoryAssetsTable() {
             <FilterIcon className="w-4 h-4" />
           </Button>
         </div>
-        <h1 className="text-lg font-semibold text-right">Assets Table</h1>
+        <div className="flex items-center gap-1">
+          <h1 className="text-lg font-semibold text-right">Assets Table</h1>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={editable ? 'Exit edit mode' : 'Enter edit mode'}
+            onClick={() => setEditable((v) => !v)}
+          >
+            {editable ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
+          </Button>
+        </div>
       </div>
 
       {error ? (
@@ -139,7 +151,7 @@ export default function InventoryAssetsTable() {
           <Button onClick={() => setOpen(true)} size="sm">Open Filters</Button>
         </div>
       ) : (
-        <AssetsTable
+        <AssetsTableAny
           rows={rows || []}
           sort={sort}
           onSortChange={setSort}
@@ -148,6 +160,7 @@ export default function InventoryAssetsTable() {
           onPageChange={setPage}
           onPageSizeChange={setPageSize}
           loading={loading}
+          editable={editable}
         />
       )}
 

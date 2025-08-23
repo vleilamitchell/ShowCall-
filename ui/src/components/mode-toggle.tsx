@@ -27,13 +27,6 @@ export function ModeToggle() {
       size="icon"
       className="h-8 w-8"
       onClick={() => {
-        // Add a short-lived transition class to the root to fade colors
-        const root = document.documentElement;
-        root.classList.add("theme-transition");
-        window.setTimeout(() => {
-          root.classList.remove("theme-transition");
-        }, 220);
-
         setTheme(theme === "light" ? "dark" : "light");
       }}
     >

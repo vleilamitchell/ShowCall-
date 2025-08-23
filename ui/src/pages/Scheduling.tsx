@@ -6,6 +6,7 @@ import { List } from '@/features/listDetail';
 import { Input } from '@/components/ui/input';
 import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
+import { formatTimeTo12Hour } from '@/lib/time';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -276,7 +277,7 @@ export default function Scheduling() {
                     <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded">Published</span>
                   ) : null}
                 </div>
-                <div className="text-xs text-muted-foreground">{s.date} {s.startTime} – {s.endTime}</div>
+                <div className="text-xs text-muted-foreground">{s.date} {formatTimeTo12Hour(s.startTime)} – {formatTimeTo12Hour(s.endTime)}</div>
               </>
             )}
           />

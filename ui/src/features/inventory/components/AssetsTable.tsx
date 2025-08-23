@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { InventoryItemRecord } from '@/lib/serverComm';
+import { patchInventoryItem } from '@/lib/serverComm';
 
 export type SortState = { by: keyof InventoryItemRecord; dir: 'asc' | 'desc' };
 
@@ -12,8 +13,61 @@ export function AssetsTable(props: {
   onPageChange(n: number): void;
   onPageSizeChange?(n: number): void;
   loading?: boolean;
+  editable?: boolean;
 }) {
-  const { rows, sort, onSortChange, page, pageSize, onPageChange, onPageSizeChange, loading } = props;
+  const { rows, sort, onSortChange, page, pageSize, onPageChange, onPageSizeChange, loading, editable } = props;
+
+  const [editsById, setEditsById] = useState<Record<string, Partial<InventoryItemRecord>>>({});
+  const timersRef = useRef<Record<string, number | null>>({});
+  const pendingRef = useRef<Record<string, Partial<InventoryItemRecord>>>({});
+
+  useEffect(() => {
+    // Clear edits when the underlying dataset changes substantially
+    // but preserve if same ids exist; keeping simple and clearing all for now
+    setEditsById({});
+    pendingRef.current = {};
+    timersRef.current = {};
+  }, [rows]);
+
+  const schedulePatch = (itemId: string) => {
+    if (timersRef.current[itemId]) {
+      window.clearTimeout(timersRef.current[itemId]!);
+    }
+    timersRef.current[itemId] = window.setTimeout(async () => {
+      const patch = pendingRef.current[itemId];
+      if (!patch || Object.keys(patch).length === 0) return;
+      try {
+        await patchInventoryItem(itemId, patch);
+        // keep local edits so UI reflects changes immediately
+      } finally {
+        pendingRef.current[itemId] = {};
+        timersRef.current[itemId] = null;
+      }
+    }, 500);
+  };
+
+  const updateCell = <K extends keyof InventoryItemRecord>(row: InventoryItemRecord, key: K, value: InventoryItemRecord[K]) => {
+    setEditsById((prev) => ({
+      ...prev,
+      [row.itemId]: { ...(prev[row.itemId] || {}), [key]: value },
+    }));
+    pendingRef.current[row.itemId] = { ...(pendingRef.current[row.itemId] || {}), [key]: value };
+    schedulePatch(row.itemId);
+  };
+
+  const flushRow = async (itemId: string) => {
+    if (timersRef.current[itemId]) {
+      window.clearTimeout(timersRef.current[itemId]!);
+      timersRef.current[itemId] = null;
+    }
+    const patch = pendingRef.current[itemId];
+    if (!patch || Object.keys(patch).length === 0) return;
+    try {
+      await patchInventoryItem(itemId, patch);
+    } finally {
+      pendingRef.current[itemId] = {};
+    }
+  };
 
   const sortedRows = useMemo(() => {
     const copied = [...rows];
@@ -46,10 +100,10 @@ export function AssetsTable(props: {
   };
 
   return (
-    <div className="flex flex-col">
-      <div className="overflow-auto border rounded-md">
-        <table className="min-w-full text-sm">
-          <thead className="sticky top-0 bg-muted/50">
+    <div className={`flex flex-col ${editable ? 'font-mono' : ''}`}>
+      <div className={`overflow-auto border rounded-md ${editable ? 'bg-white text-black' : ''}`}>
+        <table className={`min-w-full text-sm ${editable ? 'border-collapse' : ''}`}>
+          <thead className={`sticky top-0 ${editable ? 'bg-white' : 'bg-muted/50'}`}>
             <tr className="text-left">
               <Th label="SKU" active={sort.by === 'sku'} dir={sort.dir} onClick={() => setSort('sku')} />
               <Th label="Name" active={sort.by === 'name'} dir={sort.dir} onClick={() => setSort('name')} />
@@ -76,16 +130,89 @@ export function AssetsTable(props: {
                 <td className="p-4 text-center text-muted-foreground" colSpan={6}>No results</td>
               </tr>
             ) : (
-              pageRows.map((r) => (
-                <tr key={r.itemId} className="border-t">
-                  <td className="p-2 font-mono text-xs">{r.sku}</td>
-                  <td className="p-2">{r.name}</td>
-                  <td className="p-2">{r.itemType}</td>
-                  <td className="p-2">{r.baseUnit}</td>
-                  <td className="p-2">{r.categoryId || ''}</td>
-                  <td className="p-2">{r.active ? 'Yes' : 'No'}</td>
-                </tr>
-              ))
+              pageRows.map((r) => {
+                const valueOf = <K extends keyof InventoryItemRecord>(k: K): any =>
+                  (editsById[r.itemId]?.[k] as any) ?? r[k];
+                return (
+                  <tr key={r.itemId} className={`${editable ? 'border border-black' : 'border-t'}`}>
+                    <td className={`${editable ? 'p-0 border border-black' : 'p-0'}`}>
+                      {editable ? (
+                        <input
+                          className="w-full h-8 px-2 text-xs bg-transparent outline-none focus:ring-1 focus:ring-ring"
+                          value={String(valueOf('sku') ?? '')}
+                          onChange={(e) => updateCell(r, 'sku', e.target.value as any)}
+                          onBlur={() => flushRow(r.itemId)}
+                        />
+                      ) : (
+                        <div className="p-2 font-mono text-xs">{r.sku}</div>
+                      )}
+                    </td>
+                    <td className={`${editable ? 'p-0 border border-black' : 'p-0'}`}>
+                      {editable ? (
+                        <input
+                          className="w-full h-8 px-2 text-sm bg-transparent outline-none focus:ring-1 focus:ring-ring"
+                          value={String(valueOf('name') ?? '')}
+                          onChange={(e) => updateCell(r, 'name', e.target.value as any)}
+                          onBlur={() => flushRow(r.itemId)}
+                        />
+                      ) : (
+                        <div className="p-2">{r.name}</div>
+                      )}
+                    </td>
+                    <td className={`${editable ? 'p-0 border border-black' : 'p-0'}`}>
+                      {editable ? (
+                        <input
+                          className="w-full h-8 px-2 text-sm bg-transparent outline-none focus:ring-1 focus:ring-ring"
+                          value={String(valueOf('itemType') ?? '')}
+                          onChange={(e) => updateCell(r, 'itemType', e.target.value as any)}
+                          onBlur={() => flushRow(r.itemId)}
+                        />
+                      ) : (
+                        <div className="p-2">{r.itemType}</div>
+                      )}
+                    </td>
+                    <td className={`${editable ? 'p-0 border border-black' : 'p-0'}`}>
+                      {editable ? (
+                        <input
+                          className="w-full h-8 px-2 text-sm bg-transparent outline-none focus:ring-1 focus:ring-ring"
+                          value={String(valueOf('baseUnit') ?? '')}
+                          onChange={(e) => updateCell(r, 'baseUnit', e.target.value as any)}
+                          onBlur={() => flushRow(r.itemId)}
+                        />
+                      ) : (
+                        <div className="p-2">{r.baseUnit}</div>
+                      )}
+                    </td>
+                    <td className={`${editable ? 'p-0 border border-black' : 'p-0'}`}>
+                      {editable ? (
+                        <input
+                          className="w-full h-8 px-2 text-sm bg-transparent outline-none focus:ring-1 focus:ring-ring"
+                          value={String(valueOf('categoryId') ?? '')}
+                          onChange={(e) => updateCell(r, 'categoryId', (e.target.value || null) as any)}
+                          onBlur={() => flushRow(r.itemId)}
+                        />
+                      ) : (
+                        <div className="p-2">{r.categoryId || ''}</div>
+                      )}
+                    </td>
+                    <td className={`${editable ? 'p-0 border border-black' : 'p-0'}`}>
+                      {editable ? (
+                        <div className="h-8 px-2 flex items-center">
+                          <input
+                            type="checkbox"
+                            className="size-4"
+                            checked={Boolean(valueOf('active'))}
+                            onChange={(e) => updateCell(r, 'active', e.target.checked as any)}
+                            onBlur={() => flushRow(r.itemId)}
+                          />
+                        </div>
+                      ) : (
+                        <div className="p-2">{r.active ? 'Yes' : 'No'}</div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

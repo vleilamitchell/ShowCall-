@@ -86,20 +86,10 @@
   --section-header-color: var(--accent);
 }
 
-/* Smooth theme transitions - only on specific elements that need it */
-html {
-  transition: background-color 0.2s ease;
-}
-
+/* Remove global theme transitions for instant theme switching */
 body {
   min-height: 100vh;
   overflow-x: hidden;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-/* Theme fade helper: temporarily applied to html element during theme toggle */
-.theme-transition *, .theme-transition {
-  transition: background-color 400ms ease, color 400ms ease, border-color 400ms ease, fill 400ms ease, stroke 400ms ease, box-shadow 400ms ease, outline-color 400ms ease;
 }
 
 button {
@@ -458,7 +448,6 @@ textarea.input { width: 100%; resize: vertical; }
   z-index: 0;
 }
 .eventItem { position: relative; z-index: 1; }
-.eventItem--active { /* no-op; background handled by indicator */ }
 
 /* Login layout */
 .loginLayout { min-height: 100vh; display: grid; place-items: center; background: radial-gradient(1200px 600px at 20% -10%, color-mix(in oklch, var(--primary) 12%, transparent), transparent), var(--background); }

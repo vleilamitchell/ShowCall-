@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { ChevronDown, Clock, CalendarDays } from 'lucide-react';
 import { listShiftsForEvent, type ShiftRecord, type DepartmentRecord, listDepartments } from '@/lib/serverComm';
+import { formatTimeTo12Hour } from '@/lib/time';
 
 export function EventShiftsPanel({ eventId }: { eventId: string }) {
   const [open, setOpen] = useState<boolean>(() => {
@@ -110,7 +111,7 @@ export function EventShiftsPanel({ eventId }: { eventId: string }) {
                           </div>
                           <div className="mt-1 text-xs text-muted-foreground flex items-center gap-3">
                             <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />{s.date}</span>
-                            <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{s.startTime}–{s.endTime}</span>
+                            <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{formatTimeTo12Hour(s.startTime)}–{formatTimeTo12Hour(s.endTime)}</span>
                           </div>
                           {s.notes ? (
                             <div className="mt-2 text-xs text-muted-foreground line-clamp-2">{s.notes}</div>
