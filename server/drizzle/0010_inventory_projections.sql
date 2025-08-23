@@ -11,6 +11,8 @@ FROM inventory_txn
 GROUP BY item_id, location_id, lot_id;
 
 CREATE INDEX IF NOT EXISTS idx_on_hand_item_loc ON on_hand (item_id, location_id);
+-- UNIQUE index required to support REFRESH MATERIALIZED VIEW CONCURRENTLY
+CREATE UNIQUE INDEX IF NOT EXISTS ux_on_hand_identity ON on_hand (item_id, location_id, lot_id);
 
 -- Availability view: on_hand minus active reservations in window
 CREATE OR REPLACE VIEW availability AS

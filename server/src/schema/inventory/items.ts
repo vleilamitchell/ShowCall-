@@ -83,6 +83,13 @@ export const unitConversions = pgTable('unit_conversion', {
   factor: numeric('factor').notNull(),
 });
 
+export const valuationAvg = pgTable('valuation_avg', {
+  itemId: uuid('item_id').primaryKey(),
+  avgCost: numeric('avg_cost').notNull().default('0'),
+  qtyBase: numeric('qty_base').notNull().default('0'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
 export type Item = typeof items.$inferSelect;
 export type NewItem = typeof items.$inferInsert;
 

@@ -10,6 +10,8 @@ import { and, asc, desc, eq, gte, gt, ilike, or, lte, isNull, sql } from 'drizzl
 import { isValidEmail, isValidPhone, isValidState, isValidZip4, isValidZip5, normalizePhone, normalizeState, normalizeZip4, normalizeZip5, isValidDateStr, isValidTimeStr } from './lib/validators';
 import { listInventoryItems, createInventoryItem, getInventoryItem, patchInventoryItem } from './services/inventory/items';
 import { postTransaction } from './services/inventory/postTransaction';
+import { listTransactions } from './services/inventory/transactions';
+import { getItemSummary } from './services/inventory/projections';
 import { createReservation, listReservations, updateReservation } from './services/inventory/reservations';
 
 type Env = {
@@ -1583,17 +1585,26 @@ inventoryRoutes.get('/items', async (c) => {
 });
 
 inventoryRoutes.post('/items', async (c) => {
-  const body = await c.req.json();
-  const rec = await createInventoryItem({
-    sku: String(body.sku || '').trim(),
-    name: String(body.name || '').trim(),
-    itemType: String(body.itemType || '').trim(),
-    baseUnit: String(body.baseUnit || '').trim(),
-    schemaId: String(body.schemaId || '').trim(),
-    attributes: body.attributes ?? {},
-    categoryId: body.categoryId ?? null,
-  });
-  return c.json(rec, 201);
+  try {
+    const body = await c.req.json();
+    const rec = await createInventoryItem({
+      sku: String(body.sku || '').trim(),
+      name: String(body.name || '').trim(),
+      itemType: String(body.itemType || '').trim(),
+      baseUnit: String(body.baseUnit || '').trim(),
+      schemaId: String(body.schemaId || '').trim(),
+      attributes: body.attributes ?? {},
+      categoryId: body.categoryId ?? null,
+    });
+    return c.json(rec, 201);
+  } catch (error) {
+    const msg = (error instanceof Error) ? error.message : String(error);
+    if (typeof msg === 'string' && msg.startsWith('attributes invalid:')) {
+      return c.json({ error: msg }, 400);
+    }
+    console.error('Create inventory item error:', error);
+    return c.json({ error: 'Failed to create inventory item' }, 500);
+  }
 });
 
 inventoryRoutes.get('/items/:itemId', async (c) => {
@@ -1603,15 +1614,24 @@ inventoryRoutes.get('/items/:itemId', async (c) => {
 });
 
 inventoryRoutes.patch('/items/:itemId', async (c) => {
-  const body = await c.req.json();
-  const updated = await patchInventoryItem(c.req.param('itemId'), {
-    name: typeof body.name === 'string' ? body.name : undefined,
-    baseUnit: typeof body.baseUnit === 'string' ? body.baseUnit : undefined,
-    attributes: 'attributes' in body ? body.attributes : undefined,
-    active: typeof body.active === 'boolean' ? body.active : undefined,
-  });
-  if (!updated) return c.json({ error: 'Not found' }, 404);
-  return c.json(updated);
+  try {
+    const body = await c.req.json();
+    const updated = await patchInventoryItem(c.req.param('itemId'), {
+      name: typeof body.name === 'string' ? body.name : undefined,
+      baseUnit: typeof body.baseUnit === 'string' ? body.baseUnit : undefined,
+      attributes: 'attributes' in body ? body.attributes : undefined,
+      active: typeof body.active === 'boolean' ? body.active : undefined,
+    });
+    if (!updated) return c.json({ error: 'Not found' }, 404);
+    return c.json(updated);
+  } catch (error) {
+    const msg = (error instanceof Error) ? error.message : String(error);
+    if (typeof msg === 'string' && msg.startsWith('attributes invalid:')) {
+      return c.json({ error: msg }, 400);
+    }
+    console.error('Patch inventory item error:', error);
+    return c.json({ error: 'Failed to patch inventory item' }, 500);
+  }
 });
 
 // Transactions
@@ -1621,7 +1641,9 @@ inventoryRoutes.post('/transactions', async (c) => {
     itemId: String(body.itemId || '').trim(),
     locationId: String(body.locationId || '').trim(),
     eventType: String(body.eventType || '').trim(),
-    qtyBase: Number(body.qtyBase),
+    qtyBase: body.qtyBase == null ? undefined : Number(body.qtyBase),
+    qty: body.qty == null ? undefined : Number(body.qty),
+    unit: typeof body.unit === 'string' ? body.unit : undefined,
     lotId: body.lotId ?? null,
     serialNo: body.serialNo ?? null,
     costPerBase: body.costPerBase == null ? null : Number(body.costPerBase),
@@ -1630,6 +1652,20 @@ inventoryRoutes.post('/transactions', async (c) => {
     transfer: body.transfer || null,
   });
   return c.json(entries, 201);
+});
+
+// Transactions list
+inventoryRoutes.get('/transactions', async (c) => {
+  const rows = await listTransactions({
+    itemId: c.req.query('itemId') || undefined,
+    locationId: c.req.query('locationId') || undefined,
+    eventType: c.req.query('eventType') || undefined,
+    from: c.req.query('from') || undefined,
+    to: c.req.query('to') || undefined,
+    limit: c.req.query('limit') ? Number(c.req.query('limit')) : undefined,
+    order: (c.req.query('order') as any) || 'desc',
+  });
+  return c.json(rows);
 });
 
 // Reservations
@@ -1666,8 +1702,20 @@ inventoryRoutes.patch('/reservations/:resId', async (c) => {
 // Locations list (basic)
 inventoryRoutes.get('/locations', async (c) => {
   const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
-  const rows = await db.select().from(schema.locations);
+  const departmentId = c.req.query('department_id') || undefined;
+  const rows = await db
+    .select()
+    .from(schema.locations)
+    .where(departmentId ? eq(schema.locations.departmentId, departmentId) : undefined as any);
   return c.json(rows);
+});
+
+// Item summary
+inventoryRoutes.get('/items/:itemId/summary', async (c) => {
+  const from = c.req.query('from') || undefined;
+  const to = c.req.query('to') || undefined;
+  const summary = await getItemSummary(c.req.param('itemId'), { from, to });
+  return c.json(summary);
 });
 
 // Mount inventory under /inventory

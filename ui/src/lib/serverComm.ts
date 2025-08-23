@@ -176,6 +176,8 @@ export const api: {
   getInventoryItem?: typeof getInventoryItem;
   patchInventoryItem?: typeof patchInventoryItem;
   postInventoryTransaction?: typeof postInventoryTransaction;
+  listInventoryTransactions?: typeof listInventoryTransactions;
+  getInventoryItemSummary?: typeof getInventoryItemSummary;
   listReservations?: typeof listReservations;
   createReservation?: typeof createReservation;
   updateReservation?: typeof updateReservation;
@@ -629,7 +631,9 @@ export type InventoryTxnInput = {
   itemId: string;
   locationId: string;
   eventType: string;
-  qtyBase: number;
+  qtyBase?: number;
+  qty?: number;
+  unit?: string;
   lotId?: string | null;
   serialNo?: string | null;
   costPerBase?: number | null;
@@ -643,6 +647,32 @@ export async function postInventoryTransaction(payload: InventoryTxnInput) {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
   });
   return response.json() as Promise<any[]>;
+}
+
+export async function listInventoryTransactions(params?: { itemId?: string; locationId?: string; eventType?: string | string[]; from?: string; to?: string; limit?: number; order?: 'asc' | 'desc' }) {
+  const query = new URLSearchParams();
+  if (params?.itemId) query.set('itemId', params.itemId);
+  if (params?.locationId) query.set('locationId', params.locationId);
+  if (params?.eventType) {
+    const v = Array.isArray(params.eventType) ? params.eventType.join(',') : params.eventType;
+    query.set('eventType', v);
+  }
+  if (params?.from) query.set('from', params.from);
+  if (params?.to) query.set('to', params.to);
+  if (params?.limit != null) query.set('limit', String(params.limit));
+  if (params?.order) query.set('order', params.order);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/inventory/transactions${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<any[]>;
+}
+
+export async function getInventoryItemSummary(itemId: string, params?: { from?: string; to?: string }) {
+  const query = new URLSearchParams();
+  if (params?.from) query.set('from', params.from);
+  if (params?.to) query.set('to', params.to);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/inventory/items/${encodeURIComponent(itemId)}/summary${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<{ onHand: Array<{ locationId: string; lotId?: string | null; qtyBase: number }>; totals: { onHand: number; reserved: number; available: number } }>
 }
 
 export type ReservationRecord = {
@@ -681,8 +711,11 @@ export async function updateReservation(resId: string, action: 'RELEASE' | 'FULF
 
 export type InventoryLocationRecord = { locationId: string; name: string; departmentId: string };
 
-export async function listInventoryLocations() {
-  const response = await fetchWithAuth('/api/v1/inventory/locations');
+export async function listInventoryLocations(params?: { departmentId?: string }) {
+  const query = new URLSearchParams();
+  if (params?.departmentId) query.set('department_id', params.departmentId);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/inventory/locations${qs ? `?${qs}` : ''}`);
   return response.json() as Promise<InventoryLocationRecord[]>;
 }
 
@@ -691,6 +724,8 @@ api.createInventoryItem = createInventoryItem as any;
 api.getInventoryItem = getInventoryItem as any;
 api.patchInventoryItem = patchInventoryItem as any;
 api.postInventoryTransaction = postInventoryTransaction as any;
+api.listInventoryTransactions = listInventoryTransactions as any;
+api.getInventoryItemSummary = getInventoryItemSummary as any;
 api.listReservations = listReservations as any;
 api.createReservation = createReservation as any;
 api.updateReservation = updateReservation as any;
