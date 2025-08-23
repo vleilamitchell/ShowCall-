@@ -1565,16 +1565,29 @@ api.delete('/assignments/:assignmentId', async (c) => {
 // Mount departments after scheduling routes are attached
 api.route('/departments', departmentsRoutes);
 
-// Finally mount the API router now that all subroutes are attached
-app.route('/api/v1', api);
-
-export default app; 
-
 // -------------------- Inventory Routes (protected under /api/v1/inventory) --------------------
 const inventoryRoutes = new Hono();
 inventoryRoutes.use('*', authMiddleware);
 
 // Items
+inventoryRoutes.get('/schemas', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const rows = await db.select().from(schema.attributeSchema).orderBy(asc(schema.attributeSchema.itemType), desc(schema.attributeSchema.version));
+    // Deduplicate by itemType keeping highest version first
+    const seen = new Set<string>();
+    const unique = rows.filter((r: any) => {
+      if (seen.has(r.itemType)) return false;
+      seen.add(r.itemType);
+      return true;
+    });
+    return c.json(unique);
+  } catch (error) {
+    console.error('List inventory schemas error:', error);
+    return c.json({ error: 'Failed to list schemas' }, 500);
+  }
+});
+
 inventoryRoutes.get('/items', async (c) => {
   const q = c.req.query('q') || undefined;
   const itemType = c.req.query('item_type') || undefined;
@@ -1720,3 +1733,8 @@ inventoryRoutes.get('/items/:itemId/summary', async (c) => {
 
 // Mount inventory under /inventory
 api.route('/inventory', inventoryRoutes);
+
+// Finally mount the API router now that all subroutes are attached
+app.route('/api/v1', api);
+
+export default app; 

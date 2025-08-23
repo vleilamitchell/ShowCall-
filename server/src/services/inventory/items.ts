@@ -22,7 +22,7 @@ export async function createInventoryItem(input: {
   name: string;
   itemType: string;
   baseUnit: string;
-  schemaId: string;
+  schemaId?: string; // optional: resolve by itemType if missing
   attributes: any;
   categoryId?: string | null;
 }) {
@@ -36,8 +36,23 @@ export async function createInventoryItem(input: {
   }
   if (!id) id = `itm_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
+  // Resolve schemaId if not provided: choose latest version by itemType
+  let schemaId = String(input.schemaId || '');
+  if (!schemaId) {
+    const row = (await db
+      .select({ schemaId: schema.attributeSchema.schemaId, version: schema.attributeSchema.version })
+      .from(schema.attributeSchema)
+      .where(eq(schema.attributeSchema.itemType, input.itemType))
+      .orderBy((asc as any)((schema.attributeSchema.version as any) as any))
+    ).pop();
+    if (!row) {
+      throw new Error(`attribute schema not found for itemType: ${input.itemType}`);
+    }
+    schemaId = String(row.schemaId);
+  }
+
   // Validate attributes against schema
-  const validation = await validateItemAttributes(String(input.schemaId), input.attributes ?? {});
+  const validation = await validateItemAttributes(String(schemaId), input.attributes ?? {});
   if (!validation.ok) {
     throw new Error(`attributes invalid: ${validation.message}${validation.path ? ` at ${validation.path}` : ''}`);
   }
@@ -48,7 +63,7 @@ export async function createInventoryItem(input: {
     name: input.name.trim(),
     itemType: input.itemType,
     baseUnit: input.baseUnit,
-    schemaId: input.schemaId,
+    schemaId,
     attributes: input.attributes ?? {},
     categoryId: input.categoryId ?? null,
   } as const;

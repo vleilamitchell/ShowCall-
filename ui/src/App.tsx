@@ -8,9 +8,10 @@ import { Home } from '@/pages/Home';
 import { Settings } from '@/pages/Settings';
 import Events from '@/pages/Events';
 import Departments from '@/pages/Departments';
+import Inventory from '@/pages/Inventory';
 import Employees from '@/pages/Employees';
 import Scheduling from '@/pages/Scheduling';
-import Inventory from '@/pages/Inventory';
+// Inventory UI removed
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import {
   SidebarProvider,
@@ -54,6 +55,7 @@ function AppContent() {
                     <Route path="/employees/:employeeId" element={<Employees />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/inventory" element={<Inventory />} />
+                    <Route path="/inventory/:itemId" element={<Inventory />} />
                   </Routes>
                 </div>
               </main>

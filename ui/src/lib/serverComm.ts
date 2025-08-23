@@ -182,6 +182,7 @@ export const api: {
   createReservation?: typeof createReservation;
   updateReservation?: typeof updateReservation;
   listInventoryLocations?: typeof listInventoryLocations;
+  listInventorySchemas?: typeof listInventorySchemas;
 } = {
   getCurrentUser,
   listEvents,
@@ -719,6 +720,11 @@ export async function listInventoryLocations(params?: { departmentId?: string })
   return response.json() as Promise<InventoryLocationRecord[]>;
 }
 
+export async function listInventorySchemas() {
+  const response = await fetchWithAuth('/api/v1/inventory/schemas');
+  return response.json() as Promise<Array<{ schemaId: string; itemType: string; departmentId?: string | null; version: number; jsonSchema: any }>>;
+}
+
 api.listInventoryItems = listInventoryItems as any;
 api.createInventoryItem = createInventoryItem as any;
 api.getInventoryItem = getInventoryItem as any;
@@ -730,3 +736,4 @@ api.listReservations = listReservations as any;
 api.createReservation = createReservation as any;
 api.updateReservation = updateReservation as any;
 api.listInventoryLocations = listInventoryLocations as any;
+api.listInventorySchemas = listInventorySchemas as any;

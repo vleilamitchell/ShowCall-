@@ -32,7 +32,10 @@ export function useListDetail<TItem extends ListItem, TFilters extends FilterSta
       if (loadRef.current !== ticket) return;
       setItems(rows);
 
-      const routeId = (params as any)[`${resourceKey.slice(0, -1)}Id`] || params.id; // attempt both forms
+      // Try common param name patterns: singular form (e.g., itemId), generic id, or any *Id param
+      const singularKey = `${resourceKey.slice(0, -1)}Id`;
+      const anyIdKey = Object.keys(params || {}).find((k) => k.endsWith('Id') && (params as any)[k]);
+      const routeId = (params as any)[singularKey] || (params as any)[anyIdKey as any] || (params as any).id; // attempt multiple forms
       const found = routeId ? rows.some(r => String(r.id) === String(routeId)) : false;
 
       if (routeId && found) {
@@ -59,7 +62,9 @@ export function useListDetail<TItem extends ListItem, TFilters extends FilterSta
 
   // Sync selection from route without forcing a list reload to avoid flicker
   useEffect(() => {
-    const routeId = (params as any)[`${resourceKey.slice(0, -1)}Id`] || params.id;
+    const singularKey = `${resourceKey.slice(0, -1)}Id`;
+    const anyIdKey = Object.keys(params || {}).find((k) => k.endsWith('Id') && (params as any)[k]);
+    const routeId = (params as any)[singularKey] || (params as any)[anyIdKey as any] || (params as any).id;
     if (!routeId) return;
     const exists = items.some(r => String(r.id) === String(routeId));
     if (exists) {
