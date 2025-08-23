@@ -12,6 +12,7 @@ import Inventory from '@/pages/Inventory';
 import Employees from '@/pages/Employees';
 import Scheduling from '@/pages/Scheduling';
 // Inventory UI removed
+import InventoryAssetsTable from '@/pages/InventoryAssetsTable';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import {
   SidebarProvider,
@@ -55,6 +56,7 @@ function AppContent() {
                     <Route path="/employees/:employeeId" element={<Employees />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/inventory" element={<Inventory />} />
+                    <Route path="/inventory/assets" element={<InventoryAssetsTable />} />
                     <Route path="/inventory/:itemId" element={<Inventory />} />
                   </Routes>
                 </div>

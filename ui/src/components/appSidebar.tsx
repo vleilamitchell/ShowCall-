@@ -77,7 +77,7 @@ export function AppSidebar() {
   // connection status moved to global bottom-right component
 
   return (
-    <Sidebar collapsible="none" className="sticky top-12 h-[calc(100vh-3rem)] z-40 leftnav">
+    <Sidebar className="sticky top-12 h-[calc(100vh-3rem)] z-40 leftnav">
       <SidebarContent className="overflow-y-auto p-0">
         <SidebarGroup className="px-2 py-1">
           <SidebarGroupContent className="p-0">
@@ -101,6 +101,17 @@ export function AppSidebar() {
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                {/* Nested/indented item under Inventory */}
+                <div className="pl-6">
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/inventory/assets')}
+                      className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
+                      <NavLink to="/inventory/assets" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
+                        <span className="truncate">Assets Table</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </div>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive('/events')}
                     className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
