@@ -123,7 +123,7 @@ export default function EventsCalendar() {
       const verticalGaps = (ROWS - 1) * ROW_GAP_PX;
       const available = Math.max(0, baseWrapperH - weekdaysH - verticalGaps);
       const perRow = available > 0 ? Math.floor(available / ROWS) : 110;
-      setRowHeightPx(Math.max(72, perRow));
+      setRowHeightPx(Math.max(72, perRow + 5));
     };
     compute();
     let ro: ResizeObserver | null = null;
@@ -139,8 +139,8 @@ export default function EventsCalendar() {
   }, []);
 
   return (
-    <div ref={containerRef} className="routeFadeItem relative flex flex-col gap-3 pt-0 px-3 pb-3 min-h-0">
-      <div ref={toolbarRef} className="pageHeader relative rounded-t-none attachedBelowTopbar">
+    <div ref={containerRef} className="routeFadeItem relative flex flex-col gap-3 p-0 min-h-0 -mx-[18px] -mb-[18px]">
+      <div ref={toolbarRef} className="pageHeader pageHeader--flush relative rounded-t-none attachedBelowTopbar">
         <div className="toolbar">
           <div className="flex items-center gap-2">
             <Button
@@ -216,9 +216,9 @@ export default function EventsCalendar() {
 
       <div ref={wrapperRef} className="w-full flex-1 min-h-0 overflow-hidden">
         {/* Weekday header */}
-        <div ref={weekdayHeaderRef} className="grid grid-cols-7 text-[11px] uppercase tracking-wide text-muted-foreground px-1">
+        <div ref={weekdayHeaderRef} className="grid grid-cols-7 text-[11px] uppercase tracking-wide text-muted-foreground px-0">
           {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d) => (
-            <div key={d} className="px-2 py-1 select-none">{d}</div>
+            <div key={d} className="px-1 py-1 select-none">{d}</div>
           ))}
         </div>
         {/* Month grid (6 rows x 7 columns) sized to container */}
@@ -232,7 +232,7 @@ export default function EventsCalendar() {
             const dayEvents = eventsByDate[key] || [];
             const isToday = key === formatYmd(new Date());
             const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-            const baseCell = 'relative rounded-none p-1 flex flex-col min-h-0 transition-colors backdrop-blur-[0.5px]';
+            const baseCell = 'relative rounded-none p-0.5 flex flex-col min-h-0 transition-colors backdrop-blur-[0.5px]';
             const bgMuted = isWeekend ? ' bg-muted/25' : '';
             const monthTint = '';
             const todayTint = isToday ? ' ring-2 ring-primary/40 bg-primary/5' : '';
@@ -269,7 +269,7 @@ export default function EventsCalendar() {
                 />
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-xs font-medium inline-flex items-center gap-1">
-                    <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full ${isToday ? 'bg-primary text-primary-foreground' : 'bg-muted'} text-[11px] ml-1 mt-0.5`}>{day.getDate()}</span>
+                    <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full ${isToday ? 'bg-primary text-primary-foreground' : 'bg-black/70 text-white'} text-[11px] ml-1 mt-0.5`}>{day.getDate()}</span>
                   </div>
                 </div>
                 <div className="mt-1 space-y-1 overflow-auto pr-0.5">

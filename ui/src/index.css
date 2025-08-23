@@ -231,7 +231,7 @@ button {
   background: linear-gradient(135deg, var(--content-surface), color-mix(in oklch, var(--secondary) 8%, transparent));
   border: 1px solid color-mix(in oklch, var(--secondary) 20%, transparent);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 7px 8px;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
@@ -239,6 +239,7 @@ button {
   box-shadow: 0 2px 12px rgb(0 0 0 / 0.15);
   position: relative;
 }
+.pageHeader.pageHeader--flush { margin-bottom: 0; }
 .pageHeader.pageHeader--compact { padding: 4px 8px; }
 .pageHeader.pageHeader--compact .toolbar { gap: 4px; }
 .pageHeader::after {
