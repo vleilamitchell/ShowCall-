@@ -67,6 +67,9 @@ cd ui && pnpm build
 cd server && pnpm run deploy
 ```
 
+# Backup DB to local dump.
+ `pnpm run db:backup`
+
 ## 🔗 **Connecting Production Services**
 
 Your app defaults to everything running locally. Connect to production services when you're ready:

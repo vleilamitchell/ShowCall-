@@ -15,7 +15,8 @@
     "connect:deploy": "npx create-volo-app --connect --deploy",
     "connection:status": "npx create-volo-app --status",
     "build": "cd ui && pnpm run build",
-    "deploy": "cd server && wrangler deploy && echo 'Frontend deployment: Connect your Git repo to Cloudflare Pages'"
+    "deploy": "cd server && wrangler deploy && echo 'Frontend deployment: Connect your Git repo to Cloudflare Pages'",
+    "db:backup": "node scripts/db-backup.js"
   },
   "engines": {
     "node": ">=20.0.0",

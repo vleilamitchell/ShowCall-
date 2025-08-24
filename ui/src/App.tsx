@@ -10,6 +10,7 @@ import Events from '@/pages/Events';
 import EventsRecurring from '@/pages/EventsRecurring';
 import Artists from '@/pages/Artists';
 import Departments from '@/pages/Departments';
+import Contacts from '@/pages/Contacts';
 import Areas from '@/pages/Areas';
 import Inventory from '@/pages/Inventory';
 import Employees from '@/pages/Employees';
@@ -67,6 +68,8 @@ function AppContent() {
                     <Route path="/inventory/assets" element={<InventoryAssetsTable />} />
                     <Route path="/inventory/:itemId" element={<Inventory />} />
                     <Route path="/areas" element={<Areas />} />
+                    <Route path="/contacts" element={<Contacts />} />
+                    <Route path="/contacts/:contactId" element={<Contacts />} />
                     <Route path="/areas/:areaId" element={<Areas />} />
                   </Routes>
                 </div>

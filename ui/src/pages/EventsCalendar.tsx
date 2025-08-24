@@ -316,7 +316,7 @@ export default function EventsCalendar() {
             return (
               <div
                 key={idx}
-                className={`${baseCell}${bgMuted}${monthTint}${todayTint} hover:bg-accent/40`}
+                className={`${baseCell}${bgMuted}${monthTint}${todayTint}`}
               >
                 {/* Per-cell overlay: in-month gets noise, out-of-month gets darkening */}
                 {inMonth ? (
@@ -344,18 +344,18 @@ export default function EventsCalendar() {
                     maskComposite: 'exclude',
                   }}
                 />
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between">
                   <div className="text-xs font-medium inline-flex items-center gap-1">
                     <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full ${isToday ? 'bg-primary text-primary-foreground' : 'bg-black/70 text-white'} text-[11px] ml-1 mt-0.5`}>{day.getDate()}</span>
                   </div>
                 </div>
-                <div className="mt-1 space-y-[1px] overflow-auto pr-0.5">
+                <div className="space-y-[1px] overflow-auto pr-0.5">
                   {dayEvents.map((ev) => {
                     const color = ev.status === 'cancelled' || ev.status === 'canceled'
-                      ? 'bg-destructive/10 text-destructive hover:bg-destructive/15 focus:ring-destructive/40'
+                      ? 'bg-destructive/10 text-destructive hover:bg-destructive/25 hover:ring-2 hover:ring-destructive/40 hover:shadow-sm focus:ring-destructive/40'
                       : ev.status === 'confirmed' || ev.status === 'active'
-                      ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15 focus:ring-emerald-500/40 dark:text-emerald-400'
-                      : 'bg-primary/10 text-primary hover:bg-primary/15 focus:ring-primary/40';
+                      ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/25 hover:ring-2 hover:ring-emerald-500/40 hover:shadow-sm focus:ring-emerald-500/40 dark:text-emerald-400'
+                      : 'bg-primary/10 text-primary hover:bg-primary/25 hover:ring-2 hover:ring-primary/40 hover:shadow-sm focus:ring-primary/40';
                     const timePrefix = (ev.startTime ? `${formatTimeTo12Hour(ev.startTime)} ` : '');
                     const showTime = Boolean(timePrefix) && String(ev.title || '').length <= 20;
                     return (
@@ -363,7 +363,7 @@ export default function EventsCalendar() {
                         key={ev.id}
                         type="button"
                         onClick={() => navigate(`/events/${encodeURIComponent(ev.id)}`)}
-                        className={`relative w-full text-left text-[11px] leading-tight truncate rounded px-[4px] pt-0.5 pb-[3px] focus:outline-none focus:ring-2 ${color}`}
+                        className={`relative w-full text-left text-[11px] leading-tight truncate rounded px-[4px] pt-0.5 pb-[3px] focus:outline-none focus:ring-2 transition ${color}`}
                         title={`${ev.title}`}
                       >
                         <span className="inline-flex items-center gap-1 w-full">

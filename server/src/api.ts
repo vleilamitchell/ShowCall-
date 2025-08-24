@@ -2107,6 +2107,139 @@ inventoryRoutes.get('/items/:itemId/summary', async (c) => {
 // Mount inventory under /inventory
 api.route('/inventory', inventoryRoutes);
 
+// -------------------- Contacts Routes (protected under /api/v1/contacts) --------------------
+const contactsRoutes = new Hono();
+contactsRoutes.use('*', authMiddleware);
+
+contactsRoutes.get('/', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const rows = await db
+      .select()
+      .from(schema.contacts)
+      .orderBy(asc(schema.contacts.lastName), asc(schema.contacts.firstName));
+    return c.json(rows);
+  } catch (error) {
+    console.error('List contacts error:', error);
+    return c.json({ error: 'Failed to list contacts' }, 500);
+  }
+});
+
+contactsRoutes.post('/', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const body = await c.req.json();
+
+    const f = (v: unknown) => (v == null ? null : (typeof v === 'string' ? (v.trim() === '' ? null : v.trim()) : (v as any)));
+
+    // Validations (light): email/state/zip/phone formats
+    if (!isValidEmail(body.email)) return c.json({ error: 'invalid email format' }, 400);
+    if (!isValidState(body.state)) return c.json({ error: 'state must be 2-letter uppercase' }, 400);
+    if (!isValidZip5(body.postalCode)) return c.json({ error: 'postalCode must be 5 digits' }, 400);
+
+    // ID generation
+    let generatedId: string | undefined;
+    const g: any = globalThis as any;
+    if (typeof g !== 'undefined' && g.crypto && typeof g.crypto.randomUUID === 'function') {
+      generatedId = g.crypto.randomUUID();
+    } else {
+      try {
+        const nodeCrypto = await import('node:crypto');
+        if (typeof nodeCrypto.randomUUID === 'function') {
+          generatedId = nodeCrypto.randomUUID();
+        }
+      } catch {}
+    }
+    if (!generatedId) generatedId = `ct_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
+    const rec = {
+      id: generatedId,
+      prefix: f(body.prefix),
+      firstName: f(body.firstName),
+      lastName: f(body.lastName),
+      suffix: f(body.suffix),
+      address1: f(body.address1),
+      address2: f(body.address2),
+      city: f(body.city),
+      state: body.state == null ? null : normalizeState(body.state),
+      postalCode: body.postalCode == null ? null : normalizeZip5(body.postalCode),
+      email: f(body.email),
+      paymentDetails: f(body.paymentDetails),
+      contactNumber: body.contactNumber == null ? null : normalizePhone(body.contactNumber),
+    } as const;
+
+    const inserted = await db.insert(schema.contacts).values(rec).returning();
+    return c.json(inserted[0], 201);
+  } catch (error) {
+    console.error('Create contact error:', error);
+    return c.json({ error: 'Failed to create contact' }, 500);
+  }
+});
+
+contactsRoutes.get('/:contactId', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const id = c.req.param('contactId');
+    const rows = await db.select().from(schema.contacts).where(eq(schema.contacts.id, id)).limit(1);
+    if (rows.length === 0) return c.json({ error: 'Not found' }, 404);
+    return c.json(rows[0]);
+  } catch (error) {
+    console.error('Get contact error:', error);
+    return c.json({ error: 'Failed to get contact' }, 500);
+  }
+});
+
+contactsRoutes.patch('/:contactId', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const id = c.req.param('contactId');
+    const body = await c.req.json();
+
+    if ('email' in body && !isValidEmail(body.email)) return c.json({ error: 'invalid email format' }, 400);
+    if ('state' in body && !isValidState(body.state)) return c.json({ error: 'state must be 2-letter uppercase' }, 400);
+    if ('postalCode' in body && !isValidZip5(body.postalCode)) return c.json({ error: 'postalCode must be 5 digits' }, 400);
+    if ('contactNumber' in body && !isValidPhone(body.contactNumber)) return c.json({ error: 'contactNumber must be at least 7 digits' }, 400);
+
+    const f = (v: unknown) => (v == null ? null : (typeof v === 'string' ? (v.trim() === '' ? null : v.trim()) : (v as any)));
+    const patch: any = {};
+    if ('prefix' in body) patch.prefix = f(body.prefix);
+    if ('firstName' in body) patch.firstName = f(body.firstName);
+    if ('lastName' in body) patch.lastName = f(body.lastName);
+    if ('suffix' in body) patch.suffix = f(body.suffix);
+    if ('address1' in body) patch.address1 = f(body.address1);
+    if ('address2' in body) patch.address2 = f(body.address2);
+    if ('city' in body) patch.city = f(body.city);
+    if ('state' in body) patch.state = body.state == null ? null : normalizeState(body.state);
+    if ('postalCode' in body) patch.postalCode = body.postalCode == null ? null : normalizeZip5(body.postalCode);
+    if ('email' in body) patch.email = f(body.email);
+    if ('paymentDetails' in body) patch.paymentDetails = f(body.paymentDetails);
+    if ('contactNumber' in body) patch.contactNumber = body.contactNumber == null ? null : normalizePhone(body.contactNumber);
+    patch.updatedAt = new Date();
+
+    const updated = await db.update(schema.contacts).set(patch).where(eq(schema.contacts.id, id)).returning();
+    if (updated.length === 0) return c.json({ error: 'Not found' }, 404);
+    return c.json(updated[0]);
+  } catch (error) {
+    console.error('Update contact error:', error);
+    return c.json({ error: 'Failed to update contact' }, 500);
+  }
+});
+
+contactsRoutes.delete('/:contactId', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const id = c.req.param('contactId');
+    const deleted = await db.delete(schema.contacts).where(eq(schema.contacts.id, id)).returning();
+    if (deleted.length === 0) return c.json({ error: 'Not found' }, 404);
+    return c.body(null, 204);
+  } catch (error) {
+    console.error('Delete contact error:', error);
+    return c.json({ error: 'Failed to delete contact' }, 500);
+  }
+});
+
+api.route('/contacts', contactsRoutes);
+
 // Finally mount the API router now that all subroutes are attached
 app.route('/api/v1', api);
 

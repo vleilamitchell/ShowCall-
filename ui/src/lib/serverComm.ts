@@ -223,6 +223,12 @@ export const api: {
   addEventArea?: typeof addEventArea;
   removeEventArea?: typeof removeEventArea;
   reorderAreas?: typeof reorderAreas;
+  // Contacts
+  listContacts?: typeof listContacts;
+  createContact?: typeof createContact;
+  getContact?: typeof getContact;
+  updateContact?: typeof updateContact;
+  deleteContact?: typeof deleteContact;
 } = {
   getCurrentUser,
   listEvents,
@@ -988,3 +994,55 @@ api.getEventAreas = getEventAreas as any;
 api.replaceEventAreas = replaceEventAreas as any;
 api.addEventArea = addEventArea as any;
 api.removeEventArea = removeEventArea as any;
+
+// Contacts API helpers
+export type ContactRecord = {
+  id: string;
+  prefix?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  suffix?: string | null;
+  address1?: string | null;
+  address2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  email?: string | null;
+  paymentDetails?: string | null;
+  contactNumber?: string | null;
+  updatedAt?: string;
+};
+
+export async function listContacts() {
+  const response = await fetchWithAuth('/api/v1/contacts');
+  return response.json() as Promise<ContactRecord[]>;
+}
+
+export async function createContact(payload: Partial<ContactRecord>) {
+  const response = await fetchWithAuth('/api/v1/contacts', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<ContactRecord>;
+}
+
+export async function getContact(id: string) {
+  const response = await fetchWithAuth(`/api/v1/contacts/${encodeURIComponent(id)}`);
+  return response.json() as Promise<ContactRecord>;
+}
+
+export async function updateContact(id: string, patch: Partial<ContactRecord>) {
+  const response = await fetchWithAuth(`/api/v1/contacts/${encodeURIComponent(id)}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<ContactRecord>;
+}
+
+export async function deleteContact(id: string) {
+  await fetchWithAuth(`/api/v1/contacts/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+api.listContacts = listContacts as any;
+api.createContact = createContact as any;
+api.getContact = getContact as any;
+api.updateContact = updateContact as any;
+api.deleteContact = deleteContact as any;
