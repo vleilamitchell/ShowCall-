@@ -1010,6 +1010,7 @@ export type ContactRecord = {
   email?: string | null;
   paymentDetails?: string | null;
   contactNumber?: string | null;
+  organization?: string | null;
   updatedAt?: string;
 };
 

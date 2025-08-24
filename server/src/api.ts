@@ -2166,6 +2166,7 @@ contactsRoutes.post('/', async (c) => {
       email: f(body.email),
       paymentDetails: f(body.paymentDetails),
       contactNumber: body.contactNumber == null ? null : normalizePhone(body.contactNumber),
+      organization: f(body.organization),
     } as const;
 
     const inserted = await db.insert(schema.contacts).values(rec).returning();
@@ -2214,6 +2215,7 @@ contactsRoutes.patch('/:contactId', async (c) => {
     if ('email' in body) patch.email = f(body.email);
     if ('paymentDetails' in body) patch.paymentDetails = f(body.paymentDetails);
     if ('contactNumber' in body) patch.contactNumber = body.contactNumber == null ? null : normalizePhone(body.contactNumber);
+    if ('organization' in body) patch.organization = f(body.organization);
     patch.updatedAt = new Date();
 
     const updated = await db.update(schema.contacts).set(patch).where(eq(schema.contacts.id, id)).returning();
@@ -2239,6 +2241,292 @@ contactsRoutes.delete('/:contactId', async (c) => {
 });
 
 api.route('/contacts', contactsRoutes);
+
+// -------------------- Addresses Routes (protected under /api/v1/addresses) --------------------
+const addressesRoutes = new Hono();
+addressesRoutes.use('*', authMiddleware);
+
+// Helpers
+const allowedAddressStatuses = ['active', 'inactive', 'pending_verification'] as const;
+const isValidLatitude = (v: unknown): boolean => {
+  if (v == null || String(v).trim() === '') return true;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= -90 && n <= 90;
+};
+const isValidLongitude = (v: unknown): boolean => {
+  if (v == null || String(v).trim() === '') return true;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= -180 && n <= 180;
+};
+
+addressesRoutes.get('/', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const entityType = c.req.query('entityType') || undefined;
+    const entityId = c.req.query('entityId') || undefined;
+    const role = c.req.query('role') || undefined;
+    const status = c.req.query('status') || undefined;
+    const isPrimaryParam = c.req.query('isPrimary');
+    const q = c.req.query('q') || undefined;
+
+    const conditions: any[] = [];
+    if (entityType) conditions.push(eq(schema.addresses.entityType, entityType));
+    if (entityId) conditions.push(eq(schema.addresses.entityId, entityId));
+    if (role) conditions.push(eq(schema.addresses.role, role));
+    if (status) conditions.push(eq(schema.addresses.status, status));
+    if (isPrimaryParam != null) conditions.push(eq(schema.addresses.isPrimary, isPrimaryParam === 'true'));
+    if (q) {
+      const pattern = `%${q}%`;
+      conditions.push(or(ilike(schema.addresses.city, pattern), ilike(schema.addresses.addressLine1, pattern)));
+    }
+
+    const rows = await db
+      .select()
+      .from(schema.addresses)
+      .where(conditions.length > 0 ? and(...conditions) : undefined as any)
+      .orderBy(desc(schema.addresses.isPrimary), desc(schema.addresses.updatedAt));
+    return c.json(rows);
+  } catch (error) {
+    console.error('List addresses error:', error);
+    return c.json({ error: 'Failed to list addresses' }, 500);
+  }
+});
+
+addressesRoutes.post('/', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const body = await c.req.json();
+
+    const s = (v: unknown) => (v == null ? null : (typeof v === 'string' ? (v.trim() === '' ? null : v.trim()) : String(v)));
+
+    const entityType = String(body.entityType || '').trim();
+    const entityId = String(body.entityId || '').trim();
+    if (!entityType || !entityId) return c.json({ error: 'entityType and entityId are required' }, 400);
+    if (!['contact', 'employee'].includes(entityType)) return c.json({ error: 'entityType must be contact or employee (organization not enabled yet)' }, 400);
+
+    // Validate entity existence for supported types (organization reserved for future)
+    if (entityType === 'contact') {
+      const exists = await db.select({ id: schema.contacts.id }).from(schema.contacts).where(eq(schema.contacts.id, entityId)).limit(1);
+      if (exists.length === 0) return c.json({ error: 'Contact not found' }, 400);
+    } else if (entityType === 'employee') {
+      const exists = await db.select({ id: schema.employees.id }).from(schema.employees).where(eq(schema.employees.id, entityId)).limit(1);
+      if (exists.length === 0) return c.json({ error: 'Employee not found' }, 400);
+    }
+
+    // Required core fields
+    const addressLine1 = String(body.addressLine1 || body.address_line_1 || '').trim();
+    const city = String(body.city || '').trim();
+    const state = normalizeState(body.state);
+    const zipCode = normalizeZip5(body.zipCode ?? body.zip_code);
+    const zipPlus4 = normalizeZip4(body.zipPlus4 ?? body.zip_plus4);
+
+    if (!addressLine1) return c.json({ error: 'addressLine1 is required' }, 400);
+    if (!city) return c.json({ error: 'city is required' }, 400);
+    if (!isValidState(state) || state == null) return c.json({ error: 'state must be 2-letter uppercase' }, 400);
+    if (!(zipCode && isValidZip5(zipCode))) return c.json({ error: 'zipCode must be 5 digits' }, 400);
+    if (!isValidZip4(zipPlus4)) return c.json({ error: 'zipPlus4 must be 4 digits' }, 400);
+
+    if (!isValidLatitude(body.latitude)) return c.json({ error: 'latitude must be between -90 and 90' }, 400);
+    if (!isValidLongitude(body.longitude)) return c.json({ error: 'longitude must be between -180 and 180' }, 400);
+
+    // Validate dates ordering if both present
+    const validFrom = typeof body.validFrom === 'string' ? body.validFrom.trim() : null;
+    const validTo = typeof body.validTo === 'string' ? body.validTo.trim() : null;
+    if (validFrom && !isValidDateStr(validFrom)) return c.json({ error: 'invalid validFrom YYYY-MM-DD' }, 400);
+    if (validTo && !isValidDateStr(validTo)) return c.json({ error: 'invalid validTo YYYY-MM-DD' }, 400);
+    if (validFrom && validTo && !(validFrom <= validTo)) return c.json({ error: 'validFrom must be <= validTo' }, 400);
+
+    // ID generation
+    let generatedId: string | undefined;
+    const g: any = globalThis as any;
+    if (typeof g !== 'undefined' && g.crypto && typeof g.crypto.randomUUID === 'function') {
+      generatedId = g.crypto.randomUUID();
+    } else {
+      try { const nodeCrypto = await import('node:crypto'); if (typeof nodeCrypto.randomUUID === 'function') { generatedId = nodeCrypto.randomUUID(); } } catch {}
+    }
+    if (!generatedId) generatedId = `addr_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
+    // Status validation
+    const rawStatus = typeof body.status === 'string' ? body.status.trim() : '';
+    const status = rawStatus || 'active';
+    if (!allowedAddressStatuses.includes(status as any)) return c.json({ error: 'invalid status' }, 400);
+
+    const record = {
+      id: generatedId,
+      entityType,
+      entityId,
+      role: s(body.role),
+      validFrom: validFrom as any,
+      validTo: validTo as any,
+      isPrimary: Boolean(body.isPrimary),
+      addressLine1,
+      addressLine2: s(body.addressLine2 ?? body.address_line_2),
+      city,
+      county: s(body.county),
+      state: String(state),
+      zipCode: String(zipCode),
+      zipPlus4: zipPlus4,
+      latitude: body.latitude == null || String(body.latitude).trim() === '' ? null : String(Number(body.latitude)),
+      longitude: body.longitude == null || String(body.longitude).trim() === '' ? null : String(Number(body.longitude)),
+      uspsStandardized: s(body.uspsStandardized),
+      rawInput: s(body.rawInput),
+      verified: Boolean(body.verified),
+      verificationDate: typeof body.verificationDate === 'string' ? body.verificationDate.trim() : null,
+      dataSource: (typeof body.dataSource === 'string' && body.dataSource.trim()) || 'manual',
+      status: status,
+    } as const;
+
+    try {
+      const inserted = await db.insert(schema.addresses).values(record).returning();
+      return c.json(inserted[0], 201);
+    } catch (e: any) {
+      const msg = String(e?.message || '');
+      if (msg.includes('uniq_addresses_primary_per_role')) return c.json({ error: 'PrimaryExists' }, 409);
+      throw e;
+    }
+  } catch (error) {
+    console.error('Create address error:', error);
+    return c.json({ error: 'Failed to create address' }, 500);
+  }
+});
+
+addressesRoutes.get('/:addressId', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const id = c.req.param('addressId');
+    const rows = await db.select().from(schema.addresses).where(eq(schema.addresses.id, id)).limit(1);
+    if (rows.length === 0) return c.json({ error: 'Not found' }, 404);
+    return c.json(rows[0]);
+  } catch (error) {
+    console.error('Get address error:', error);
+    return c.json({ error: 'Failed to get address' }, 500);
+  }
+});
+
+addressesRoutes.patch('/:addressId', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const id = c.req.param('addressId');
+    const body = await c.req.json();
+
+    const patch: any = {};
+    const s = (v: unknown) => (v == null ? null : (typeof v === 'string' ? (v.trim() === '' ? null : v.trim()) : String(v)));
+
+    if ('entityType' in body) {
+      const entityType = String(body.entityType || '').trim();
+      if (!['contact', 'employee'].includes(entityType)) return c.json({ error: 'entityType must be contact or employee (organization not enabled yet)' }, 400);
+      patch.entityType = entityType;
+    }
+    if ('entityId' in body) patch.entityId = String(body.entityId || '').trim();
+    if ('role' in body) patch.role = s(body.role);
+    if ('validFrom' in body) {
+      if (body.validFrom != null && !isValidDateStr(body.validFrom)) return c.json({ error: 'invalid validFrom' }, 400);
+      patch.validFrom = body.validFrom == null ? null : String(body.validFrom).trim();
+    }
+    if ('validTo' in body) {
+      if (body.validTo != null && !isValidDateStr(body.validTo)) return c.json({ error: 'invalid validTo' }, 400);
+      patch.validTo = body.validTo == null ? null : String(body.validTo).trim();
+    }
+    if ('isPrimary' in body) patch.isPrimary = Boolean(body.isPrimary);
+    if ('addressLine1' in body || 'address_line_1' in body) patch.addressLine1 = String((body.addressLine1 ?? body.address_line_1) || '').trim() || null;
+    if ('addressLine2' in body || 'address_line_2' in body) patch.addressLine2 = s(body.addressLine2 ?? body.address_line_2);
+    if ('city' in body) patch.city = String(body.city || '').trim() || null;
+    if ('county' in body) patch.county = s(body.county);
+    if ('state' in body) {
+      if (!isValidState(body.state)) return c.json({ error: 'state must be 2-letter uppercase' }, 400);
+      patch.state = normalizeState(body.state);
+    }
+    if ('zipCode' in body || 'zip_code' in body) {
+      const z5 = normalizeZip5(body.zipCode ?? body.zip_code);
+      if (!isValidZip5(z5)) return c.json({ error: 'zipCode must be 5 digits' }, 400);
+      patch.zipCode = z5;
+    }
+    if ('zipPlus4' in body || 'zip_plus4' in body) {
+      const z4 = normalizeZip4(body.zipPlus4 ?? body.zip_plus4);
+      if (!isValidZip4(z4)) return c.json({ error: 'zipPlus4 must be 4 digits' }, 400);
+      patch.zipPlus4 = z4;
+    }
+    if ('latitude' in body) {
+      if (!isValidLatitude(body.latitude)) return c.json({ error: 'latitude must be between -90 and 90' }, 400);
+      patch.latitude = body.latitude == null || String(body.latitude).trim() === '' ? null : String(Number(body.latitude));
+    }
+    if ('longitude' in body) {
+      if (!isValidLongitude(body.longitude)) return c.json({ error: 'longitude must be between -180 and 180' }, 400);
+      patch.longitude = body.longitude == null || String(body.longitude).trim() === '' ? null : String(Number(body.longitude));
+    }
+    if ('uspsStandardized' in body) patch.uspsStandardized = s(body.uspsStandardized);
+    if ('rawInput' in body) patch.rawInput = s(body.rawInput);
+    if ('verified' in body) patch.verified = Boolean(body.verified);
+    if ('verificationDate' in body) {
+      if (body.verificationDate != null && !isValidDateStr(body.verificationDate)) return c.json({ error: 'invalid verificationDate' }, 400);
+      patch.verificationDate = body.verificationDate == null ? null : String(body.verificationDate).trim();
+    }
+    if ('dataSource' in body) patch.dataSource = (typeof body.dataSource === 'string' ? body.dataSource.trim() : '') || 'manual';
+    if ('status' in body) {
+      const nextStatus = (typeof body.status === 'string' ? body.status.trim() : '') || 'active';
+      if (!allowedAddressStatuses.includes(nextStatus as any)) return c.json({ error: 'invalid status' }, 400);
+      patch.status = nextStatus;
+    }
+    patch.updatedAt = new Date();
+
+    // If entityType/entityId changed, re-validate target exists
+    if ('entityType' in patch || 'entityId' in patch) {
+      const nextType = patch.entityType;
+      const nextId = patch.entityId;
+      if (nextType === 'contact') {
+        const exists = await db.select({ id: schema.contacts.id }).from(schema.contacts).where(eq(schema.contacts.id, nextId)).limit(1);
+        if (exists.length === 0) return c.json({ error: 'Contact not found' }, 400);
+      } else if (nextType === 'employee') {
+        const exists = await db.select({ id: schema.employees.id }).from(schema.employees).where(eq(schema.employees.id, nextId)).limit(1);
+        if (exists.length === 0) return c.json({ error: 'Employee not found' }, 400);
+      }
+    }
+
+    // Validate validFrom <= validTo when either is being changed
+    if ('validFrom' in body || 'validTo' in body) {
+      const current = await db
+        .select()
+        .from(schema.addresses)
+        .where(eq(schema.addresses.id, id))
+        .limit(1);
+      if (current.length === 0) return c.json({ error: 'Not found' }, 404);
+      const nextFrom = Object.prototype.hasOwnProperty.call(patch, 'validFrom') ? patch.validFrom : (current[0] as any).validFrom;
+      const nextTo = Object.prototype.hasOwnProperty.call(patch, 'validTo') ? patch.validTo : (current[0] as any).validTo;
+      if (nextFrom != null && nextTo != null && !(String(nextFrom) <= String(nextTo))) {
+        return c.json({ error: 'validFrom must be <= validTo' }, 400);
+      }
+    }
+
+    try {
+      const updated = await db.update(schema.addresses).set(patch).where(eq(schema.addresses.id, id)).returning();
+      if (updated.length === 0) return c.json({ error: 'Not found' }, 404);
+      return c.json(updated[0]);
+    } catch (e: any) {
+      const msg = String(e?.message || '');
+      if (msg.includes('uniq_addresses_primary_per_role')) return c.json({ error: 'PrimaryExists' }, 409);
+      if (msg.includes('chk_valid_dates')) return c.json({ error: 'validFrom must be <= validTo' }, 400);
+      throw e;
+    }
+  } catch (error) {
+    console.error('Patch address error:', error);
+    return c.json({ error: 'Failed to update address' }, 500);
+  }
+});
+
+addressesRoutes.delete('/:addressId', async (c) => {
+  try {
+    const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+    const id = c.req.param('addressId');
+    const deleted = await db.delete(schema.addresses).where(eq(schema.addresses.id, id)).returning();
+    if (deleted.length === 0) return c.json({ error: 'Not found' }, 404);
+    return c.body(null, 204);
+  } catch (error) {
+    console.error('Delete address error:', error);
+    return c.json({ error: 'Failed to delete address' }, 500);
+  }
+});
+
+api.route('/addresses', addressesRoutes);
 
 // Finally mount the API router now that all subroutes are attached
 app.route('/api/v1', api);

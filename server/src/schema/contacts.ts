@@ -14,6 +14,7 @@ export const contacts = pgTable('contacts', {
   email: text('email'),
   paymentDetails: text('payment_details'),
   contactNumber: text('contact_number'),
+  organization: text('organization'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
