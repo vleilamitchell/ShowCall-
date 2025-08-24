@@ -1,20 +1,13 @@
 import { and, asc, eq, ilike } from 'drizzle-orm';
-import { getDatabase } from '../../lib/db';
+import { DatabaseConnection, getDatabase } from '../../lib/db';
 import { getDatabaseUrl } from '../../lib/env';
 import * as schema from '../../schema';
 import { validateItemAttributes } from './validation';
+import * as itemsRepo from '../../repositories/inventory/itemsRepo';
 
-export async function listInventoryItems(params: { q?: string; itemType?: string; departmentId?: string; active?: boolean }) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
-  const conditions: any[] = [];
-  if (params.q) {
-    const p = `%${params.q}%`;
-    conditions.push(ilike(schema.inventoryItems.name, p));
-  }
-  if (params.itemType) conditions.push(eq(schema.inventoryItems.itemType, params.itemType));
-  if (params.active != null) conditions.push(eq(schema.inventoryItems.active, params.active));
-  const whereClause = conditions.length ? and(...conditions) : undefined;
-  return db.select().from(schema.inventoryItems).where(whereClause as any).orderBy(asc(schema.inventoryItems.name));
+export async function listInventoryItems(params: { q?: string; itemType?: string; departmentId?: string; active?: boolean }, dbOrTx?: DatabaseConnection) {
+  // Delegate read to repository (departmentId currently unused in repo implementation)
+  return itemsRepo.findAll({ q: params.q, itemType: params.itemType, active: params.active }, dbOrTx);
 }
 
 export async function createInventoryItem(input: {
@@ -25,8 +18,8 @@ export async function createInventoryItem(input: {
   schemaId?: string; // optional: resolve by itemType if missing
   attributes: any;
   categoryId?: string | null;
-}) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+}, dbOrTx?: DatabaseConnection) {
+  const db = dbOrTx || (await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres'));
   // Generate ID
   const g: any = globalThis as any;
   let id: string | undefined;
@@ -42,13 +35,24 @@ export async function createInventoryItem(input: {
     const row = (await db
       .select({ schemaId: schema.attributeSchema.schemaId, version: schema.attributeSchema.version })
       .from(schema.attributeSchema)
-      .where(eq(schema.attributeSchema.itemType, input.itemType))
+      .where(eq(schema.attributeSchema.itemType, input.itemType as any))
       .orderBy((asc as any)((schema.attributeSchema.version as any) as any))
     ).pop();
     if (!row) {
-      throw new Error(`attribute schema not found for itemType: ${input.itemType}`);
+      // Fallback to generic Consumable schema when not found
+      const fallback = (await db
+        .select({ schemaId: schema.attributeSchema.schemaId, version: schema.attributeSchema.version })
+        .from(schema.attributeSchema)
+        .where(eq(schema.attributeSchema.itemType, 'Consumable' as any))
+        .orderBy((asc as any)((schema.attributeSchema.version as any) as any))
+      ).pop();
+      if (!fallback) {
+        throw new Error(`attribute schema not found for itemType: ${input.itemType}`);
+      }
+      schemaId = String(fallback.schemaId);
+    } else {
+      schemaId = String(row.schemaId);
     }
-    schemaId = String(row.schemaId);
   }
 
   // Validate attributes against schema
@@ -72,14 +76,12 @@ export async function createInventoryItem(input: {
   return inserted[0];
 }
 
-export async function getInventoryItem(itemId: string) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
-  const rows = await db.select().from(schema.inventoryItems).where(eq(schema.inventoryItems.itemId, itemId)).limit(1);
-  return rows[0] || null;
+export async function getInventoryItem(itemId: string, dbOrTx?: DatabaseConnection) {
+  return itemsRepo.findById(itemId, dbOrTx);
 }
 
-export async function patchInventoryItem(itemId: string, patch: Partial<{ name: string; baseUnit: string; attributes: any; active: boolean }>) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+export async function patchInventoryItem(itemId: string, patch: Partial<{ name: string; baseUnit: string; attributes: any; active: boolean }>, dbOrTx?: DatabaseConnection) {
+  const db = dbOrTx || (await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres'));
   const update: any = {};
   if (typeof patch.name === 'string') update.name = patch.name.trim();
   if (typeof patch.baseUnit === 'string') update.baseUnit = patch.baseUnit.trim();

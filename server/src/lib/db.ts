@@ -4,7 +4,7 @@ import { neon } from '@neondatabase/serverless';
 import postgres from 'postgres';
 import * as schema from '../schema';
 
-type DatabaseConnection = ReturnType<typeof drizzle> | ReturnType<typeof createDrizzlePostgres>;
+export type DatabaseConnection = ReturnType<typeof drizzle> | ReturnType<typeof createDrizzlePostgres>;
 
 let cachedConnection: DatabaseConnection | null = null;
 let cachedConnectionString: string | null = null;
@@ -63,3 +63,16 @@ export const clearConnectionCache = (): void => {
   cachedConnection = null;
   cachedConnectionString = null;
 };
+
+// withTransaction helper for postgres-js connections.
+// For neon-http (serverless) there is no transactional client in this setup, so we run the callback directly.
+export async function withTransaction<T>(fn: (db: DatabaseConnection) => Promise<T>, connectionString?: string): Promise<T> {
+  const db = await getDatabase(connectionString);
+  // Detect whether this is the postgres-js drizzle client by the presence of a .transaction method on the underlying client
+  const hasTx = typeof (db as any).transaction === 'function';
+  if (hasTx) {
+    return (db as any).transaction(async (tx: any) => fn(tx as DatabaseConnection));
+  }
+  // Fallback: best effort for neon-http: just execute without wrapping
+  return fn(db);
+}

@@ -43,8 +43,7 @@ export function RecurringRuleEditor({ seriesId }: { seriesId: string }) {
   };
 
   return (
-    <div className="rounded-md border p-3">
-      <div className="text-sm font-medium mb-2">Recurring rule</div>
+    <div>
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Every</span>
@@ -55,7 +54,7 @@ export function RecurringRuleEditor({ seriesId }: { seriesId: string }) {
           {weekdayLabels.map((lbl, i) => {
             const on = (mask & (1 << i)) !== 0;
             return (
-              <button key={i} type="button" onClick={() => toggleDay(i)} className={`px-2 py-1 rounded text-xs border ${on ? 'bg-primary/10 border-primary' : 'border-border'}`}>{lbl}</button>
+              <button key={i} type="button" onClick={() => toggleDay(i)} className={`px-2 py-1 rounded text-xs border ${on ? 'bg-primary/15 text-foreground border-primary/70' : 'border-border text-muted-foreground'}`}>{lbl}</button>
             );
           })}
         </div>

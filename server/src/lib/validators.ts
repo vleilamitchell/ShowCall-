@@ -86,4 +86,17 @@ export function isValidFrequency(s?: unknown): boolean {
   return v === 'WEEKLY';
 }
 
+// Geo validators (optional for legacy address handlers)
+export function isValidLatitude(v?: unknown): boolean {
+  if (v == null || String(v).trim() === '') return true;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= -90 && n <= 90;
+}
+
+export function isValidLongitude(v?: unknown): boolean {
+  if (v == null || String(v).trim() === '') return true;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= -180 && n <= 180;
+}
+
 

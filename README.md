@@ -67,6 +67,8 @@ cd ui && pnpm build
 cd server && pnpm run deploy
 ```
 
+From server/: pnpm run test:integration or pnpm run test:ci
+
 # Backup DB to local dump.
  `pnpm run db:backup`
 

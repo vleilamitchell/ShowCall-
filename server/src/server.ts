@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { serve } from '@hono/node-server';
-import app from './api';
+import buildApp from './app';
 import { getEnv, getDatabaseUrl, isLocalEmbeddedPostgres } from './lib/env';
 
 // Parse CLI arguments
@@ -36,10 +36,8 @@ const startServer = async () => {
     console.log('🔗 Using external database connection');
   }
 
-  serve({
-    fetch: app.fetch,
-    port,
-  });
+  const app = buildApp();
+  serve({ fetch: app.fetch, port });
 };
 
 // Graceful shutdown

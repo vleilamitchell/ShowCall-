@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ExternalLink, ClipboardCopy, Pencil, ChevronDown } from 'lucide-react';
+import { ExternalLink, ClipboardCopy, Pencil } from 'lucide-react';
 import type { EventRecord } from '@/lib/serverComm';
 import { updateEvent } from '@/lib/serverComm';
 import { useDebouncedPatch } from '@/features/listDetail';
+import { Rollup } from '@/components/ui/rollup';
 
 type Props = {
   event: EventRecord;
@@ -19,9 +19,7 @@ type Props = {
 type FieldKey = 'ticketUrl' | 'eventPageUrl' | 'promoAssetsUrl';
 
 export function EventMarketingPanel({ event, onPatch, mutateItems }: Props) {
-  const [open, setOpen] = useState<boolean>(() => {
-    try { return localStorage.getItem('eventMarketingRollupOpen') === '1'; } catch { return true; }
-  });
+  // open state handled by Rollup
   const [editing, setEditing] = useState<FieldKey | null>(null);
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
 
@@ -106,29 +104,22 @@ export function EventMarketingPanel({ event, onPatch, mutateItems }: Props) {
 
   return (
     <div className="mt-6">
-      <Collapsible open={open} onOpenChange={(v) => { setOpen(v); try { localStorage.setItem('eventMarketingRollupOpen', v ? '1' : '0'); } catch {} }}>
-        <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 hover:bg-muted/50 transition-colors" aria-expanded={open}>
-            <span className="text-sm font-semibold">Marketing</span>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">{['ticketUrl','eventPageUrl','promoAssetsUrl'].filter((k) => (event as any)[k]).length}</Badge>
-              <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : 'rotate-0'}`} />
-            </div>
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden transition-[max-height,opacity] duration-400 ease-out data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:max-h-[2000px] data-[state=closed]:max-h-0" style={{ willChange: 'opacity, max-height' }}>
-          <Card className="mt-3 p-3 bg-muted/30">
-            <div className="space-y-3">
-              {fields.map((f, i) => (
-                <div key={f.key}>
-                  <Row k={f.key} label={f.label} value={f.value} placeholder={f.placeholder} />
-                  {i < fields.length - 1 ? <Separator className="mt-3" /> : null}
-                </div>
-              ))}
-            </div>
-          </Card>
-        </CollapsibleContent>
-      </Collapsible>
+      <Rollup
+        title="Marketing"
+        summaryText={['ticketUrl','eventPageUrl','promoAssetsUrl'].filter((k) => (event as any)[k]).length}
+        storageKey="eventMarketingRollupOpen"
+      >
+        <Card className="p-3 bg-muted/30">
+          <div className="space-y-3">
+            {fields.map((f, i) => (
+              <div key={f.key}>
+                <Row k={f.key} label={f.label} value={f.value} placeholder={f.placeholder} />
+                {i < fields.length - 1 ? <Separator className="mt-3" /> : null}
+              </div>
+            ))}
+          </div>
+        </Card>
+      </Rollup>
     </div>
   );
 }

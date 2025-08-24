@@ -6,10 +6,10 @@ import { Switch } from '@/components/ui/switch';
 import { ListDetailLayout, List, FilterBar, useListDetail, useDebouncedPatch, type ResourceAdapter } from '@/features/listDetail';
 import { type EventSeries, listEventSeries, createEventSeries, getEventSeries, updateEventSeries, deleteEventSeries, getEventSeriesAreas, putEventSeriesAreas, previewEventSeries, generateEventSeries } from '@/lib/serverComm';
 import { SeriesAreasPanel } from '@/features/events/SeriesAreasPanel';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown } from 'lucide-react';
 import { RecurringRuleEditor } from '@/features/events/RecurringRuleEditor';
+import { Rollup } from '@/components/ui/rollup';
+import { SeriesRecurringRulePanel } from '@/features/events/SeriesRecurringRulePanel';
 
 type SeriesFilters = { activeOnly?: boolean; from?: string; to?: string };
 
@@ -139,96 +139,70 @@ export default function EventsRecurring() {
 
             {selected ? (
               <>
-                <Collapsible open defaultOpen>
-                  <CollapsibleTrigger asChild>
-                    <button className="w-full flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 hover:bg-muted/50 transition-colors">
-                      <span className="text-sm font-semibold">Details</span>
-                      <ChevronDown className="h-4 w-4" />
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs text-muted-foreground mb-1">Description</label>
-                        <Input value={selected.description || ''} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, description: v } : i))); updateEventSeries(selected.id, { description: v || null }); }} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-muted-foreground mb-1">Default Status</label>
-                        <Input value={selected.defaultStatus} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, defaultStatus: v } : i))); updateEventSeries(selected.id, { defaultStatus: v }); }} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-muted-foreground mb-1">Start Date</label>
-                        <DateField value={selected.startDate || ''} onChange={(v) => { mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, startDate: v || null } : i))); updateEventSeries(selected.id, { startDate: v || null }); }} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-muted-foreground mb-1">End Date</label>
-                        <DateField value={selected.endDate || ''} onChange={(v) => { mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, endDate: v || null } : i))); updateEventSeries(selected.id, { endDate: v || null }); }} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-muted-foreground mb-1">Default Start</label>
-                        <Input value={selected.defaultStartTime} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, defaultStartTime: v } : i))); updateEventSeries(selected.id, { defaultStartTime: v }); }} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-muted-foreground mb-1">Default End</label>
-                        <Input value={selected.defaultEndTime} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, defaultEndTime: v } : i))); updateEventSeries(selected.id, { defaultEndTime: v }); }} />
-                      </div>
-                      <div className="col-span-2">
-                        <label className="block text-xs text-muted-foreground mb-1">Title Template</label>
-                        <Input value={selected.titleTemplate || ''} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, titleTemplate: v } : i))); updateEventSeries(selected.id, { titleTemplate: v || null }); }} />
-                      </div>
-                      <div className="col-span-2">
-                        <label className="block text-xs text-muted-foreground mb-1">Promoter</label>
-                        <Input value={selected.promoterTemplate || ''} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, promoterTemplate: v } : i))); updateEventSeries(selected.id, { promoterTemplate: v || null }); }} />
-                      </div>
+                <Rollup title="Details">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Description</label>
+                      <Input value={selected.description || ''} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, description: v } : i))); updateEventSeries(selected.id, { description: v || null }); }} />
                     </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Default Status</label>
+                      <Input value={selected.defaultStatus} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, defaultStatus: v } : i))); updateEventSeries(selected.id, { defaultStatus: v }); }} />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Start Date</label>
+                      <DateField value={selected.startDate || ''} onChange={(v) => { mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, startDate: v || null } : i))); updateEventSeries(selected.id, { startDate: v || null }); }} />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">End Date</label>
+                      <DateField value={selected.endDate || ''} onChange={(v) => { mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, endDate: v || null } : i))); updateEventSeries(selected.id, { endDate: v || null }); }} />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Default Start</label>
+                      <Input value={selected.defaultStartTime} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, defaultStartTime: v } : i))); updateEventSeries(selected.id, { defaultStartTime: v }); }} />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Default End</label>
+                      <Input value={selected.defaultEndTime} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, defaultEndTime: v } : i))); updateEventSeries(selected.id, { defaultEndTime: v }); }} />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-xs text-muted-foreground mb-1">Title Template</label>
+                      <Input value={selected.titleTemplate || ''} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, titleTemplate: v } : i))); updateEventSeries(selected.id, { titleTemplate: v || null }); }} />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-xs text-muted-foreground mb-1">Promoter</label>
+                      <Input value={selected.promoterTemplate || ''} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, promoterTemplate: v } : i))); updateEventSeries(selected.id, { promoterTemplate: v || null }); }} />
+                    </div>
+                  </div>
+                </Rollup>
 
-                <Collapsible open defaultOpen>
-                  <CollapsibleTrigger asChild>
-                    <button className="w-full flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 hover:bg-muted/50 transition-colors mt-6">
-                      <span className="text-sm font-semibold">Recurring Rule</span>
-                      <ChevronDown className="h-4 w-4" />
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-3">
-                    <RecurringRuleEditor seriesId={selected.id} />
-                  </CollapsibleContent>
-                </Collapsible>
+                <SeriesRecurringRulePanel seriesId={selected.id} />
 
                 <SeriesAreasPanel seriesId={selected.id} />
 
-                <Collapsible>
-                  <CollapsibleTrigger asChild>
-                    <button className="w-full flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 hover:bg-muted/50 transition-colors mt-6">
-                      <span className="text-sm font-semibold">Generate</span>
-                      <ChevronDown className="h-4 w-4" />
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="rounded-md border p-3 mt-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs text-muted-foreground mb-1">Until date</label>
-                          <DateField value={genUntil} onChange={(v) => setGenUntil(v || '')} />
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <label className="text-xs text-muted-foreground">Overwrite existing</label>
-                          <Switch checked={genOverwrite} onCheckedChange={setGenOverwrite} />
-                          <label className="text-xs text-muted-foreground">Replace areas</label>
-                          <Switch checked={genReplaceAreas} onCheckedChange={setGenReplaceAreas} />
-                        </div>
-                        <div className="col-span-2 flex gap-2">
-                          <Button size="sm" variant="outline" onClick={onPreview} disabled={!genUntil || previewLoading}>{previewLoading ? 'Previewing…' : 'Preview'}</Button>
-                          <Button size="sm" onClick={onGenerate} disabled={!genUntil}>Generate</Button>
-                        </div>
+                <Rollup title="Generate" className="mt-6">
+                  <div className="rounded-md border p-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">Until date</label>
+                        <DateField value={genUntil} onChange={(v) => setGenUntil(v || '')} />
                       </div>
-                      {previewDates && previewDates.length > 0 ? (
-                        <div className="mt-3 text-xs text-muted-foreground">{previewDates.length} dates</div>
-                      ) : null}
+                      <div className="flex items-center gap-3">
+                        <label className="text-xs text-muted-foreground">Overwrite existing</label>
+                        <Switch checked={genOverwrite} onCheckedChange={setGenOverwrite} />
+                        <label className="text-xs text-muted-foreground">Replace areas</label>
+                        <Switch checked={genReplaceAreas} onCheckedChange={setGenReplaceAreas} />
+                      </div>
+                      <div className="col-span-2 flex gap-2">
+                        <Button size="sm" variant="outline" onClick={onPreview} disabled={!genUntil || previewLoading}>{previewLoading ? 'Previewing…' : 'Preview'}</Button>
+                        <Button size="sm" onClick={onGenerate} disabled={!genUntil}>Generate</Button>
+                      </div>
                     </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                    {previewDates && previewDates.length > 0 ? (
+                      <div className="mt-3 text-xs text-muted-foreground">{previewDates.length} dates</div>
+                    ) : null}
+                  </div>
+                </Rollup>
               </>
             ) : null}
           </div>

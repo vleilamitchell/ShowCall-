@@ -300,7 +300,7 @@ export function Events() {
             renderItem={(ev) => (
               <>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-primary/10 text-white border border-primary/30 shadow-sm">
+                  <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-primary/20 text-foreground border border-primary/40 shadow-sm">
                     {formatDateMMDD(ev.date)}
                   </span>
                   <div className="flex items-center gap-1.5">

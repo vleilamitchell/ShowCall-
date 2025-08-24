@@ -6,7 +6,11 @@
     "dev": "tsx watch src/server.ts",
     "deploy": "npm run deploy:cf",
     "deploy:cf": "node scripts/deploy-cloudflare.js",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run --dir src --include \"**/*.unit.{ts,tsx}\"",
+    "test:integration": "vitest run --dir src --include \"**/*.int.{ts,tsx}\"",
+    "test:ci": "vitest run --coverage",
     "db:push": "drizzle-kit push:pg",
     "db:migrate:sql": "node scripts/setup-private-schema.mjs && node scripts/apply-sql-migrations.mjs"
   },

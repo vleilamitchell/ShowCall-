@@ -1,11 +1,11 @@
 import { and, eq } from 'drizzle-orm';
-import { getDatabase } from '../../lib/db';
+import { DatabaseConnection, getDatabase } from '../../lib/db';
 import { getDatabaseUrl } from '../../lib/env';
 import * as schema from '../../schema';
 
-export async function convertToBaseUnits(baseUnit: string, qty: number, unit: string): Promise<number> {
+export async function convertToBaseUnits(baseUnit: string, qty: number, unit: string, dbOrTx?: DatabaseConnection): Promise<number> {
   if (unit === baseUnit) return qty;
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = dbOrTx || (await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres'));
   // direct
   const direct = await db
     .select({ factor: schema.unitConversions.factor })

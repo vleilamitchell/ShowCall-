@@ -41,7 +41,7 @@ Brief description: Stand up the testing workflow and guardrails that will protec
   - Capture both success and representative failure modes (400/401/403/404/409) and list/pagination semantics.
 - How to enumerate current endpoints:
   - Review `server/src/api.ts` and any existing `server/src/routes/*` (e.g., `routes/eventSeries.ts`) for `GET/POST/PATCH/PUT/DELETE` registrations.
-  - Optionally run a quick route inventory locally to cross-check your manual scan.
+  - run a quick route inventory locally to cross-check your manual scan.
 - Prioritization criteria (test these first):
   - Business-critical flows with side effects: inventory transactions, reservations.
   - Recently modified or unstable areas: addresses, event series.

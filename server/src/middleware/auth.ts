@@ -3,7 +3,8 @@ import { verifyFirebaseToken } from '../lib/firebase-auth';
 import { getDatabase } from '../lib/db';
 import { eq } from 'drizzle-orm';
 import { User, users } from '../schema/users';
-import { getFirebaseProjectId, getDatabaseUrl } from '../lib/env';
+import { getEnv, getFirebaseProjectId, getDatabaseUrl } from '../lib/env';
+import { AuthError } from '../errors';
 
 declare module 'hono' {
   interface ContextVariableMap {
@@ -11,11 +12,56 @@ declare module 'hono' {
   }
 }
 
+// Re-export a friendly alias for controllers/services to reference the auth user type
+export type AuthenticatedUser = User;
+
 export const authMiddleware: MiddlewareHandler = async (c, next) => {
   try {
+    // Test-mode stub path: allow tests to inject a user without JWT
+    const nodeEnv = getEnv('NODE_ENV');
+    if (nodeEnv === 'test') {
+      let stub = (c as any).get?.('testUser') as { userId: string; email?: string } | undefined;
+      if (!stub) {
+        const hdr = c.req.header('x-test-user');
+        if (hdr) {
+          try {
+            stub = JSON.parse(hdr);
+          } catch {
+            // ignore malformed header; fall through to normal auth
+          }
+        }
+      }
+      if (stub?.userId) {
+        const databaseUrl = getDatabaseUrl();
+        const db = await getDatabase(databaseUrl!);
+        await db
+          .insert(users)
+          .values({
+            id: stub.userId,
+            email: stub.email ?? null,
+            display_name: null,
+            photo_url: null,
+          })
+          .onConflictDoNothing();
+
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, stub.userId))
+          .limit(1);
+
+        if (!user) {
+          throw new Error('Failed to create or retrieve user');
+        }
+
+        c.set('user', user);
+        return next();
+      }
+    }
+
     const authHeader = c.req.header('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return c.json({ error: 'Unauthorized' }, 401);
+      throw new AuthError('Missing or invalid Authorization header');
     }
 
     const token = authHeader.split('Bearer ')[1];
@@ -48,7 +94,6 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
     c.set('user', user);
     await next();
   } catch (error) {
-    console.error('Auth error:', error);
-    return c.json({ error: 'Unauthorized' }, 401);
+    throw new AuthError('Unauthorized');
   }
 }; 

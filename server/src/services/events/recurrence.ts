@@ -111,88 +111,104 @@ export async function upsertEventsForSeries(seriesId: string, params: { fromDate
   const dates = computeOccurrences(series as any, rule as any, { fromDate: params.fromDate, untilDate: params.untilDate });
   const { template, mergeStrategy } = buildEventTemplate(series as any);
 
+  // Batch fetch existing events for the date set to reduce N+1 lookups
+  const existingByDate = new Map<string, any>();
+  if (dates.length > 0) {
+    const all = await db
+      .select()
+      .from(schema.events)
+      .where(and(eq(schema.events.seriesId, seriesId), inArray(schema.events.date as any, dates as any) as any));
+    for (const ev of all as any[]) existingByDate.set(ev.date, ev);
+  }
+
   let created = 0, updated = 0, skipped = 0;
   const eventIds: string[] = [];
 
-  for (const date of dates) {
-    const existing = await db.select().from(schema.events).where(and(eq(schema.events.seriesId, seriesId), eq(schema.events.date, date))).limit(1);
-    if (existing.length === 0) {
-      // Insert
-      let id: string | undefined;
-      const g: any = globalThis as any;
-      if (g?.crypto?.randomUUID) id = g.crypto.randomUUID();
-      if (!id) { try { const nc = await import('node:crypto'); if (nc.randomUUID) id = nc.randomUUID(); } catch {} }
-      if (!id) id = `evt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-      const rec: any = {
-        id,
-        seriesId,
-        date,
-        title: (template.title && String(template.title).trim()) || String(series.name || '').trim() || '',
-        status: template.status,
-        startTime: template.startTime,
-        endTime: template.endTime,
-        promoter: template.promoter || null,
-        artists: template.artists || null,
-        ticketUrl: template.ticketUrl || null,
-        eventPageUrl: template.eventPageUrl || null,
-        promoAssetsUrl: template.promoAssetsUrl || null,
-      };
-      const inserted = await db.insert(schema.events).values(rec).returning();
-      const ev = inserted[0];
-      if (ev) {
-        eventIds.push(ev.id as any);
-        created++;
-        // Apply areas via replace semantics
-        if (areaIds.length > 0) {
-          const current = await db.select({ areaId: schema.eventAreas.areaId }).from(schema.eventAreas).where(eq(schema.eventAreas.eventId, ev.id));
-          const currentIds = new Set(current.map((r: any) => r.areaId));
-          const toAdd = areaIds.filter((id) => !currentIds.has(id));
-          const toRemove = Array.from(currentIds).filter((id) => !areaIds.includes(id));
-          if (toRemove.length > 0) {
-            await db.delete(schema.eventAreas).where(and(eq(schema.eventAreas.eventId, ev.id), inArray(schema.eventAreas.areaId as any, toRemove as any) as any));
-          }
-          for (const aid of toAdd) {
-            await db.insert(schema.eventAreas).values({ eventId: ev.id, areaId: aid });
-          }
-        }
-      }
-    } else {
-      const ev = existing[0];
-      if (params.overwriteExisting) {
-        const next = applyTemplateToEvent(ev, template, mergeStrategy);
-        const updatedRows = await db.update(schema.events).set({
-          title: next.title,
-          status: next.status,
-          startTime: next.startTime,
-          endTime: next.endTime,
-          promoter: next.promoter,
-          artists: next.artists,
-          ticketUrl: next.ticketUrl,
-          eventPageUrl: next.eventPageUrl,
-          promoAssetsUrl: next.promoAssetsUrl,
-          updatedAt: new Date(),
-        }).where(eq(schema.events.id, ev.id)).returning();
-        if (updatedRows[0]) {
-          updated++;
-          eventIds.push(updatedRows[0].id as any);
-          if (params.setAreasMode === 'replace') {
-            // replace areas
-            const current = await db.select({ areaId: schema.eventAreas.areaId }).from(schema.eventAreas).where(eq(schema.eventAreas.eventId, ev.id));
+  // Wrap in transaction when supported by the underlying client
+  const run = async (client: any) => {
+    for (const date of dates) {
+      const existing = existingByDate.get(date);
+      if (!existing) {
+        let id: string | undefined;
+        const g: any = globalThis as any;
+        if (g?.crypto?.randomUUID) id = g.crypto.randomUUID();
+        if (!id) { try { const nc = await import('node:crypto'); if (nc.randomUUID) id = nc.randomUUID(); } catch {} }
+        if (!id) id = `evt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        const rec: any = {
+          id,
+          seriesId,
+          date,
+          title: (template.title && String(template.title).trim()) || String(series.name || '').trim() || '',
+          status: template.status,
+          startTime: template.startTime,
+          endTime: template.endTime,
+          promoter: template.promoter || null,
+          artists: template.artists || null,
+          ticketUrl: template.ticketUrl || null,
+          eventPageUrl: template.eventPageUrl || null,
+          promoAssetsUrl: template.promoAssetsUrl || null,
+        };
+        const inserted = await client.insert(schema.events).values(rec).returning();
+        const ev = inserted[0];
+        if (ev) {
+          eventIds.push(ev.id as any);
+          created++;
+          if (areaIds.length > 0) {
+            const current = await client.select({ areaId: schema.eventAreas.areaId }).from(schema.eventAreas).where(eq(schema.eventAreas.eventId, ev.id));
             const currentIds = new Set(current.map((r: any) => r.areaId));
             const toAdd = areaIds.filter((id) => !currentIds.has(id));
             const toRemove = Array.from(currentIds).filter((id) => !areaIds.includes(id));
             if (toRemove.length > 0) {
-              await db.delete(schema.eventAreas).where(and(eq(schema.eventAreas.eventId, ev.id), inArray(schema.eventAreas.areaId as any, toRemove as any) as any));
+              await client.delete(schema.eventAreas).where(and(eq(schema.eventAreas.eventId, ev.id), inArray(schema.eventAreas.areaId as any, toRemove as any) as any));
             }
             for (const aid of toAdd) {
-              await db.insert(schema.eventAreas).values({ eventId: ev.id, areaId: aid });
+              await client.insert(schema.eventAreas).values({ eventId: ev.id, areaId: aid });
             }
           }
         }
       } else {
-        skipped++;
+        if (params.overwriteExisting) {
+          const next = applyTemplateToEvent(existing, template, mergeStrategy);
+          const updatedRows = await client.update(schema.events).set({
+            title: next.title,
+            status: next.status,
+            startTime: next.startTime,
+            endTime: next.endTime,
+            promoter: next.promoter,
+            artists: next.artists,
+            ticketUrl: next.ticketUrl,
+            eventPageUrl: next.eventPageUrl,
+            promoAssetsUrl: next.promoAssetsUrl,
+            updatedAt: new Date(),
+          }).where(eq(schema.events.id, existing.id)).returning();
+          if (updatedRows[0]) {
+            updated++;
+            eventIds.push(updatedRows[0].id as any);
+            if (params.setAreasMode === 'replace') {
+              const current = await client.select({ areaId: schema.eventAreas.areaId }).from(schema.eventAreas).where(eq(schema.eventAreas.eventId, existing.id));
+              const currentIds = new Set(current.map((r: any) => r.areaId));
+              const toAdd = areaIds.filter((id) => !currentIds.has(id));
+              const toRemove = Array.from(currentIds).filter((id) => !areaIds.includes(id));
+              if (toRemove.length > 0) {
+                await client.delete(schema.eventAreas).where(and(eq(schema.eventAreas.eventId, existing.id), inArray(schema.eventAreas.areaId as any, toRemove as any) as any));
+              }
+              for (const aid of toAdd) {
+                await client.insert(schema.eventAreas).values({ eventId: existing.id, areaId: aid });
+              }
+            }
+          }
+        } else {
+          skipped++;
+        }
       }
     }
+  };
+
+  const hasTx = typeof (db as any).transaction === 'function';
+  if (hasTx) {
+    await (db as any).transaction(async (tx: any) => run(tx));
+  } else {
+    await run(db);
   }
 
   return { created, updated, skipped, eventIds };

@@ -8,9 +8,9 @@ import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
 import { formatTimeTo12Hour } from '@/lib/time';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown, MoreVertical } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Rollup } from '@/components/ui/rollup';
+import { AssignmentPicker } from '@/components/assignment-picker';
 
 type FilterState = { departmentId?: string; q?: string };
 
@@ -403,13 +403,9 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
   const [assignments, setAssignments] = useState<Array<{ id: string; requiredPositionId: string; assigneeEmployeeId: string | null }>>([]);
   const [positions, setPositions] = useState<PositionRecord[]>([]);
   const [eligible, setEligible] = useState<Record<string, EligibleEmployee[]>>({});
-  const [creating, setCreating] = useState(false);
-  const [newPositionId, setNewPositionId] = useState('');
-  const [newAssigneeId, setNewAssigneeId] = useState<string>('');
+  const [selectedPositionId, setSelectedPositionId] = useState<string>('');
+  const [, setBusy] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
-  const [open, setOpen] = useState<boolean>(() => {
-    try { return localStorage.getItem('assignmentsRollupOpen') === '1'; } catch { return false; }
-  });
 
   const load = async () => {
     try {
@@ -418,7 +414,14 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
         api.listPositions?.(departmentId),
       ]);
       setAssignments((rows || []).map((r) => ({ id: r.id, requiredPositionId: r.requiredPositionId, assigneeEmployeeId: r.assigneeEmployeeId ?? null })));
-      setPositions(pos || []);
+      const ps = pos || [];
+      setPositions(ps);
+      // Default selected position: first with any assignment or first available
+      setSelectedPositionId((prev) => {
+        if (prev) return prev;
+        const firstWithAssignment = (rows || []).find((r) => !!r.requiredPositionId)?.requiredPositionId;
+        return firstWithAssignment || (ps[0]?.id || '');
+      });
     } catch (e: any) {
       setErr(e?.message || 'Failed to load assignments');
     }
@@ -426,34 +429,7 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
 
   useEffect(() => { (async()=>{ if (!departmentId || !shiftId) return; await load(); })(); }, [departmentId, shiftId]);
 
-  const onChangeAssignee = async (assignmentId: string, assigneeId: string | null) => {
-    try {
-      const updated = await api.updateAssignment?.(assignmentId, { assigneeEmployeeId: assigneeId });
-      if (updated) setAssignments((prev) => prev.map((a) => a.id === assignmentId ? { ...a, assigneeEmployeeId: updated.assigneeEmployeeId ?? null } : a));
-    } catch (e: any) {
-      setErr(e?.message || 'Failed to update assignment');
-    }
-  };
-
-  const onDelete = async (assignmentId: string) => {
-    try { await api.deleteAssignment?.(assignmentId); setAssignments((prev)=>prev.filter(a=>a.id!==assignmentId)); } catch (e:any){ setErr(e?.message||'Failed to delete'); }
-  };
-
-  const onCreate = async () => {
-    if (!newPositionId) return;
-    setCreating(true);
-    try {
-      const created = await api.createAssignment?.(departmentId, { shiftId, requiredPositionId: newPositionId, assigneeEmployeeId: newAssigneeId || undefined });
-      if (created) {
-        setAssignments((prev) => [...prev, { id: created.id, requiredPositionId: created.requiredPositionId, assigneeEmployeeId: created.assigneeEmployeeId ?? null }]);
-        setNewPositionId(''); setNewAssigneeId('');
-      }
-    } catch (e: any) {
-      setErr(e?.message || 'Failed to create assignment');
-    } finally { setCreating(false); }
-  };
-
-  const loadEligible = async (positionId: string) => {
+  const ensureEligibleLoaded = async (positionId: string) => {
     if (!positionId) return;
     if (eligible[positionId]) return;
     try {
@@ -462,75 +438,124 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
     } catch {}
   };
 
-  useEffect(() => { if (newPositionId) { loadEligible(newPositionId); } }, [newPositionId]);
+  useEffect(() => { if (selectedPositionId) { void ensureEligibleLoaded(selectedPositionId); } }, [selectedPositionId]);
 
-  useEffect(() => {
-    try { localStorage.setItem('assignmentsRollupOpen', open ? '1' : '0'); } catch {}
-  }, [open]);
+  const assignedForSelected = useMemo(() => assignments.filter(a => a.requiredPositionId === selectedPositionId), [assignments, selectedPositionId]);
+  const assignedEmployeeIds = useMemo(() => new Set(assignedForSelected.filter(a => a.assigneeEmployeeId).map(a => a.assigneeEmployeeId as string)), [assignedForSelected]);
+  const pickerItems = useMemo(() => {
+    const elig = eligible[selectedPositionId] || [];
+    return elig.map(e => ({ id: e.id, label: e.name }));
+  }, [eligible, selectedPositionId]);
+
+  const assignEmployee = async (employeeId: string) => {
+    if (!selectedPositionId) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      // Reuse an open slot if present; otherwise create one
+      const open = assignments.find(a => a.requiredPositionId === selectedPositionId && !a.assigneeEmployeeId);
+      if (open) {
+        const updated = await api.updateAssignment?.(open.id, { assigneeEmployeeId: employeeId });
+        if (updated) setAssignments(prev => prev.map(a => a.id === open.id ? { ...a, assigneeEmployeeId: updated.assigneeEmployeeId ?? null } : a));
+      } else {
+        const created = await api.createAssignment?.(departmentId, { shiftId, requiredPositionId: selectedPositionId, assigneeEmployeeId: employeeId });
+        if (created) setAssignments(prev => [...prev, { id: created.id, requiredPositionId: created.requiredPositionId, assigneeEmployeeId: created.assigneeEmployeeId ?? null }]);
+      }
+    } catch (e: any) {
+      setErr(e?.message || 'Failed to assign');
+    } finally { setBusy(false); }
+  };
+
+  const unassignEmployee = async (employeeId: string) => {
+    if (!selectedPositionId) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const row = assignments.find(a => a.requiredPositionId === selectedPositionId && a.assigneeEmployeeId === employeeId);
+      if (!row) return;
+      await api.deleteAssignment?.(row.id);
+      setAssignments(prev => prev.filter(a => a.id !== row.id));
+    } catch (e: any) {
+      setErr(e?.message || 'Failed to unassign');
+    } finally { setBusy(false); }
+  };
+
+  // Stats and derived lists
+  const totalSlots = assignments.length;
+  const totalAssigned = assignments.filter(a => a.assigneeEmployeeId).length;
+  const positionStats = useMemo(() => {
+    const byId = new Map<string, { id: string; name: string; total: number; assigned: number; open: number }>();
+    positions.forEach(p => byId.set(p.id, { id: p.id, name: p.name, total: 0, assigned: 0, open: 0 }));
+    assignments.forEach(a => {
+      const s = byId.get(a.requiredPositionId) || { id: a.requiredPositionId, name: positions.find(p => p.id === a.requiredPositionId)?.name || a.requiredPositionId, total: 0, assigned: 0, open: 0 };
+      s.total += 1;
+      if (a.assigneeEmployeeId) s.assigned += 1; else s.open += 1;
+      byId.set(a.requiredPositionId, s);
+    });
+    // Ensure at least some positions exist
+    return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [positions, assignments]);
+
+  const [showOnlyUsed, setShowOnlyUsed] = useState<boolean>(false);
+  const visiblePositions = useMemo(() => showOnlyUsed ? positionStats.filter(s => s.total > 0) : positionStats, [positionStats, showOnlyUsed]);
+
+  const rollupSummary = (
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] text-muted-foreground">Assigned</span>
+      <Badge variant="secondary" className="text-[10px]">{totalAssigned}/{totalSlots}</Badge>
+    </div>
+  );
 
   return (
     <div className="mt-3">
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 hover:bg-muted/50 transition-colors">
-            <span className="text-sm font-semibold">Assignments</span>
-            <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden transition-[max-height,opacity] duration-400 ease-out data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:max-h-[2000px] data-[state=closed]:max-h-0" style={{ willChange: 'opacity, max-height' }}>
-          <div className="space-y-2 px-3 pb-3 pt-2">
-            {err ? <div className="text-xs text-red-600">{err}</div> : null}
-            <div className="flex items-center gap-3 px-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-              <span className="w-[200px]">Position</span>
-              <span className="flex-1">Assignee</span>
+      <Rollup title="Assignments" summary={rollupSummary} storageKey="assignmentsRollupOpen">
+        <div className="px-3 pb-3 pt-2">
+          {err ? <div className="text-xs text-red-600 mb-2">{err}</div> : null}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-1">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs text-muted-foreground">Positions</div>
+                <Button size="sm" variant={showOnlyUsed ? 'default' : 'outline'} onClick={() => setShowOnlyUsed(v => !v)}>
+                  {showOnlyUsed ? 'Showing used' : 'Show used'}
+                </Button>
+              </div>
+              <div className="rounded-md border divide-y">
+                {visiblePositions.length === 0 ? (
+                  <div className="p-3 text-sm text-muted-foreground">No positions</div>
+                ) : (
+                  visiblePositions.map(s => (
+                    <button
+                      key={s.id}
+                      className={`w-full text-left p-2 hover:bg-muted/50 ${selectedPositionId === s.id ? 'bg-muted/50' : ''}`}
+                      onClick={() => setSelectedPositionId(s.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 truncate text-sm">{s.name}</div>
+                        <Badge variant="secondary" className="text-[10px]">{s.assigned}/{s.total}</Badge>
+                        {s.open > 0 ? <span className="text-[10px] text-amber-700">+{s.open}</span> : null}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+              {/* Slot controls removed: removing an assignee now deletes the slot */}
             </div>
-            {assignments.map((a) => (
-              <div key={a.id} className="flex items-center gap-2 rounded border p-2">
-                <span className="text-sm w-[200px] truncate">{positions.find((p) => p.id === a.requiredPositionId)?.name || a.requiredPositionId}</span>
-                <select className="border rounded px-2 py-1 text-sm flex-1" value={a.assigneeEmployeeId || ''}
-                  onChange={(e) => onChangeAssignee(a.id, e.target.value || null)}
-                  onFocus={() => loadEligible(a.requiredPositionId)}>
-                  <option value="">Unassigned</option>
-                  {(eligible[a.requiredPositionId] || []).map((emp) => (
-                    <option key={emp.id} value={emp.id}>{emp.name}{emp.priority != null ? ` (p${emp.priority})` : ''}</option>
-                  ))}
-                </select>
-                <div className="ml-auto">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button size="icon" variant="ghost" aria-label="Assignment actions">
-                        <MoreVertical className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem className="text-destructive" onClick={() => onDelete(a.id)}>Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            ))}
-            <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
-              <div>
-                <label className="block text-xs text-muted-foreground">Position</label>
-                <select className="border rounded px-2 py-1 text-sm w-full" value={newPositionId} onChange={(e) => setNewPositionId(e.target.value)}>
-                  <option value="">Select…</option>
-                  {positions.map((p) => (<option key={p.id} value={p.id}>{p.name}</option>))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-muted-foreground">Assignee</label>
-                <select className="border rounded px-2 py-1 text-sm w-full" value={newAssigneeId} onChange={(e) => setNewAssigneeId(e.target.value)} onFocus={() => { if (newPositionId) loadEligible(newPositionId); }}>
-                  <option value="">Unassigned</option>
-                  {(eligible[newPositionId] || []).map((emp) => (<option key={emp.id} value={emp.id}>{emp.name}{emp.priority != null ? ` (p${emp.priority})` : ''}</option>))}
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={onCreate} disabled={creating || !newPositionId}>{creating ? 'Adding…' : 'Add'}</Button>
-              </div>
+            <div className="sm:col-span-2">
+              {!selectedPositionId ? (
+                <div className="p-3 text-sm text-muted-foreground border rounded-md">Select a position to manage assignments</div>
+              ) : (
+                <AssignmentPicker
+                  items={pickerItems}
+                  isSelected={(id) => assignedEmployeeIds.has(id)}
+                  onAdd={assignEmployee}
+                  onRemove={unassignEmployee}
+                  searchPlaceholder="Search employees"
+                />
+              )}
             </div>
           </div>
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+      </Rollup>
     </div>
   );
 }

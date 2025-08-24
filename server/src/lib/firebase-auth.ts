@@ -39,7 +39,9 @@ export async function verifyFirebaseToken(token: string, projectId: string): Pro
         throw new Error('Invalid token format');
       }
       
-      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const json = Buffer.from(b64, 'base64').toString('utf8');
+      const payload = JSON.parse(json);
       
       // Basic validation for emulator tokens
       if (!payload.sub || !payload.aud || payload.aud !== projectId) {

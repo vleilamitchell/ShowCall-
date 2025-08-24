@@ -1,17 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronDown, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { listShiftsForEvent, type ShiftRecord, type DepartmentRecord, listDepartments } from '@/lib/serverComm';
 import { formatTimeTo12Hour } from '@/lib/time';
+import { Rollup } from '@/components/ui/rollup';
 
 export function EventShiftsPanel({ eventId }: { eventId: string }) {
-  const [open, setOpen] = useState<boolean>(() => {
-    try { return localStorage.getItem('eventShiftsRollupOpen') === '1'; } catch { return true; }
-  });
+  // open state handled by Rollup
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shifts, setShifts] = useState<ShiftRecord[]>([]);
@@ -56,21 +54,8 @@ export function EventShiftsPanel({ eventId }: { eventId: string }) {
 
   return (
     <div className="mt-6">
-      <Collapsible open={open} onOpenChange={(v) => { setOpen(v); try { localStorage.setItem('eventShiftsRollupOpen', v ? '1' : '0'); } catch {} }}>
-        <CollapsibleTrigger asChild>
-          <button
-            className="w-full flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 hover:bg-muted/50 transition-colors"
-            aria-expanded={open}
-          >
-            <span className="text-sm font-semibold">Shifts</span>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">{shifts.length}</Badge>
-              <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : 'rotate-0'}`} />
-            </div>
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden transition-[max-height,opacity] duration-400 ease-out data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:max-h-[2000px] data-[state=closed]:max-h-0" style={{ willChange: 'opacity, max-height' }}>
-          <div className="mt-3 space-y-4">
+      <Rollup title="Shifts" summaryText={shifts.length} storageKey="eventShiftsRollupOpen">
+        <div className="space-y-4">
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -107,9 +92,8 @@ export function EventShiftsPanel({ eventId }: { eventId: string }) {
                 })}
               </div>
             )}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+      </Rollup>
     </div>
   );
 }

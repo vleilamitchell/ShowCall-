@@ -1,5 +1,5 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { getDatabase } from '../../lib/db';
+import { DatabaseConnection, getDatabase, withTransaction } from '../../lib/db';
 import { getDatabaseUrl } from '../../lib/env';
 import * as schema from '../../schema';
 import { refreshOnHandMaterializedView } from './projections';
@@ -21,8 +21,8 @@ type PostTxnInput = {
   transfer?: { destinationLocationId: string } | null;
 };
 
-export async function postTransaction(input: PostTxnInput) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+export async function postTransaction(input: PostTxnInput, dbOrTx?: DatabaseConnection) {
+  const run = async (db: DatabaseConnection) => {
 
   // Minimal validations
   const item = (await db.select().from(schema.inventoryItems).where(eq(schema.inventoryItems.itemId, input.itemId)).limit(1))[0];
@@ -34,7 +34,7 @@ export async function postTransaction(input: PostTxnInput) {
   let qtyBase: number | undefined = Number.isFinite(input.qtyBase as any) ? Number(input.qtyBase) : undefined;
   if (qtyBase == null) {
     if (Number.isFinite(input.qty as any) && typeof input.unit === 'string' && input.unit) {
-      qtyBase = await convertToBaseUnits(String(item.baseUnit), Number(input.qty), String(input.unit));
+      qtyBase = await convertToBaseUnits(String(item.baseUnit), Number(input.qty), String(input.unit), db);
     }
   }
   if (!Number.isFinite(qtyBase)) throw new Error('qtyBase or (qty+unit) required');
@@ -80,15 +80,20 @@ export async function postTransaction(input: PostTxnInput) {
     entries.push(baseEntry);
   }
 
-  // Policies: load by department of location
-  const policies = await loadPolicies(String(location.departmentId), String(item.itemType));
+  // Policies: load by department of location; tolerate empty
+  let policies: any = {};
+  try {
+    policies = await loadPolicies(String(location.departmentId), String(item.itemType), db);
+  } catch {
+    policies = {};
+  }
 
-  // Compute simple on-hand prior to posting for enforcement
-  const onHandRows = await (db as any).execute(
-    `SELECT COALESCE(SUM(qty_base),0) as qty FROM on_hand WHERE item_id = $1 AND location_id = $2`,
-    [input.itemId, input.locationId]
-  );
-  const onHandQtyBase = Number((onHandRows as any)[0]?.qty || 0);
+  // Compute simple on-hand prior to posting for enforcement using txn table
+  const onHandAgg = await db
+    .select({ qty: (sql as any)`COALESCE(SUM(${schema.inventoryTxn.qtyBase}), 0)` })
+    .from(schema.inventoryTxn)
+    .where(and(eq(schema.inventoryTxn.itemId, input.itemId), eq(schema.inventoryTxn.locationId, input.locationId)));
+  const onHandQtyBase = Number((onHandAgg as any)[0]?.qty || 0);
   const reservationPresent = Boolean(input.sourceDoc && input.sourceDoc.eventId);
   const enforcement = enforcePostingPolicies({ policies, eventType: input.eventType, itemType: String(item.itemType), onHandQtyBase, reservationPresent });
   if (!('ok' in enforcement && enforcement.ok)) throw new Error((enforcement as any).message || 'Policy violation');
@@ -156,7 +161,13 @@ export async function postTransaction(input: PostTxnInput) {
       set: { avgCost: avgCost as any, qtyBase: qtyVal as any, updatedAt: new Date() },
     });
 
-  // Update projections
+    return entries;
+  };
+
+  const entries = dbOrTx
+    ? await run(dbOrTx)
+    : await withTransaction(run);
+  // Refresh projections OUTSIDE of any transaction context to avoid CONCURRENTLY errors
   await refreshOnHandMaterializedView();
   return entries;
 }

@@ -219,7 +219,7 @@ export default function EventsCalendar() {
     <div ref={containerRef} className="routeFadeItem relative flex flex-col gap-3 px-2 pb-2 md:px-3 min-h-0">
       <div ref={toolbarRef} className="pageHeader pageHeader--flush pageHeader--calendar relative rounded-t-none attachedBelowTopbar">
         <div className="toolbar">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 -translate-y-[5px]">
             <Button
               size="sm"
               variant="outline"
@@ -227,7 +227,7 @@ export default function EventsCalendar() {
               onClick={goPrev}
               aria-label="Previous month"
             >
-              Prev
+              <span className="material-symbols-outlined text-base leading-none">chevron_left</span>
             </Button>
             <Button
               size="sm"
@@ -245,7 +245,7 @@ export default function EventsCalendar() {
               onClick={goNext}
               aria-label="Next month"
             >
-              Next
+              <span className="material-symbols-outlined text-base leading-none">chevron_right</span>
             </Button>
           </div>
           <div className="spacer" />
@@ -312,7 +312,7 @@ export default function EventsCalendar() {
             const baseCell = 'relative rounded-none p-0.5 flex flex-col min-h-0 transition-colors backdrop-blur-[0.5px]';
             const bgMuted = isWeekend ? ' bg-muted/25' : '';
             const monthTint = '';
-            const todayTint = isToday ? ' ring-2 ring-primary/40 bg-primary/5' : '';
+            const todayTint = isToday ? ' ring-2 ring-primary/70 bg-primary/15 ring-offset-1 ring-offset-white dark:ring-offset-[#0a0f1c]' : '';
             return (
               <div
                 key={idx}
@@ -346,16 +346,24 @@ export default function EventsCalendar() {
                 />
                 <div className="flex items-center justify-between">
                   <div className="text-xs font-medium inline-flex items-center gap-1">
-                    <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full ${isToday ? 'bg-primary text-primary-foreground' : 'bg-black/70 text-white'} text-[11px] ml-1 mt-0.5`}>{day.getDate()}</span>
+                    <span
+                      className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md text-[11px] ml-1 mt-0.5 ring-1 transition-colors
+                        ${isToday
+                          ? 'bg-primary/30 text-foreground font-semibold ring-primary/70 dark:bg-primary/35 dark:text-foreground'
+                          : 'bg-muted text-muted-foreground ring-black/5 dark:bg-white/5 dark:text-foreground/80 dark:ring-white/10'
+                        }`}
+                    >
+                      {day.getDate()}
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-[1px] overflow-auto pr-0.5">
                   {dayEvents.map((ev) => {
                     const color = ev.status === 'cancelled' || ev.status === 'canceled'
-                      ? 'bg-destructive/10 text-destructive hover:bg-destructive/25 hover:ring-2 hover:ring-destructive/40 hover:shadow-sm focus:ring-destructive/40'
+                      ? 'bg-destructive/10 text-destructive hover:bg-destructive/40 hover:ring-2 hover:ring-destructive/60 hover:shadow focus:ring-destructive/60'
                       : ev.status === 'confirmed' || ev.status === 'active'
-                      ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/25 hover:ring-2 hover:ring-emerald-500/40 hover:shadow-sm focus:ring-emerald-500/40 dark:text-emerald-400'
-                      : 'bg-primary/10 text-primary hover:bg-primary/25 hover:ring-2 hover:ring-primary/40 hover:shadow-sm focus:ring-primary/40';
+                      ? 'bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/40 hover:ring-2 hover:ring-emerald-500/60 hover:shadow focus:ring-emerald-500/60 dark:text-emerald-400'
+                      : 'bg-primary/10 text-foreground dark:text-primary hover:bg-primary/40 hover:ring-2 hover:ring-primary/60 hover:shadow focus:ring-primary/60';
                     const timePrefix = (ev.startTime ? `${formatTimeTo12Hour(ev.startTime)} ` : '');
                     const showTime = Boolean(timePrefix) && String(ev.title || '').length <= 20;
                     return (
@@ -363,7 +371,7 @@ export default function EventsCalendar() {
                         key={ev.id}
                         type="button"
                         onClick={() => navigate(`/events/${encodeURIComponent(ev.id)}`)}
-                        className={`relative w-full text-left text-[11px] leading-tight truncate rounded px-[4px] pt-0.5 pb-[3px] focus:outline-none focus:ring-2 transition ${color}`}
+                        className={`relative w-full text-left text-[11px] leading-tight truncate rounded px-[4px] pt-0.5 pb-[3px] focus:outline-none focus:ring-2 hover:ring-2 ring-offset-1 ring-offset-white dark:ring-offset-[#0a0f1c] transition ${color}`}
                         title={`${ev.title}`}
                       >
                         <span className="inline-flex items-center gap-1 w-full">

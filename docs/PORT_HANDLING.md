@@ -164,3 +164,10 @@ FIREBASE_PROJECT_ID=demo-project
 ```
 
 **Note:** Port numbers in DATABASE_URL are handled automatically - the system will update the actual port used for embedded PostgreSQL.
+
+## 📆 Date/Time and Timezone Expectations
+
+- API date strings use `YYYY-MM-DD` without timezone and represent calendar days.
+- API time strings use `HH:mm` 24-hour format.
+- Server-side recurrence calculations anchor and compare dates using UTC for determinism.
+- Keep UI inputs and server payloads aligned to avoid implicit timezone shifts.

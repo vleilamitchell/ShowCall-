@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { listAreas, getEventSeriesAreas, addEventSeriesArea, removeEventSeriesArea, type Area } from '@/lib/serverComm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Rollup } from '@/components/ui/rollup';
 
 export function SeriesAreasPanel({ seriesId }: { seriesId: string }) {
   const [open, setOpen] = useState<boolean>(() => {
@@ -67,61 +67,71 @@ export function SeriesAreasPanel({ seriesId }: { seriesId: string }) {
     }
   };
 
+  const summaryChips = (
+    <div className="flex items-center gap-1.5 max-w-[360px] overflow-hidden">
+      {attached.length === 0 ? (
+        <Badge variant="secondary" className="text-xs">0</Badge>
+      ) : (
+        <>
+          {attached.slice(0, 6).map((a) => (
+            <span key={a.id} className="inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] text-foreground/80 bg-muted/30">
+              {a.color ? <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: a.color }} /> : null}
+              <span className="truncate max-w-[80px]">{a.name}</span>
+            </span>
+          ))}
+          {attached.length > 6 ? (
+            <Badge variant="secondary" className="text-[10px]">+{attached.length - 6}</Badge>
+          ) : null}
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div className="mt-6">
-      <Collapsible open={open} onOpenChange={(v) => { setOpen(v); try { localStorage.setItem('seriesAreasRollupOpen', v ? '1' : '0'); } catch {} }}>
-        <CollapsibleTrigger asChild>
-          <button
-            className="w-full flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 hover:bg-muted/50 transition-colors"
-            aria-expanded={open}
-          >
-            <span className="text-sm font-semibold">Areas</span>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">{attached.length}</Badge>
-              <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : 'rotate-0'}`} />
-            </div>
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden transition-[max-height,opacity] duration-400 ease-out data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:max-h-[2000px] data-[state=closed]:max-h-0" style={{ willChange: 'opacity, max-height' }}>
-          {error ? (
-            <div className="text-xs text-destructive mt-3">{error}</div>
-          ) : (
-            <div className="mt-3 space-y-3">
-              {loading ? (
-                <div className="text-xs text-muted-foreground">Loading…</div>
-              ) : (
-                <>
+      <Rollup
+        title="Areas"
+        summary={summaryChips}
+        storageKey="seriesAreasRollupOpen"
+      >
+        {error ? (
+          <div className="text-xs text-destructive">{error}</div>
+        ) : (
+          <div className="space-y-3">
+            {loading ? (
+              <div className="text-xs text-muted-foreground">Loading…</div>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  {attached.length === 0 ? (
+                    <div className="text-xs text-muted-foreground">No areas attached yet</div>
+                  ) : (
+                    attached.map((a) => (
+                      <Badge key={a.id} variant="secondary" className="inline-flex items-center gap-1">
+                        {a.color ? <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} /> : null}
+                        <span>{a.name}</span>
+                        <button className="ml-1 inline-flex" onClick={() => onRemove(a.id)} aria-label={`Remove ${a.name}`} disabled={submitting}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))
+                  )}
+                </div>
+                {available.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {attached.length === 0 ? (
-                      <div className="text-xs text-muted-foreground">No areas attached yet</div>
-                    ) : (
-                      attached.map((a) => (
-                        <Badge key={a.id} variant="secondary" className="inline-flex items-center gap-1">
-                          {a.color ? <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} /> : null}
-                          <span>{a.name}</span>
-                          <button className="ml-1 inline-flex" onClick={() => onRemove(a.id)} aria-label={`Remove ${a.name}`} disabled={submitting}>
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))
-                    )}
+                    {available.slice(0, 12).map((a) => (
+                      <Button key={a.id} variant="outline" size="sm" onClick={() => onAdd(a.id)} disabled={submitting}>
+                        {a.color ? <span className="inline-block w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: a.color }} /> : null}
+                        {a.name}
+                      </Button>
+                    ))}
                   </div>
-                  {available.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {available.slice(0, 12).map((a) => (
-                        <Button key={a.id} variant="outline" size="sm" onClick={() => onAdd(a.id)} disabled={submitting}>
-                          {a.color ? <span className="inline-block w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: a.color }} /> : null}
-                          {a.name}
-                        </Button>
-                      ))}
-                    </div>
-                  ) : null}
-                </>
-              )}
-            </div>
-          )}
-        </CollapsibleContent>
-      </Collapsible>
+                ) : null}
+              </>
+            )}
+          </div>
+        )}
+      </Rollup>
     </div>
   );
 }

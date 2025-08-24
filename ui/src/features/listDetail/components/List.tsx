@@ -27,7 +27,7 @@ export function List<TItem extends ListItem>(props: Props<TItem>) {
   }, [selectedId, items.length]);
 
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1 min-h-0 overflow-auto">
       {loading ? (
         <div className="p-3 text-sm text-muted-foreground">Loading…</div>
       ) : (

@@ -18,7 +18,8 @@
   --popover-foreground: oklch(0.141 0.005 285.823);
   /* Warm pastel day-mode */
   --primary: oklch(0.88 0.06 180); /* soft teal */
-  --primary-foreground: oklch(0.985 0 0);
+  /* Dark text on light primary for better contrast in day-mode */
+  --primary-foreground: var(--foreground);
   --secondary: oklch(0.92 0.04 300); /* lavender */
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.97 0.01 95);
@@ -494,4 +495,71 @@ textarea.input { width: 100%; resize: vertical; }
 .loginButton:hover { filter: brightness(1.05); }
 .loginButton:disabled { opacity: 0.7; cursor: default; }
 .loginHelp { margin-top: 6px; font-size: 12px; color: color-mix(in oklch, var(--foreground) 60%, transparent); }
+
+/* Material Symbols icon font tuning */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+}
+
+/* Rollup header visual: vertical gradient and rounded appearance */
+.rollupHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--radius);
+  padding: 8px 12px; /* px-3 py-2 */
+  border: 1px solid color-mix(in oklch, var(--foreground) 8%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--foreground) 3%, var(--content-surface)),
+    color-mix(in oklch, var(--foreground) 8%, var(--content-surface))
+  );
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.04) inset, 0 1px 3px rgb(0 0 0 / 0.06);
+  transition: background-color 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+.rollupHeader:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--foreground) 4%, var(--content-surface)),
+    color-mix(in oklch, var(--foreground) 10%, var(--content-surface))
+  );
+  filter: brightness(1.01);
+}
+.dark .rollupHeader {
+  border: 1px solid color-mix(in oklch, var(--secondary) 18%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--foreground) 4%, var(--card)),
+    color-mix(in oklch, var(--foreground) 10%, var(--card))
+  );
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.02) inset, 0 1px 6px rgb(0 0 0 / 0.18);
+}
+.dark .rollupHeader:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--foreground) 6%, var(--card)),
+    color-mix(in oklch, var(--foreground) 12%, var(--card))
+  );
+}
+
+/* Rollup summary badge (used for summaryText) — inspired by list view area chips */
+.rollupBadge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px; /* ~ h-5 */
+  padding: 0 8px; /* px-2 */
+  border-radius: 999px;
+  font-size: 11px; /* text-[11px] */
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  color: color-mix(in oklch, var(--foreground) 92%, transparent);
+  background: color-mix(in oklch, var(--foreground) 6%, transparent);
+  border: 1px solid color-mix(in oklch, var(--foreground) 14%, transparent);
+}
+.dark .rollupBadge {
+  color: var(--foreground);
+  background: color-mix(in oklch, var(--foreground) 12%, transparent);
+  border-color: color-mix(in oklch, var(--foreground) 22%, transparent);
+}
 

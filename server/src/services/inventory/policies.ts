@@ -1,12 +1,12 @@
 import { and, eq } from 'drizzle-orm';
-import { getDatabase } from '../../lib/db';
+import { DatabaseConnection, getDatabase } from '../../lib/db';
 import { getDatabaseUrl } from '../../lib/env';
 import * as schema from '../../schema';
 
 export type DepartmentPolicy = Record<string, any>;
 
-export async function loadPolicies(departmentId: string, itemType: string): Promise<DepartmentPolicy> {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+export async function loadPolicies(departmentId: string, itemType: string, dbOrTx?: DatabaseConnection): Promise<DepartmentPolicy> {
+  const db = dbOrTx || (await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres'));
   const rows = await db
     .select({ key: schema.policies.key, value: schema.policies.value })
     .from(schema.policies)
