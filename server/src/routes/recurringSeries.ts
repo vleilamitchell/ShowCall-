@@ -23,4 +23,8 @@ recurringSeriesRouter.delete('/:seriesId/areas/:areaId', ctrl.removeArea);
 recurringSeriesRouter.post('/:seriesId/preview', ctrl.preview);
 recurringSeriesRouter.post('/:seriesId/generate', ctrl.generate);
 
+// Rule get/patch
+recurringSeriesRouter.get('/:seriesId/rule', ctrl.getRule);
+recurringSeriesRouter.patch('/:seriesId/rule', ctrl.patchRule);
+
 

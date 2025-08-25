@@ -42,6 +42,9 @@ export function buildApp(options: BuildAppOptions = {}) {
   // Route-level error handler wrapper
   app.use('*', errorHandler);
 
+  // Public health endpoint (no auth)
+  app.get('/healthz', (c) => c.json({ ok: true }));
+
   // Build API v1 router composition and mount under /api/v1
   const api = new Hono();
   mountV1Routers(api);

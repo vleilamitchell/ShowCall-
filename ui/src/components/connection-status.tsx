@@ -9,7 +9,7 @@ export function ConnectionStatus() {
     let mounted = true;
     const check = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/v1/health`, { cache: 'no-store' });
+        const res = await fetch(`${API_BASE_URL}/healthz`, { cache: 'no-store' });
         if (!mounted) return;
         setIsConnected(res.ok);
       } catch {

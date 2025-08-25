@@ -404,7 +404,7 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
   const [positions, setPositions] = useState<PositionRecord[]>([]);
   const [eligible, setEligible] = useState<Record<string, EligibleEmployee[]>>({});
   const [selectedPositionId, setSelectedPositionId] = useState<string>('');
-  const [, setBusy] = useState<boolean>(false);
+  const [busy, setBusy] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
 
   const load = async () => {
@@ -480,6 +480,22 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
     } finally { setBusy(false); }
   };
 
+  const addSlot = async () => {
+    if (!selectedPositionId) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const created = await api.createAssignment?.(departmentId, { shiftId, requiredPositionId: selectedPositionId });
+      if (created) {
+        setAssignments(prev => [...prev, { id: created.id, requiredPositionId: created.requiredPositionId, assigneeEmployeeId: created.assigneeEmployeeId ?? null }]);
+      }
+    } catch (e: any) {
+      setErr(e?.message || 'Failed to add slot');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   // Stats and derived lists
   const totalSlots = assignments.length;
   const totalAssigned = assignments.filter(a => a.assigneeEmployeeId).length;
@@ -538,7 +554,19 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
                   ))
                 )}
               </div>
-              {/* Slot controls removed: removing an assignee now deletes the slot */}
+              <div className="mt-2 flex items-center gap-2">
+                <select
+                  className="border rounded px-2 py-1 text-sm flex-1"
+                  value={selectedPositionId}
+                  onChange={(e) => setSelectedPositionId(e.target.value)}
+                >
+                  <option value="">Select position…</option>
+                  {positions.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <Button size="sm" onClick={addSlot} disabled={busy || !selectedPositionId}>Add slot</Button>
+              </div>
             </div>
             <div className="sm:col-span-2">
               {!selectedPositionId ? (

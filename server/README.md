@@ -146,3 +146,37 @@ This project uses [Drizzle ORM](https://orm.drizzle.team) with a Neon Postgres d
    ```
 
 This command will create or update your database tables to match your schema. Run it whenever you make changes to files in `src/schema/`. 
+
+## Legacy Data Import (showcall_import)
+
+If you have a legacy Postgres database named `showcall_import`, you can import its data into the current application schema. The importer connects to both databases, discovers likely legacy tables (departments/employees/positions), maps fields heuristically, and creates join records.
+
+Environment variables:
+
+```
+# Required: connection string to legacy DB
+LEGACY_DATABASE_URL=postgresql://postgres:password@localhost:5432/showcall_import
+
+# Optional: override target app DB (otherwise uses DATABASE_URL)
+DATABASE_URL=postgresql://postgres:password@localhost:5502/postgres
+
+# Optional: dry run (no writes)
+DRY_RUN=true
+```
+
+Run a dry run first:
+
+```bash
+pnpm --filter server tsx src/scripts/import-legacy.ts --dry-run
+```
+
+Apply changes:
+
+```bash
+DRY_RUN=false pnpm --filter server tsx src/scripts/import-legacy.ts
+```
+
+Notes:
+- The script inserts or reuses Departments, Positions, Employees, and Employee-Position joins.
+- It derives missing data when possible (e.g., department from employee rows).
+- Generated IDs are prefixed (e.g., `legacy-emp:*`) to avoid collisions.

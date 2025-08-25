@@ -209,3 +209,59 @@ export async function generate(c: Context) {
 }
 
 
+export async function getRule(c: Context) {
+  const db = await getDatabase();
+  const seriesId = c.req.param('seriesId');
+  const rows = await db.select().from(schema.eventSeriesRules).where(eq(schema.eventSeriesRules.seriesId, seriesId)).limit(1);
+  if (rows.length === 0) return c.json({ error: 'Series rule not found' }, 404);
+  return c.json(rows[0]);
+}
+
+export async function patchRule(c: Context) {
+  const db = await getDatabase();
+  const seriesId = c.req.param('seriesId');
+  const body = await c.req.json();
+
+  const patch: any = {};
+  if ('frequency' in body) {
+    const frequency = String(body.frequency || '').trim().toUpperCase();
+    if (!isValidFrequency(frequency)) return c.json({ error: 'invalid frequency' }, 400);
+    patch.frequency = frequency;
+  }
+  if ('interval' in body) {
+    const interval = Number(body.interval);
+    if (!Number.isInteger(interval) || interval < 1) return c.json({ error: 'interval must be >= 1' }, 400);
+    patch.interval = interval;
+  }
+  if ('byWeekdayMask' in body) {
+    const byWeekdayMask = Number(body.byWeekdayMask);
+    if (!isValidWeekdayMask(byWeekdayMask)) return c.json({ error: 'invalid byWeekdayMask' }, 400);
+    patch.byWeekdayMask = byWeekdayMask;
+  }
+
+  const existing = await db.select().from(schema.eventSeriesRules).where(eq(schema.eventSeriesRules.seriesId, seriesId)).limit(1);
+  if (existing.length === 0) {
+    // Upsert: create a new rule if one does not exist yet
+    const g: any = globalThis as any; let rid: string | undefined = g?.crypto?.randomUUID?.();
+    if (!rid) { try { const nc = await import('node:crypto'); if (nc.randomUUID) rid = nc.randomUUID(); } catch {} }
+    if (!rid) rid = `srl_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    const record = {
+      id: rid,
+      seriesId,
+      frequency: (patch.frequency ?? String(body.frequency || 'WEEKLY').trim().toUpperCase()),
+      interval: (patch.interval ?? Math.max(1, Number(body.interval ?? 1))),
+      byWeekdayMask: (patch.byWeekdayMask ?? Math.max(0, Number(body.byWeekdayMask ?? 0))),
+    };
+    if (!isValidFrequency(record.frequency)) return c.json({ error: 'invalid frequency' }, 400);
+    if (!Number.isInteger(record.interval) || record.interval < 1) return c.json({ error: 'interval must be >= 1' }, 400);
+    if (!isValidWeekdayMask(record.byWeekdayMask)) return c.json({ error: 'invalid byWeekdayMask' }, 400);
+    const rows = await db.insert(schema.eventSeriesRules).values(record).returning();
+    return c.json(rows[0], 201);
+  }
+
+  const current = existing[0];
+  const updated = await db.update(schema.eventSeriesRules).set({ ...patch, updatedAt: new Date() }).where(eq(schema.eventSeriesRules.id, current.id)).returning();
+  return c.json(updated[0]);
+}
+
+

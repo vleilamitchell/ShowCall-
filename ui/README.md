@@ -12,29 +12,10 @@ This app uses Firebase for authentication. To set up Firebase:
 2. Create a new project or select an existing one
 3. Add a web app to your project by clicking the web icon (</>)
 4. Register your app and copy the provided configuration
-5. Set these Vite environment variables (locally in `.env` at repo root, and in CI/hosting env):
-
-```
-VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_APP_ID=your-app-id
-# optional
-VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
-VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
-```
-
-6. Enable Google authentication in Firebase Console:
+5. Enable Google authentication in Firebase Console:
    - Go to Authentication > Sign-in method
    - Enable Google as a sign-in provider
    - Configure the OAuth consent screen if prompted
-
-Local emulator (optional):
-
-```
-VITE_USE_FIREBASE_EMULATOR=true
-VITE_FIREBASE_AUTH_EMULATOR_PORT=9099
-```
 
 Note: The app now reads Firebase config from Vite env variables and no longer requires `src/lib/firebase-config.json`.
 
