@@ -10,8 +10,8 @@ on:
 
 jobs:
   build-and-deploy:
-    environment: dev   # <- must match the environment where the secret lives
     runs-on: ubuntu-latest
+    environment: dev   # <- must match the environment where the secret lives
     steps:
       - name: Checkout
         uses: actions/checkout@v4
