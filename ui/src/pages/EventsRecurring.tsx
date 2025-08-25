@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { DateField } from '@/components/date-field';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { ListDetailLayout, List, FilterBar, useListDetail, useDebouncedPatch, type ResourceAdapter } from '@/features/listDetail';
-import { type EventSeries, listEventSeries, createEventSeries, getEventSeries, updateEventSeries, deleteEventSeries, getEventSeriesAreas, putEventSeriesAreas, previewEventSeries, generateEventSeries } from '@/lib/serverComm';
+import { type EventSeries, listEventSeries, createEventSeries, getEventSeries, updateEventSeries, previewEventSeries, generateEventSeries } from '@/lib/serverComm';
 import { SeriesAreasPanel } from '@/features/events/SeriesAreasPanel';
-import { Badge } from '@/components/ui/badge';
-import { RecurringRuleEditor } from '@/features/events/RecurringRuleEditor';
 import { Rollup } from '@/components/ui/rollup';
 import { SeriesRecurringRulePanel } from '@/features/events/SeriesRecurringRulePanel';
 
@@ -41,8 +39,6 @@ export default function EventsRecurring() {
     mutateItems,
     queryState,
     setQueryState,
-    filterState,
-    setFilterState,
     create,
   } = useListDetail<EventSeries, SeriesFilters, { q?: string}>({
     resourceKey: 'events/recurring',
@@ -57,7 +53,6 @@ export default function EventsRecurring() {
     }
   });
 
-  const [genOpen, setGenOpen] = useState(false);
   const [genUntil, setGenUntil] = useState<string>('');
   const [genOverwrite, setGenOverwrite] = useState<boolean>(false);
   const [genReplaceAreas, setGenReplaceAreas] = useState<boolean>(false);
@@ -84,7 +79,6 @@ export default function EventsRecurring() {
     if (!selected || !genUntil) return;
     const res = await generateEventSeries(selected.id, { untilDate: genUntil, overwriteExisting: genOverwrite, setAreasMode: genReplaceAreas ? 'replace' : 'skip' });
     alert(`Created: ${res.created}, Updated: ${res.updated}, Skipped: ${res.skipped}`);
-    setGenOpen(false);
   };
 
   return (

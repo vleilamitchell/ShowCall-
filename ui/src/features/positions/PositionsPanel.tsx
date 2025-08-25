@@ -6,9 +6,6 @@ import { Rollup } from '@/components/ui/rollup';
 export function PositionsPanel({ departmentId }: { departmentId: string }) {
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
-  const [open, setOpen] = useState<boolean>(() => {
-    try { return localStorage.getItem('positionsRollupOpen') === '1'; } catch { return false; }
-  });
 
   const notifyChanged = () => setRefreshSignal((v) => v + 1);
 

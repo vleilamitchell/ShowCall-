@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { X } from 'lucide-react';
 import { Rollup } from '@/components/ui/rollup';
 import { addEventArea, getEventAreas, listAreas, removeEventArea, type Area } from '@/lib/serverComm';
 
 export function EventAreasPanel({ eventId }: { eventId: string }) {
-  const [open, setOpen] = useState<boolean>(() => {
-    try { return localStorage.getItem('eventAreasRollupOpen') === '1'; } catch { return true; }
-  });
-  const [loading, setLoading] = useState(true);
+  
   const [error, setError] = useState<string | null>(null);
   const [areas, setAreas] = useState<Area[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -18,7 +14,6 @@ export function EventAreasPanel({ eventId }: { eventId: string }) {
 
   useEffect(() => {
     let ignore = false;
-    setLoading(true);
     setError(null);
     Promise.all([
       getEventAreas(eventId),
@@ -30,9 +25,6 @@ export function EventAreasPanel({ eventId }: { eventId: string }) {
     }).catch((e: any) => {
       if (ignore) return;
       setError(e?.message || 'Failed to load areas');
-    }).finally(() => {
-      if (ignore) return;
-      setLoading(false);
     });
     return () => { ignore = true; };
   }, [eventId]);

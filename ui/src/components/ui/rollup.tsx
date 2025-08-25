@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import type React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 
 type RollupProps = {
-  title: string | JSX.Element;
-  summary?: JSX.Element | string | null;
+  title: string | React.ReactNode;
+  summary?: React.ReactNode;
   summaryText?: string | number | null;
   storageKey?: string;
   defaultOpen?: boolean;

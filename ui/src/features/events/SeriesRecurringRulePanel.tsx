@@ -6,9 +6,6 @@ import { RecurringRuleEditor } from '@/features/events/RecurringRuleEditor';
 const weekdayLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
 export function SeriesRecurringRulePanel({ seriesId }: { seriesId: string }) {
-  const [open, setOpen] = useState<boolean>(() => {
-    try { return localStorage.getItem('seriesRuleRollupOpen') === '1'; } catch { return true; }
-  });
   const [rule, setRule] = useState<EventSeriesRule | null>(null);
   const [loading, setLoading] = useState(false);
 

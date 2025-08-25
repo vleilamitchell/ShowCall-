@@ -6,9 +6,6 @@ import { X } from 'lucide-react';
 import { Rollup } from '@/components/ui/rollup';
 
 export function SeriesAreasPanel({ seriesId }: { seriesId: string }) {
-  const [open, setOpen] = useState<boolean>(() => {
-    try { return localStorage.getItem('seriesAreasRollupOpen') === '1'; } catch { return true; }
-  });
   const [allAreas, setAllAreas] = useState<Area[]>([]);
   const [attached, setAttached] = useState<Area[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,8 +42,8 @@ export function SeriesAreasPanel({ seriesId }: { seriesId: string }) {
     if (submitting) return;
     setSubmitting(true);
     try {
-      const updated = await removeEventSeriesArea(seriesId, areaId);
-      setAttached(updated);
+      await removeEventSeriesArea(seriesId, areaId);
+      setAttached(prev => prev.filter(a => a.id !== areaId));
     } catch (e: any) {
       alert(e?.message || 'Failed to remove area');
     } finally {
@@ -58,8 +55,11 @@ export function SeriesAreasPanel({ seriesId }: { seriesId: string }) {
     if (submitting) return;
     setSubmitting(true);
     try {
-      const updated = await addEventSeriesArea(seriesId, areaId);
-      setAttached(updated);
+      await addEventSeriesArea(seriesId, areaId);
+      const area = allAreas.find(a => a.id === areaId);
+      if (area) {
+        setAttached(prev => (prev.some(x => x.id === areaId) ? prev : [...prev, area]));
+      }
     } catch (e: any) {
       alert(e?.message || 'Failed to add area');
     } finally {
