@@ -6,6 +6,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "echo 'Skipping tsc build; using tsx at runtime'",
     "start": "tsx src/server.ts",
+    "start:prod": "npm run dev",
     "deploy": "npm run deploy:cf",
     "deploy:cf": "node scripts/deploy-cloudflare.js",
     "test": "vitest run",
