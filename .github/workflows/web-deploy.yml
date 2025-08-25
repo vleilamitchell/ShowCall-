@@ -26,17 +26,11 @@ jobs:
           cache-dependency-path: |
             ui/pnpm-lock.yaml
 
-      - name: Enable Corepack (use repo's packageManager pnpm version)
-        run: corepack enable
-
-      - name: Prepare pnpm version
-        run: corepack prepare pnpm@10.15.0 --activate
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.15.0
           run_install: false
+          package_json_file: ./package.json
 
       - name: API health check
         run: |
@@ -44,7 +38,7 @@ jobs:
           if [ "$code" != "200" ]; then echo "API not healthy ($code)"; exit 1; fi
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build web
         env:
