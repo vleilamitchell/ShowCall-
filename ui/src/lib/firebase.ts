@@ -22,3 +22,22 @@ if (import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true') {
 } else {
   console.log(`🏭 Using production Firebase Auth (Project: ${firebaseConfig.projectId})`);
 } 
+
+// Optional debug exposure for console-based diagnostics
+declare global {
+  interface Window {
+    __scAuth?: ReturnType<typeof getAuth>;
+    __scGetToken?: () => Promise<string | null>;
+  }
+}
+
+if (typeof window !== 'undefined' && import.meta.env.VITE_EXPOSE_AUTH === 'true') {
+  try {
+    window.__scAuth = auth;
+    window.__scGetToken = async () => {
+      const user = getAuth(app).currentUser;
+      return user ? await user.getIdToken(true) : null;
+    };
+    console.log('🔎 Exposed __scAuth and __scGetToken for debugging');
+  } catch {}
+}
