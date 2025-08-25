@@ -10,6 +10,7 @@ on:
 
 jobs:
   build-and-deploy:
+    environment: dev   # <- must match the environment where the secret lives
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
