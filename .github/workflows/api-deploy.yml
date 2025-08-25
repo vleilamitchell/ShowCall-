@@ -75,7 +75,7 @@ jobs:
         run: |
           for i in {1..20}; do
             echo "Health check attempt $i";
-            code=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.API_BASE_URL }}/api/v1/health");
+            code=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.API_BASE_URL }}/health");
             if [ "$code" = "200" ]; then
               echo "API is healthy"; exit 0;
             fi;
