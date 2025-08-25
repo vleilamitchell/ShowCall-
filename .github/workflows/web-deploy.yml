@@ -11,9 +11,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ui
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,8 +24,7 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           run_install: false
-          package_json_file: ./package.json
-       
+
       - name: Cache pnpm store
         uses: actions/cache@v4
         with:
@@ -37,29 +33,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      - run: pnpm fetch
-        working-directory: ui
-
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile  --prefer-offline
+      - name: Install deps
+        run: |
+          cd ui
+          pnpm fetch
+          pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build web
         env:
           VITE_USE_API: "1"
           VITE_API_URL: ${{ secrets.API_BASE_URL }}
-        run: pnpm run build
+        run: |
+          cd ui
+          pnpm run build
 
+      # Deploy prebuilt files; skip Oryx build entirely
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:
+          action: upload
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          deployment_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: 'upload'
-          app_location: 'ui'
-          output_location: 'dist'
-          skip_deploy_on_missing_secrets: true
-        env:
-          AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          DEPLOYMENT_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-
+          skip_app_build: true
+          skip_api_build: true
+          app_location: ui/dist
+          output_location: ''   # required when skip_app_build: true
