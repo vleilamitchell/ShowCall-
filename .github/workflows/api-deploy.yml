@@ -22,11 +22,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -34,6 +29,9 @@ jobs:
           cache: pnpm
           cache-dependency-path: |
             server/pnpm-lock.yaml
+
+      - name: Enable Corepack (use repo's packageManager pnpm version)
+        run: corepack enable
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
