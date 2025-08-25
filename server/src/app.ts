@@ -39,6 +39,14 @@ export function buildApp(options: BuildAppOptions = {}) {
     maxAge: 86400,
   }));
 
+  // Add a simple marker header on all responses to distinguish app vs platform responses
+  app.use('*', async (c, next) => {
+    await next();
+    try {
+      c.header('x-showcall-api', '1');
+    } catch {}
+  });
+
   // Global notFound and onError for consistent error envelopes
   app.notFound((c) => c.json(errorBody('not_found', 'Not Found'), 404));
   app.onError((err, c) => {
@@ -51,6 +59,19 @@ export function buildApp(options: BuildAppOptions = {}) {
 
   // Public health endpoint (no auth)
   app.get('/healthz', (c) => c.json({ ok: true }));
+
+  // Debug endpoint to inspect if Authorization header reaches the app (enabled only when DEBUG_AUTH=1)
+  if (typeof process !== 'undefined' && process.env && process.env.DEBUG_AUTH === '1') {
+    app.get('/debug/auth-info', (c) => {
+      const authHeader = c.req.header('authorization');
+      const preview = authHeader ? `${authHeader.slice(0, 10)}...` : null;
+      let requestId: string | undefined;
+      try {
+        requestId = (c as any).get?.('requestId');
+      } catch {}
+      return c.json({ ok: true, sawAuthHeader: !!authHeader, authHeaderPreview: preview, requestId });
+    });
+  }
 
   // Build API v1 router composition and mount under /api/v1
   const api = new Hono();
