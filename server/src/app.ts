@@ -30,7 +30,14 @@ export function buildApp(options: BuildAppOptions = {}) {
   if (!options.disableLogger) {
     app.use('*', logger());
   }
-  app.use('*', cors());
+  app.use('*', cors({
+    // Allow the Static Web App origin in production; '*' is acceptable if no credentials are used
+    origin: '*',
+    allowMethods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    // Explicitly allow Authorization for Firebase ID tokens and Content-Type for JSON bodies
+    allowHeaders: ['Authorization', 'Content-Type'],
+    maxAge: 86400,
+  }));
 
   // Global notFound and onError for consistent error envelopes
   app.notFound((c) => c.json(errorBody('not_found', 'Not Found'), 404));
