@@ -3,7 +3,7 @@ import { getDatabaseUrl } from '../lib/env';
 import * as repo from '../repositories/employeesRepo';
 
 export async function listByDepartment(departmentId: string) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const rows = await repo.listEmployeesByDepartment(db, departmentId);
   return rows.map((e) => ({
     ...e,
@@ -12,7 +12,7 @@ export async function listByDepartment(departmentId: string) {
 }
 
 export async function create(departmentId: string, body: any) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const f = (v: unknown) => (v == null ? null : (typeof v === 'string' ? (v.trim() === '' ? null : v.trim()) : (v as any)));
   const name = (String(body.name || '')).trim() || `${String(body.firstName || '').trim()} ${String(body.lastName || '').trim()}`.trim();
   if (!name) throw new Error('Name or firstName+lastName is required');
@@ -47,7 +47,7 @@ export async function create(departmentId: string, body: any) {
 }
 
 export async function patch(id: string, body: any) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const f = (v: unknown) => (v == null ? null : (typeof v === 'string' ? (v.trim() === '' ? null : v.trim()) : (v as any)));
   const patch: any = {};
   if ('name' in body) patch.name = f(body.name);
@@ -83,7 +83,7 @@ export async function patch(id: string, body: any) {
 }
 
 export async function remove(id: string) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   await repo.deleteEmployeeById(db, id);
 }
 

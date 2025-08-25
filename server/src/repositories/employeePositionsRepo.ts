@@ -20,4 +20,27 @@ export async function updateEmployeePositionById(db: Database, id: string, patch
   return updated[0] ?? null;
 }
 
+export async function deleteEmployeePositionById(db: Database, id: string) {
+  const deleted = await db.delete(schema.employeePositions).where(eq(schema.employeePositions.id, id)).returning();
+  return deleted.length > 0;
+}
+
+export async function deleteEmployeePositionByComposite(
+  db: Database,
+  departmentId: string,
+  positionId: string,
+  employeeId: string
+) {
+  const deleted = await db
+    .delete(schema.employeePositions)
+    .where(
+      and(
+        eq(schema.employeePositions.departmentId, departmentId),
+        and(eq(schema.employeePositions.positionId, positionId), eq(schema.employeePositions.employeeId, employeeId))
+      )
+    )
+    .returning();
+  return deleted.length > 0;
+}
+
 

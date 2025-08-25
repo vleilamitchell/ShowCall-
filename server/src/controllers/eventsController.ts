@@ -21,13 +21,13 @@ export async function list(c: Context) {
   const from = c.req.query('from') || undefined;
   const to = c.req.query('to') || undefined;
   const areaIds = areaIdParam ? String(areaIdParam).split(',').map((s) => s.trim()).filter(Boolean) : undefined;
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const rows = await repo.listEvents(db, { status, q, includePast, areaIds, from, to });
   return c.json(rows);
 }
 
 export async function create(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const body = await c.req.json();
   const now = new Date();
   const formatDate = (d: Date): string => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -66,7 +66,7 @@ export async function create(c: Context) {
 }
 
 export async function get(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const id = c.req.param('eventId');
   const row = await repo.getEventById(db, id);
   if (!row) return c.json({ error: 'Not found' }, 404);
@@ -74,7 +74,7 @@ export async function get(c: Context) {
 }
 
 export async function patch(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const id = c.req.param('eventId');
   const body = await c.req.json();
   const patch: Partial<repo.NewEventRecord> = {};
@@ -100,7 +100,7 @@ export async function patch(c: Context) {
 }
 
 export async function remove(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const id = c.req.param('eventId');
   const ok = await repo.deleteEventById(db, id);
   if (!ok) return c.json({ error: 'Not found' }, 404);
@@ -108,7 +108,7 @@ export async function remove(c: Context) {
 }
 
 export async function listShifts(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const id = c.req.param('eventId');
   const rows = await repo.listShiftsByEventId(db, id);
   return c.json(rows);

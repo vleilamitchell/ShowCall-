@@ -10,7 +10,7 @@ export const inventoryLocationsRouter = new Hono();
 inventoryLocationsRouter.use('*', authMiddleware);
 
 inventoryLocationsRouter.get('/', async (c) => {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const departmentId = c.req.query('department_id') || undefined;
   const rows = await db
     .select()

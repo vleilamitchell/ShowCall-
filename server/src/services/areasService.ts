@@ -4,12 +4,12 @@ import { validateAreaName, isValidColor } from '../lib/validators';
 import * as repo from '../repositories/areasRepo';
 
 export async function list(params: { q?: string; active?: boolean | null }) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   return repo.listAreas(db, params);
 }
 
 export async function create(input: { name: string; description?: string | null; color?: string | null; active?: boolean }) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   if (!validateAreaName(input.name)) throw new Error('invalid name');
   const name = input.name.trim();
   const description = (typeof input.description === 'string' ? input.description.trim() : '') || null;
@@ -39,7 +39,7 @@ export async function create(input: { name: string; description?: string | null;
 }
 
 export async function patch(areaId: string, body: Partial<{ name: string; description: string | null; color: string | null; active: boolean }>) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const patch: any = {};
   if (typeof body.name === 'string') {
     if (!validateAreaName(body.name)) throw new Error('invalid name');
@@ -76,7 +76,7 @@ export async function patch(areaId: string, body: Partial<{ name: string; descri
 }
 
 export async function remove(areaId: string) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   try {
     await repo.deleteAreaById(db, areaId);
   } catch (e: any) {
@@ -92,7 +92,7 @@ export async function remove(areaId: string) {
 }
 
 export async function reorder(ids: string[]) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   try {
     return await repo.reorderAreas(db, ids);
   } catch (e: any) {

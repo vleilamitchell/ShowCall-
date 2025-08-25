@@ -12,6 +12,18 @@ export async function listByDepartment(c: Context) {
   return c.json(rows);
 }
 
+export async function list(c: Context) {
+  const departmentId = c.req.query('departmentId');
+  if (!departmentId) return c.json({ error: 'departmentId is required' }, 400);
+  const q = c.req.query('q') || undefined;
+  const scheduleId = c.req.query('scheduleId') || undefined;
+  const from = c.req.query('from') || undefined;
+  const to = c.req.query('to') || undefined;
+  const published = c.req.query('published') ?? null;
+  const rows = await service.listByDepartment(departmentId, { q, scheduleId, from, to, published });
+  return c.json(rows);
+}
+
 export async function create(c: Context) {
   const departmentId = c.req.param('departmentId');
   const body = await c.req.json();

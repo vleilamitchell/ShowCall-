@@ -40,4 +40,26 @@ export async function listEligible(c: Context) {
   return c.json(rows);
 }
 
+export async function listByDepartment(c: Context) {
+  const departmentId = c.req.param('departmentId');
+  const rows = await service.listByDepartment(departmentId);
+  return c.json(rows);
+}
+
+export async function removeById(c: Context) {
+  const id = c.req.param('employeePositionId');
+  const ok = await service.removeById(id);
+  if (!ok) return c.json({ error: 'Not found' }, 404);
+  return c.body(null, 204);
+}
+
+export async function removeByComposite(c: Context) {
+  const departmentId = c.req.param('departmentId');
+  const positionId = c.req.param('positionId');
+  const employeeId = c.req.param('employeeId');
+  const ok = await service.removeByComposite(departmentId, positionId, employeeId);
+  if (!ok) return c.json({ error: 'Not found' }, 404);
+  return c.body(null, 204);
+}
+
 

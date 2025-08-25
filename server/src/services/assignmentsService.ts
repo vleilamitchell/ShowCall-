@@ -3,7 +3,7 @@ import { getDatabase } from '../lib/db';
 import { getDatabaseUrl } from '../lib/env';
 import * as schema from '../schema';
 
-const conn = async () => getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+const conn = async () => getDatabase();
 
 export async function listByDepartment(departmentId: string, params: { shiftId?: string }) {
   const db = await conn();

@@ -1,4 +1,5 @@
 import { and, asc, eq, ilike, inArray } from 'drizzle-orm';
+import { withTransaction } from '../lib/db';
 import * as schema from '../schema';
 
 type Database = Awaited<ReturnType<typeof import('../lib/db').getDatabase>>;
@@ -32,20 +33,22 @@ export async function deleteAreaById(db: Database, areaId: string): Promise<void
 }
 
 export async function reorderAreas(db: Database, ids: string[]): Promise<AreaRecord[]> {
-  if (ids.length === 0) return listAreas(db, {});
-  const existing = await db.select({ id: schema.areas.id }).from(schema.areas).where((inArray as any)(schema.areas.id, ids));
-  const existsSet = new Set(existing.map((r: any) => r.id));
-  const missing = ids.filter((id) => !existsSet.has(id));
-  if (missing.length > 0) {
-    const err: any = new Error('Unknown ids');
-    err.code = 'UnknownIds';
-    err.details = missing;
-    throw err;
-  }
-  for (let i = 0; i < ids.length; i++) {
-    await db.update(schema.areas).set({ sortOrder: i, updatedAt: new Date() }).where(eq(schema.areas.id, ids[i]!));
-  }
-  return listAreas(db, {});
+  return withTransaction(async (tx) => {
+    if (ids.length === 0) return listAreas(tx as any, {});
+    const existing = await (tx as any).select({ id: schema.areas.id }).from(schema.areas).where((inArray as any)(schema.areas.id, ids));
+    const existsSet = new Set(existing.map((r: any) => r.id));
+    const missing = ids.filter((id) => !existsSet.has(id));
+    if (missing.length > 0) {
+      const err: any = new Error('Unknown ids');
+      err.code = 'UnknownIds';
+      err.details = missing;
+      throw err;
+    }
+    for (let i = 0; i < ids.length; i++) {
+      await (tx as any).update(schema.areas).set({ sortOrder: i, updatedAt: new Date() }).where(eq(schema.areas.id, ids[i]!));
+    }
+    return listAreas(tx as any, {});
+  });
 }
 
 

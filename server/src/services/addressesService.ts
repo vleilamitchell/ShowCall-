@@ -64,12 +64,12 @@ async function ensureEntityExists(db: Awaited<ReturnType<typeof getDatabase>>, e
 }
 
 export async function list(params: { entityType?: string; entityId?: string; role?: string; status?: string; isPrimary?: boolean | null; q?: string }) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   return repo.listAddresses(db, params);
 }
 
 export async function create(input: AddressCreateInput) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
 
   const entityType = String(input.entityType || '').trim() as 'contact' | 'employee';
   const entityId = String(input.entityId || '').trim();
@@ -145,14 +145,14 @@ export async function create(input: AddressCreateInput) {
 }
 
 export async function get(addressId: string) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const row = await repo.getAddressById(db, addressId);
   if (!row) throw new NotFoundError('Not found');
   return row;
 }
 
 export async function patch(addressId: string, body: AddressPatchInput) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
 
   const patch: any = {};
   const s = (v: unknown) => (v == null ? null : (typeof v === 'string' ? (v.trim() === '' ? null : v.trim()) : String(v)));
@@ -222,7 +222,6 @@ export async function patch(addressId: string, body: AddressPatchInput) {
     await ensureEntityExists(db, nextType, nextId);
   }
 
-  // Enforce validFrom <= validTo when either changes
   if (body.validFrom !== undefined || body.validTo !== undefined) {
     const current = await repo.getAddressById(db, addressId);
     if (!current) throw new NotFoundError('Not found');
@@ -246,7 +245,7 @@ export async function patch(addressId: string, body: AddressPatchInput) {
 }
 
 export async function remove(addressId: string) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const ok = await repo.deleteAddressById(db, addressId);
   if (!ok) throw new NotFoundError('Not found');
   return true;

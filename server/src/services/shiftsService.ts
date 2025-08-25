@@ -4,7 +4,7 @@ import { getDatabaseUrl } from '../lib/env';
 import * as schema from '../schema';
 import { isValidDateStr, isValidTimeStr } from '../lib/validators';
 
-const conn = async () => getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+const conn = async () => getDatabase();
 
 export async function listByDepartment(departmentId: string, params: { q?: string; scheduleId?: string; from?: string; to?: string; published?: string | null }) {
   const db = await conn();

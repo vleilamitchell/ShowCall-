@@ -1,0 +1,55 @@
+name: Web Deploy (dev)
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "ui/**"
+      - ".github/workflows/web-deploy.yml"
+  workflow_dispatch: {}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: |
+            ui/pnpm-lock.yaml
+
+      - name: API health check
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.API_BASE_URL }}/health");
+          if [ "$code" != "200" ]; then echo "API not healthy ($code)"; exit 1; fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web
+        env:
+          VITE_USE_API: "1"
+          VITE_API_URL: ${{ secrets.API_BASE_URL }}
+        run: pnpm run build
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: "upload"
+          app_location: "/ui"
+          output_location: "dist"
+

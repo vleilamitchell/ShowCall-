@@ -46,4 +46,19 @@ export async function listEligible(departmentId: string, positionId: string) {
   return rows.slice().sort((a: any, b: any) => (Number(b.priority ?? 0) - Number(a.priority ?? 0)) || a.name.localeCompare(b.name));
 }
 
+export async function listByDepartment(departmentId: string) {
+  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  return repo.listEmployeePositionsByDepartment(db, departmentId);
+}
+
+export async function removeById(id: string) {
+  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  return repo.deleteEmployeePositionById(db, id);
+}
+
+export async function removeByComposite(departmentId: string, positionId: string, employeeId: string) {
+  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  return repo.deleteEmployeePositionByComposite(db, departmentId, positionId, employeeId);
+}
+
 

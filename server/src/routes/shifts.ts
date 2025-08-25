@@ -6,6 +6,9 @@ export const shiftsRouter = new Hono();
 
 shiftsRouter.use('*', authMiddleware);
 
+// Top-level list (proxy with departmentId query)
+shiftsRouter.get('/shifts', ctrl.list);
+
 // Scoped under departments
 shiftsRouter.get('/departments/:departmentId/shifts', ctrl.listByDepartment);
 shiftsRouter.post('/departments/:departmentId/shifts', ctrl.create);

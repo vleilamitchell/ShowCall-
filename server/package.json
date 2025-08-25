@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "build": "echo 'Skipping tsc build; using tsx at runtime'",
+    "start": "tsx src/server.ts",
     "deploy": "npm run deploy:cf",
     "deploy:cf": "node scripts/deploy-cloudflare.js",
     "test": "vitest run",
@@ -12,7 +14,8 @@
     "test:integration": "vitest run --dir src --include \"**/*.int.{ts,tsx}\"",
     "test:ci": "vitest run --coverage",
     "db:push": "drizzle-kit push:pg",
-    "db:migrate:sql": "node scripts/setup-private-schema.mjs && node scripts/apply-sql-migrations.mjs"
+    "db:migrate:sql": "node scripts/setup-private-schema.mjs && node scripts/apply-sql-migrations.mjs",
+    "import:legacy": "tsx src/scripts/import-legacy.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.12.0",
@@ -23,14 +26,15 @@
     "fs-extra": "^11.2.0",
     "hono": "^4.0.5",
     "jose": "^5.2.3",
-    "postgres": "^3.4.7"
+    "postgres": "^3.4.7",
+    "tsx": "^4.7.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240208.0",
     "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.15.21",
     "dotenv-cli": "^7.3.0",
     "drizzle-kit": "^0.20.14",
-    "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "vitest": "^1.2.2",
     "wrangler": "^4.16.0"

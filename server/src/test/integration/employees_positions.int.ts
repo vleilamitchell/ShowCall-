@@ -115,6 +115,27 @@ describe('Employees & Positions golden-master', () => {
     const emp1Updated = await patchEmp.json();
     expect(emp1Updated.email).toBe('alex.t@example.com');
 
+    // Delete employee-position by id
+    const delById = await app.request(`${BASE}/employee-positions/${epRec1.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    expect(delById.status).toBe(204);
+
+    // Delete employee-position by composite
+    const delByComposite = await app.request(`${BASE}/departments/${dept.id}/positions/${pos1.id}/employee-positions/${emp2.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    expect(delByComposite.status).toBe(204);
+
+    // Verify department employee-positions list is empty
+    const listEp = await app.request(`${BASE}/departments/${dept.id}/employee-positions`, { headers: { Authorization: `Bearer ${token}` } });
+    expect(listEp.status).toBe(200);
+    const epRows = await listEp.json();
+    expect(Array.isArray(epRows)).toBe(true);
+    expect(epRows.length).toBe(0);
+
     // Delete employee
     const delEmp = await app.request(`${BASE}/employees/${emp2.id}`, {
       method: 'DELETE',

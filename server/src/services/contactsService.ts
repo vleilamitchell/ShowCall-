@@ -4,12 +4,12 @@ import * as repo from '../repositories/contactsRepo';
 import { normalizePhone, normalizeState, normalizeZip5 } from '../lib/validators';
 
 export async function list(params: { q?: string }) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   return repo.listContacts(db, params);
 }
 
 export async function create(input: Partial<repo.NewContactRecord>) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
 
   let id: string | undefined;
   const g: any = globalThis as any;
@@ -40,14 +40,14 @@ export async function create(input: Partial<repo.NewContactRecord>) {
 }
 
 export async function get(id: string) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const row = await repo.getContactById(db, id);
   if (!row) { const e: any = new Error('Not found'); e.code = 'NotFound'; throw e; }
   return row;
 }
 
 export async function patch(id: string, body: Partial<repo.NewContactRecord>) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const s = (v: unknown) => (v == null ? null : (typeof v === 'string' ? (v.trim() === '' ? null : v.trim()) : (v as any)));
   const patch: any = {};
   if ('prefix' in body) patch.prefix = s(body.prefix);
@@ -70,7 +70,7 @@ export async function patch(id: string, body: Partial<repo.NewContactRecord>) {
 }
 
 export async function remove(id: string) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const ok = await repo.deleteContactById(db, id);
   if (!ok) { const e: any = new Error('Not found'); e.code = 'NotFound'; throw e; }
 }

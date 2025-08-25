@@ -13,6 +13,7 @@ import { getItemSummary } from './services/inventory/projections';
 import { createReservation, listReservations, updateReservation } from './services/inventory/reservations';
 // import { computeOccurrences, upsertEventsForSeries } from './services/events/recurrence';
 // import { mountEventSeriesRoutes } from './routes/eventSeries';
+import { isDevelopment } from './lib/env';
 
 // API routes
 const api = new Hono();
@@ -27,6 +28,9 @@ api.get('/hello', (c) => {
 
 // Database test route - public for testing
 api.get('/db-test', async (c) => {
+  if (!isDevelopment()) {
+    return c.json({ error: 'Not Found' }, 404);
+  }
   try {
     // Use external DB URL if available, otherwise use local PostgreSQL database server
     // Note: In development, the port is dynamically allocated by port-manager.js

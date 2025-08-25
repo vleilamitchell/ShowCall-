@@ -1,0 +1,71 @@
+name: API Deploy (dev)
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "server/**"
+      - ".github/workflows/api-deploy.yml"
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: |
+            server/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build API
+        run: pnpm run build
+
+      - name: Prune dev dependencies
+        run: pnpm prune --prod
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          package: server
+
+      - name: Post-deploy health check
+        run: |
+          for i in {1..20}; do
+            echo "Health check attempt $i";
+            code=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.API_BASE_URL }}/api/v1/health");
+            if [ "$code" = "200" ]; then
+              echo "API is healthy"; exit 0;
+            fi;
+            sleep 5;
+          done;
+          echo "API did not become healthy in time"; exit 1;
+

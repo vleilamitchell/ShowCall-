@@ -4,14 +4,14 @@ import { getDatabaseUrl } from '../lib/env';
 import * as repo from '../repositories/eventAreasRepo';
 
 export async function list(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const eventId = c.req.param('eventId');
   const rows = await repo.listAreasForEvent(db, eventId);
   return c.json(rows);
 }
 
 export async function replace(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const eventId = c.req.param('eventId');
   const body = await c.req.json();
   const incomingIds: string[] = Array.isArray(body.areaIds) ? Array.from(new Set(body.areaIds.map((s: any) => String(s || '').trim()).filter(Boolean))) : [];
@@ -25,7 +25,7 @@ export async function replace(c: Context) {
 }
 
 export async function add(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const eventId = c.req.param('eventId');
   const body = await c.req.json();
   const areaId = String(body.areaId || '').trim();
@@ -40,7 +40,7 @@ export async function add(c: Context) {
 }
 
 export async function remove(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const eventId = c.req.param('eventId');
   const areaId = c.req.param('areaId');
   await repo.removeAreaFromEvent(db, eventId, areaId);

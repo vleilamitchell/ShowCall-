@@ -3,12 +3,12 @@ import { getDatabaseUrl } from '../lib/env';
 import * as repo from '../repositories/positionsRepo';
 
 export async function list(departmentId: string, params: { q?: string }) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   return repo.listPositions(db, departmentId, params);
 }
 
 export async function create(departmentId: string, input: { name: string }) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const name = String(input.name || '').trim();
   if (!name) throw new Error('Name is required');
   let id: string | undefined;
@@ -20,7 +20,7 @@ export async function create(departmentId: string, input: { name: string }) {
 }
 
 export async function patch(id: string, body: Partial<{ name: string }>) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const patch: any = {};
   if (typeof body.name === 'string') patch.name = body.name.trim();
   patch.updatedAt = new Date();
@@ -30,7 +30,7 @@ export async function patch(id: string, body: Partial<{ name: string }>) {
 }
 
 export async function remove(id: string) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   await repo.deletePositionById(db, id);
 }
 

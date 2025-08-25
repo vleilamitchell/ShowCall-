@@ -5,7 +5,7 @@ import * as schema from '../schema';
 import { and, asc, eq, gte, ilike, lte } from 'drizzle-orm';
 import { isValidDateStr } from '../lib/validators';
 
-const conn = async () => getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+const conn = async () => getDatabase();
 
 export async function list(params: { q?: string; isPublished?: boolean | null; from?: string; to?: string }) {
   const db = await conn();

@@ -69,8 +69,25 @@ cd server && pnpm run deploy
 
 From server/: pnpm run test:integration or pnpm run test:ci
 
-# Backup DB to local dump.
- `pnpm run db:backup`
+# Backup and Import Database
+
+```bash
+# Backup DB to local dump
+pnpm run db:backup
+
+# Import the latest backup into a new DB named "showcall_import"
+pnpm run db:import:latest
+```
+
+Notes:
+- Requires PostgreSQL client tools (`psql`). On macOS: `brew install postgresql@17`.
+- The import script will:
+  - Detect the embedded Postgres port from `data/postgres/postmaster.opts` or use `DATABASE_URL` if set.
+  - Drop and recreate the `showcall_import` database.
+  - Load the most recent SQL file from `data/postgres/backups/`.
+- After import, you can connect with your client using the printed connection string, or:
+  - macOS example: `psql postgresql://postgres:password@localhost:<port>/showcall_import`
+- The script path is `scripts/db-import-latest.js`.
 
 ## 🔗 **Connecting Production Services**
 
@@ -176,6 +193,36 @@ protectedRoutes.get('/private-route', (c) => {
 
 > **Note**: Embedded PostgreSQL is for local development only. Production deployments require an external database (configured during setup).
 
+### CI/CD: Azure dev workflows
+
+This repository includes GitHub Actions to deploy the API and Web to an Azure-based testing environment on pushes to `main`:
+
+- `.github/workflows/api-deploy.yml` – Deploys the API from `server/` to Azure App Service
+- `.github/workflows/web-deploy.yml` – Deploys the UI from `ui/` to Azure Static Web Apps
+
+Required GitHub Action secrets (Settings → Secrets and variables → Actions):
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+- `AZURE_WEBAPP_NAME` (Azure App Service name for the API)
+- `AZURE_STATIC_WEB_APPS_API_TOKEN` (for the UI)
+- `API_BASE_URL` (e.g. `https://<api-app>.azurewebsites.net/api/v1`)
+
+Azure App Service (API) app settings:
+- `DATABASE_URL` – Postgres connection string
+- `FIREBASE_PROJECT_ID` – Firebase project id
+- Runtime: Node 22
+
+How the workflows run:
+- API: checks out repo, sets up Node + pnpm, installs in `server/`, runs a lightweight build step (tsx runtime), prunes dev deps, logs into Azure via OIDC, deploys the `server/` folder, then health-checks `GET ${API_BASE_URL}/health` (the router exposes `/api/v1/health`).
+- Web: verifies API health, installs in `ui/`, builds with `VITE_USE_API=1` and `VITE_API_URL=${API_BASE_URL}`, then uploads `ui/dist` via `Azure/static-web-apps-deploy@v1`.
+
+Manual runs: open the Actions tab and use “Run workflow” on either workflow.
+
+Notes:
+- The API uses `tsx` to run TypeScript directly (`pnpm start` in `server/`). No separate compile artifact is required for the Azure App Service.
+- If you later add staging/prod, duplicate the workflows and point them at separate Azure resources and secrets.
+
 ### Backend (Cloudflare Workers)
 
 ```bash
@@ -259,6 +306,36 @@ export const users = pgTable('users', {
 ```
 
 ### Adding New Tables
+### Import-to-Active Migration (AI-assisted)
+
+- After importing a backup into `showcall_import`, you can generate and run a schema-aware migration into the active DB using an AI automation prompt.
+
+```bash
+# 1) Ensure the latest backup is imported
+pnpm run db:import:latest
+
+# 2) Open and run the prompt to generate+execute the migration script
+#    The prompt is at scripts/prompts/migrate_showcall_import_prompt.md
+#    Use your AI assistant to execute its steps.
+
+# 3) The generated script will appear at scripts/migrate-showcall-import.js
+#    Preview (dry run) the plan:
+node scripts/migrate-showcall-import.js | cat
+
+# 4) Execute the migration:
+node scripts/migrate-showcall-import.js --execute | cat
+
+# Optional: limit to specific tables
+node scripts/migrate-showcall-import.js --execute --tables=users,events
+```
+
+Notes:
+- The migration handles schema drift via explicit column mapping, enum updates, casts, FK order, and sequence resets.
+- Environment overrides:
+  - `ACTIVE_DATABASE_URL`: target DB (falls back to `DATABASE_URL` or embedded URL).
+  - `IMPORT_DATABASE_URL`: source DB (falls back to embedded URL with db `showcall_import`).
+- Requires Node 20+ and Postgres client availability.
+
 
 1. Create schema file in `server/src/schema/`
 2. Export from main schema file

@@ -73,7 +73,7 @@ export default function Scheduling() {
       try {
         let rows: ShiftRecord[] | undefined;
         if (!filters.departmentId) {
-          rows = await (api as any).listAllShifts?.({ q: filters.q });
+          rows = [];
         } else {
           rows = await api.listShifts?.(filters.departmentId!, { q: filters.q });
         }

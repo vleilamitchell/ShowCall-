@@ -1,21 +1,27 @@
 import { Context } from 'hono';
+import { and, asc, eq, inArray, ilike, or, gte, lte, isNull } from 'drizzle-orm';
 import { getDatabase } from '../lib/db';
 import { getDatabaseUrl } from '../lib/env';
-import * as repo from '../repositories/recurringSeriesRepo';
+import * as schema from '../schema';
 import { isValidDateStr, isValidTimeStr, isValidWeekdayMask, isValidFrequency } from '../lib/validators';
 import { computeOccurrences, upsertEventsForSeries } from '../services/events/recurrence';
 
 export async function list(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const q = c.req.query('q') || undefined;
   const from = c.req.query('from') || undefined;
   const to = c.req.query('to') || undefined;
-  const rows = await repo.listSeries(db, { q, from, to });
+  const conditions: any[] = [];
+  if (q) conditions.push(or(ilike(schema.eventSeries.name, `%${q}%`), ilike(schema.eventSeries.description, `%${q}%`)));
+  if (from && isValidDateStr(from)) conditions.push(or(isNull(schema.eventSeries.endDate), gte(schema.eventSeries.endDate, from)));
+  if (to && isValidDateStr(to)) conditions.push(or(isNull(schema.eventSeries.startDate), lte(schema.eventSeries.startDate, to)));
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const rows = await db.select().from(schema.eventSeries).where(whereClause as any).orderBy(asc(schema.eventSeries.name));
   return c.json(rows);
 }
 
 export async function create(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const body = await c.req.json();
   const name = String(body.name || '').trim();
   if (!name) return c.json({ error: 'name required' }, 400);
@@ -24,12 +30,13 @@ export async function create(c: Context) {
   if (startDate && !isValidDateStr(startDate)) return c.json({ error: 'invalid startDate' }, 400);
   if (endDate && !isValidDateStr(endDate)) return c.json({ error: 'invalid endDate' }, 400);
   if (startDate && endDate && startDate > endDate) return c.json({ error: 'startDate must be <= endDate' }, 400);
+
   const defaultStatus = String(body.defaultStatus || 'planned').trim();
   const defaultStartTime = String(body.defaultStartTime || '00:00').trim();
   const defaultEndTime = String(body.defaultEndTime || '23:59').trim();
   if (!isValidTimeStr(defaultStartTime) || !isValidTimeStr(defaultEndTime)) return c.json({ error: 'invalid time format HH:mm' }, 400);
 
-  let id: string | undefined; const g: any = globalThis as any; if (g?.crypto?.randomUUID) id = g.crypto.randomUUID();
+  const g: any = globalThis as any; let id: string | undefined = g?.crypto?.randomUUID?.();
   if (!id) { try { const nc = await import('node:crypto'); if (nc.randomUUID) id = nc.randomUUID(); } catch {} }
   if (!id) id = `ser_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -46,10 +53,10 @@ export async function create(c: Context) {
     promoterTemplate: (typeof body.promoterTemplate === 'string' ? body.promoterTemplate.trim() : null),
     artistsTemplate: (typeof body.artistsTemplate === 'string' ? body.artistsTemplate.trim() : null),
     templateJson: body.templateJson ?? null,
-    updatedAt: new Date() as any,
-  } as repo.NewSeriesRecord;
+  } as const;
 
-  const created = await repo.insertSeries(db, record);
+  const inserted = await db.insert(schema.eventSeries).values(record).returning();
+  const created = inserted[0];
 
   const rule = body.rule || {};
   if (rule) {
@@ -59,26 +66,27 @@ export async function create(c: Context) {
     if (!isValidFrequency(frequency)) return c.json({ error: 'invalid frequency' }, 400);
     if (!Number.isInteger(interval) || interval < 1) return c.json({ error: 'interval must be >= 1' }, 400);
     if (!isValidWeekdayMask(byWeekdayMask)) return c.json({ error: 'invalid byWeekdayMask' }, 400);
-    let rid: string | undefined; const g2: any = globalThis as any; if (g2?.crypto?.randomUUID) rid = g2.crypto.randomUUID();
+
+    const g2: any = globalThis as any; let rid: string | undefined = g2?.crypto?.randomUUID?.();
     if (!rid) { try { const nc = await import('node:crypto'); if (nc.randomUUID) rid = nc.randomUUID(); } catch {} }
     if (!rid) rid = `srl_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-    await repo.insertRule(db, { id: rid, seriesId: created.id, frequency, interval, byWeekdayMask } as any);
+    await db.insert(schema.eventSeriesRules).values({ id: rid, seriesId: created.id, frequency, interval, byWeekdayMask });
   }
 
   return c.json(created, 201);
 }
 
 export async function get(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
-  const id = c.req.param('seriesId');
-  const row = await repo.getSeriesById(db, id);
-  if (!row) return c.json({ error: 'Not found' }, 404);
-  return c.json(row);
+  const db = await getDatabase();
+  const seriesId = c.req.param('seriesId');
+  const rows = await db.select().from(schema.eventSeries).where(eq(schema.eventSeries.id, seriesId)).limit(1);
+  if (rows.length === 0) return c.json({ error: 'Not found' }, 404);
+  return c.json(rows[0]);
 }
 
 export async function patch(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
-  const id = c.req.param('seriesId');
+  const db = await getDatabase();
+  const seriesId = c.req.param('seriesId');
   const body = await c.req.json();
   const patch: any = {};
   if (typeof body.name === 'string') patch.name = body.name.trim();
@@ -94,72 +102,95 @@ export async function patch(c: Context) {
   if ('templateJson' in body) patch.templateJson = body.templateJson ?? null;
   patch.updatedAt = new Date();
   if (patch.startDate && patch.endDate && patch.startDate > patch.endDate) return c.json({ error: 'startDate must be <= endDate' }, 400);
-  const updated = await repo.updateSeriesById(db, id, patch);
-  if (!updated) return c.json({ error: 'Not found' }, 404);
-  return c.json(updated);
+  const updated = await db.update(schema.eventSeries).set(patch).where(eq(schema.eventSeries.id, seriesId)).returning();
+  if (updated.length === 0) return c.json({ error: 'Not found' }, 404);
+  return c.json(updated[0]);
 }
 
 export async function remove(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
-  const id = c.req.param('seriesId');
-  await repo.deleteSeriesById(db, id);
+  const db = await getDatabase();
+  const seriesId = c.req.param('seriesId');
+  await db.delete(schema.eventSeries).where(eq(schema.eventSeries.id, seriesId));
   return c.body(null, 204);
 }
 
 export async function listAreas(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
-  const id = c.req.param('seriesId');
-  const rows = await repo.listAreasForSeries(db, id);
+  const db = await getDatabase();
+  const seriesId = c.req.param('seriesId');
+  const rows = await db
+    .select({ id: schema.areas.id, name: schema.areas.name, description: schema.areas.description, color: schema.areas.color, active: schema.areas.active, updatedAt: schema.areas.updatedAt })
+    .from(schema.eventSeriesAreas)
+    .innerJoin(schema.areas, eq(schema.eventSeriesAreas.areaId, schema.areas.id))
+    .where(eq(schema.eventSeriesAreas.seriesId, seriesId))
+    .orderBy(asc(schema.areas.sortOrder), asc(schema.areas.name));
   return c.json(rows);
 }
 
 export async function replaceAreas(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
-  const id = c.req.param('seriesId');
+  const db = await getDatabase();
+  const seriesId = c.req.param('seriesId');
   const body = await c.req.json();
   const incomingIds: string[] = Array.isArray(body.areaIds) ? Array.from(new Set(body.areaIds.map((s: any) => String(s || '').trim()).filter(Boolean))) : [];
-  try {
-    const rows = await repo.replaceAreasForSeries(db, id, incomingIds);
-    return c.json(rows);
-  } catch (e: any) {
-    if (String(e?.code) === 'UnknownAreaIds') return c.json({ error: 'Unknown areaIds', details: e.details }, 400);
-    throw e;
+  if (incomingIds.length > 0) {
+    const existing = await db.select({ id: schema.areas.id }).from(schema.areas).where((inArray as any)(schema.areas.id, incomingIds));
+    const existingIds = new Set(existing.map((r: any) => r.id));
+    const missing = incomingIds.filter((id) => !existingIds.has(id));
+    if (missing.length > 0) return c.json({ error: 'Unknown areaIds', details: missing }, 400);
   }
+  const current = await db.select({ areaId: schema.eventSeriesAreas.areaId }).from(schema.eventSeriesAreas).where(eq(schema.eventSeriesAreas.seriesId, seriesId));
+  const currentIds = new Set(current.map((r: any) => r.areaId));
+  const toAdd = incomingIds.filter((id) => !currentIds.has(id));
+  const toRemove = Array.from(currentIds).filter((id) => !incomingIds.includes(id));
+  if (toRemove.length > 0) await db.delete(schema.eventSeriesAreas).where(and(eq(schema.eventSeriesAreas.seriesId, seriesId), (inArray as any)(schema.eventSeriesAreas.areaId, toRemove)));
+  for (const aid of toAdd) await db.insert(schema.eventSeriesAreas).values({ seriesId, areaId: aid });
+  const rows = await db
+    .select({ id: schema.areas.id, name: schema.areas.name, description: schema.areas.description, color: schema.areas.color, active: schema.areas.active, updatedAt: schema.areas.updatedAt })
+    .from(schema.eventSeriesAreas)
+    .innerJoin(schema.areas, eq(schema.eventSeriesAreas.areaId, schema.areas.id))
+    .where(eq(schema.eventSeriesAreas.seriesId, seriesId))
+    .orderBy(asc(schema.areas.sortOrder), asc(schema.areas.name));
+  return c.json(rows);
 }
 
 export async function addArea(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
-  const id = c.req.param('seriesId');
+  const db = await getDatabase();
+  const seriesId = c.req.param('seriesId');
   const body = await c.req.json();
   const areaId = String(body.areaId || '').trim();
   if (!areaId) return c.json({ error: 'areaId required' }, 400);
-  try {
-    const rows = await repo.addAreaToSeries(db, id, areaId);
-    return c.json(rows, 201);
-  } catch (e: any) {
-    if (String(e?.code) === 'AreaNotFound') return c.json({ error: 'Area not found' }, 404);
-    throw e;
-  }
+  const exists = await db.select({ id: schema.areas.id }).from(schema.areas).where(eq(schema.areas.id, areaId)).limit(1);
+  if (exists.length === 0) return c.json({ error: 'Area not found' }, 404);
+  const already = await db.select().from(schema.eventSeriesAreas).where(and(eq(schema.eventSeriesAreas.seriesId, seriesId), eq(schema.eventSeriesAreas.areaId, areaId))).limit(1);
+  if (already.length === 0) await db.insert(schema.eventSeriesAreas).values({ seriesId, areaId });
+  const rows = await db
+    .select({ id: schema.areas.id, name: schema.areas.name, description: schema.areas.description, color: schema.areas.color, active: schema.areas.active, updatedAt: schema.areas.updatedAt })
+    .from(schema.eventSeriesAreas)
+    .innerJoin(schema.areas, eq(schema.eventSeriesAreas.areaId, schema.areas.id))
+    .where(eq(schema.eventSeriesAreas.seriesId, seriesId))
+    .orderBy(asc(schema.areas.sortOrder), asc(schema.areas.name));
+  return c.json(rows, 201);
 }
 
 export async function removeArea(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
-  const id = c.req.param('seriesId');
+  const db = await getDatabase();
+  const seriesId = c.req.param('seriesId');
   const areaId = c.req.param('areaId');
-  await repo.removeAreaFromSeries(db, id, areaId);
+  await db.delete(schema.eventSeriesAreas).where(and(eq(schema.eventSeriesAreas.seriesId, seriesId), eq(schema.eventSeriesAreas.areaId, areaId)));
   return c.body(null, 204);
 }
 
 export async function preview(c: Context) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const seriesId = c.req.param('seriesId');
   const body = await c.req.json();
   const untilDate = String(body.untilDate || '').trim();
   const fromDate = body.fromDate ? String(body.fromDate).trim() : undefined;
   if (!isValidDateStr(untilDate)) return c.json({ error: 'invalid untilDate' }, 400);
-  const series = await repo.getSeriesById(db, seriesId);
+  const sRows = await db.select().from(schema.eventSeries).where(eq(schema.eventSeries.id, seriesId)).limit(1);
+  const series = sRows[0];
   if (!series) return c.json({ error: 'Series not found' }, 404);
-  const rule = await repo.getRuleBySeriesId(db, seriesId);
+  const rRows = await db.select().from(schema.eventSeriesRules).where(eq(schema.eventSeriesRules.seriesId, seriesId)).limit(1);
+  const rule = rRows[0];
   if (!rule) return c.json({ error: 'Series rule not found' }, 404);
   const dates = computeOccurrences(series as any, rule as any, { fromDate, untilDate });
   return c.json({ dates, template: ((): any => { const t = (series as any); return { status: t.defaultStatus, startTime: t.defaultStartTime, endTime: t.defaultEndTime, title: t.titleTemplate, promoter: t.promoterTemplate, artists: t.artistsTemplate }; })() });

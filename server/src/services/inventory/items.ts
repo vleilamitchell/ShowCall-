@@ -19,7 +19,7 @@ export async function createInventoryItem(input: {
   attributes: any;
   categoryId?: string | null;
 }, dbOrTx?: DatabaseConnection) {
-  const db = dbOrTx || (await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres'));
+  const db = dbOrTx || (await getDatabase());
   // Generate ID
   const g: any = globalThis as any;
   let id: string | undefined;
@@ -81,7 +81,7 @@ export async function getInventoryItem(itemId: string, dbOrTx?: DatabaseConnecti
 }
 
 export async function patchInventoryItem(itemId: string, patch: Partial<{ name: string; baseUnit: string; attributes: any; active: boolean }>, dbOrTx?: DatabaseConnection) {
-  const db = dbOrTx || (await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres'));
+  const db = dbOrTx || (await getDatabase());
   const update: any = {};
   if (typeof patch.name === 'string') update.name = patch.name.trim();
   if (typeof patch.baseUnit === 'string') update.baseUnit = patch.baseUnit.trim();

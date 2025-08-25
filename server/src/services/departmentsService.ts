@@ -3,12 +3,12 @@ import { getDatabaseUrl } from '../lib/env';
 import * as repo from '../repositories/departmentsRepo';
 
 export async function list(params: { q?: string }) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   return repo.listDepartments(db, params);
 }
 
 export async function create(input: { name: string; description?: string | null }) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const name = typeof input.name === 'string' ? input.name.trim() : '';
   if (!name) throw new Error('Name is required');
   const description = typeof input.description === 'string' ? input.description.trim() : null;
@@ -23,14 +23,14 @@ export async function create(input: { name: string; description?: string | null 
 }
 
 export async function get(id: string) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const row = await repo.getDepartmentById(db, id);
   if (!row) { const e: any = new Error('Not found'); e.code = 'NotFound'; throw e; }
   return row;
 }
 
 export async function patch(id: string, body: Partial<{ name: string; description: string | null }>) {
-  const db = await getDatabase(getDatabaseUrl() || process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres');
+  const db = await getDatabase();
   const patch: any = {};
   if (typeof body.name === 'string') patch.name = body.name.trim();
   if (Object.prototype.hasOwnProperty.call(body, 'description')) patch.description = typeof body.description === 'string' ? body.description.trim() : null;
