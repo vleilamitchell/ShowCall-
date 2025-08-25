@@ -60,18 +60,32 @@ export function buildApp(options: BuildAppOptions = {}) {
   // Public health endpoint (no auth)
   app.get('/healthz', (c) => c.json({ ok: true }));
 
-  // Debug endpoint to inspect if Authorization header reaches the app (enabled only when DEBUG_AUTH=1)
-  if (typeof process !== 'undefined' && process.env && process.env.DEBUG_AUTH === '1') {
-    app.get('/debug/auth-info', (c) => {
-      const authHeader = c.req.header('authorization');
-      const preview = authHeader ? `${authHeader.slice(0, 10)}...` : null;
-      let requestId: string | undefined;
-      try {
-        requestId = (c as any).get?.('requestId');
-      } catch {}
-      return c.json({ ok: true, sawAuthHeader: !!authHeader, authHeaderPreview: preview, requestId });
-    });
-  }
+  // Debug endpoints to help diagnose auth routing in hosted environments
+  app.get('/debug/auth-info', (c) => {
+    const authHeader = c.req.header('authorization');
+    const preview = authHeader ? `${authHeader.slice(0, 10)}...` : null;
+    let requestId: string | undefined;
+    try {
+      requestId = (c as any).get?.('requestId');
+    } catch {}
+    return c.json({ ok: true, sawAuthHeader: !!authHeader, authHeaderPreview: preview, requestId });
+  });
+
+  app.get('/debug/token-claims', async (c) => {
+    const authHeader = c.req.header('authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) return c.json({ ok: false, error: 'no_token' }, 400);
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return c.json({ ok: false, error: 'bad_format' }, 400);
+      const payloadStr = Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+      const payload = JSON.parse(payloadStr);
+      const { iss, aud, sub, iat, exp } = payload || {};
+      return c.json({ ok: true, iss, aud, sub, iat, exp });
+    } catch {
+      return c.json({ ok: false, error: 'decode_failed' }, 400);
+    }
+  });
 
   // Build API v1 router composition and mount under /api/v1
   const api = new Hono();
