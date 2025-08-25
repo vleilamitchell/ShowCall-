@@ -1,6 +1,23 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
-import firebaseConfig from './firebase-config.json';
+
+type FirebaseClientConfig = {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  appId: string;
+  messagingSenderId?: string;
+  measurementId?: string;
+};
+
+const firebaseConfig: FirebaseClientConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string,
+  projectId: (import.meta.env.VITE_FIREBASE_PROJECT_ID as string) || 'demo-project',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID as string,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string | undefined,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID as string | undefined,
+};
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);

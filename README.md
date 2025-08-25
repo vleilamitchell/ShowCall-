@@ -242,14 +242,20 @@ Your API will be available at: `https://your-worker-name.your-subdomain.workers.
 
 ### Environment Variables (Production)
 
-Set these in Cloudflare dashboards:
+Set these where you deploy (Cloudflare, Azure, etc.).
 
-**Worker Environment Variables:**
+**API (Server) Environment Variables:**
 - `DATABASE_URL` - Your database connection string
 - `FIREBASE_PROJECT_ID` - Firebase project ID
+- `NODE_ENV` - typically `production`
 
-**Pages Environment Variables (if needed):**
-- `VITE_API_URL` - Your deployed worker URL (optional, defaults work)
+**UI (Vite) Environment Variables:**
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_APP_ID`
+- Optional: `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_MEASUREMENT_ID`
+- Optional: `VITE_USE_API=1`, `VITE_API_URL` - point UI to your API base URL
 
 ### Post-Deployment Setup
 
@@ -388,9 +394,8 @@ pnpm install
 - **Data Protection**: Emulator data is automatically backed up every 60 seconds and on clean shutdown to prevent data loss during crashes
 
 **Production Mode:**
-1. **Check Firebase config**: `ui/src/lib/firebase-config.json`
-2. **Verify environment variables**: `server/.env`
-3. **Check authorized domains** in Firebase Console
+1. **Verify environment variables**: `server/.env` and Vite `VITE_*` variables above
+2. **Check authorized domains** in Firebase Console
 
 ### Deployment Issues
 
