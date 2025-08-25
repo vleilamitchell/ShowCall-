@@ -52,6 +52,12 @@ export function isDevelopment(): boolean {
  * Get database URL from environment
  */
 export function getDatabaseUrl(): string | undefined {
+  const isTest = getEnv('NODE_ENV') === 'test';
+  if (isTest) {
+    // Prefer explicit test database if provided
+    const testUrl = getEnv('DATABASE_URL_TEST');
+    if (testUrl) return testUrl;
+  }
   return getEnv('DATABASE_URL');
 }
 

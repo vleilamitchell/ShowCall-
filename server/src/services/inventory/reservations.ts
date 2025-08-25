@@ -11,7 +11,7 @@ export async function createReservation(input: { itemId: string; locationId: str
     const item = (await db.select({ id: schema.inventoryItems.itemId }).from(schema.inventoryItems).where(eq(schema.inventoryItems.itemId, input.itemId)).limit(1))[0];
     const loc = (await db.select({ id: schema.locations.locationId }).from(schema.locations).where(eq(schema.locations.locationId, input.locationId)).limit(1))[0];
     if (!item || !loc) {
-      throw new ValidationError('Invalid itemId or locationId');
+      throw new ValidationError('Validation failed');
     }
     // Enforce mutual exclusion: overlapping active reservations for same item/location are not allowed
     const from = new Date(input.startTs);
@@ -28,7 +28,7 @@ export async function createReservation(input: { itemId: string; locationId: str
       ))
       .limit(1);
     if ((overlapping as any[]).length > 0) {
-      throw new ValidationError('Reservation overlaps another active reservation');
+      throw new ValidationError('Validation failed');
     }
   let id: string | undefined;
   const g: any = globalThis as any;

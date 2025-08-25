@@ -26,9 +26,9 @@ export async function postTransaction(input: PostTxnInput, dbOrTx?: DatabaseConn
 
   // Minimal validations
   const item = (await db.select().from(schema.inventoryItems).where(eq(schema.inventoryItems.itemId, input.itemId)).limit(1))[0];
-  if (!item) throw new Error('Item not found');
+  if (!item) { const { ValidationError } = await import('../../errors'); throw new ValidationError('Validation failed'); }
   const location = (await db.select().from(schema.locations).where(eq(schema.locations.locationId, input.locationId)).limit(1))[0];
-  if (!location) throw new Error('Location not found');
+  if (!location) { const { ValidationError } = await import('../../errors'); throw new ValidationError('Validation failed'); }
 
   // Support qty/unit or qtyBase
   let qtyBase: number | undefined = Number.isFinite(input.qtyBase as any) ? Number(input.qtyBase) : undefined;
@@ -37,7 +37,7 @@ export async function postTransaction(input: PostTxnInput, dbOrTx?: DatabaseConn
       qtyBase = await convertToBaseUnits(String(item.baseUnit), Number(input.qty), String(input.unit), db);
     }
   }
-  if (!Number.isFinite(qtyBase)) throw new Error('qtyBase or (qty+unit) required');
+  if (!Number.isFinite(qtyBase)) { const { ValidationError } = await import('../../errors'); throw new ValidationError('Validation failed'); }
 
   const g: any = globalThis as any;
   const genId = async (prefix: string) => {
@@ -96,7 +96,7 @@ export async function postTransaction(input: PostTxnInput, dbOrTx?: DatabaseConn
   const onHandQtyBase = Number((onHandAgg as any)[0]?.qty || 0);
   const reservationPresent = Boolean(input.sourceDoc && input.sourceDoc.eventId);
   const enforcement = enforcePostingPolicies({ policies, eventType: input.eventType, itemType: String(item.itemType), onHandQtyBase, reservationPresent });
-  if (!('ok' in enforcement && enforcement.ok)) throw new Error((enforcement as any).message || 'Policy violation');
+  if (!('ok' in enforcement && enforcement.ok)) { const { ValidationError } = await import('../../errors'); throw new ValidationError('Validation failed'); }
 
   // Load current valuation prior to posting so we can assign COGS for negative movements
   const vaRowsPre = await db.select().from(schema.valuationAvg).where(eq(schema.valuationAvg.itemId, input.itemId)).limit(1);

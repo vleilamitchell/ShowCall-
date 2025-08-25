@@ -9,8 +9,15 @@ export async function resetTestDatabase(connectionString: string) {
   process.env.DATABASE_URL = connectionString;
   const setupPath = path.join(serverDir, 'scripts', 'setup-private-schema.mjs');
   const applyPath = path.join(serverDir, 'scripts', 'apply-sql-migrations.mjs');
-  execSync(`${process.execPath} ${setupPath} | cat`, { cwd: serverDir, stdio: 'inherit' });
-  execSync(`${process.execPath} ${applyPath} | cat`, { cwd: serverDir, stdio: 'inherit' });
+  // Serialize migrations to prevent deadlocks across test files
+  const mutex = path.join(serverDir, '.test-migrate-lock');
+  try {
+    execSync(`bash -lc 'while [ -f ${mutex} ]; do sleep 0.05; done; trap "rm -f ${mutex}" EXIT; touch ${mutex}; ${process.execPath} ${setupPath} | cat; ${process.execPath} ${applyPath} | cat'`, { cwd: serverDir, stdio: 'inherit' });
+  } catch (e) {
+    throw e;
+  } finally {
+    try { execSync(`rm -f ${mutex}`); } catch {}
+  }
 }
 
 export async function truncateAllTables(connectionString: string) {

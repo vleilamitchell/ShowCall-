@@ -140,6 +140,24 @@ export default function Employees() {
     }
   });
 
+  const onDepartmentChange = async (newDeptId: string) => {
+    if (!selected) return;
+    const prevDeptId = selected.departmentId;
+    try {
+      const updated = await updateEmployee(selected.id, { departmentId: newDeptId });
+      mutateItems(prev => {
+        const next = prev.map(i => (i.id === updated.id ? updated : i));
+        const currentFilterDept = (filterState as EmployeeFilters).departmentId;
+        if (currentFilterDept && currentFilterDept !== '-' && currentFilterDept !== newDeptId) {
+          return next.filter(i => i.id !== updated.id);
+        }
+        return next;
+      });
+    } catch (e) {
+      console.error('Failed to update department', e);
+    }
+  };
+
   return (
     <ListDetailLayout
       left={(
@@ -240,7 +258,13 @@ export default function Employees() {
                 </div>
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1">Department</label>
-                  <Input value={departments.find(d => d.id === selected.departmentId)?.name || ''} readOnly />
+                  <select
+                    className="border rounded px-2 py-1 w-full"
+                    value={selected.departmentId}
+                    onChange={(e) => onDepartmentChange(e.target.value)}
+                  >
+                    {departments.map(d => (<option key={d.id} value={d.id}>{d.name}</option>))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1">Priority</label>

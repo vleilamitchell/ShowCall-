@@ -1,6 +1,10 @@
+import { and, eq } from 'drizzle-orm';
 import { getDatabase } from '../lib/db';
 import { getDatabaseUrl } from '../lib/env';
 import * as repo from '../repositories/employeesRepo';
+import * as depts from '../repositories/departmentsRepo';
+import * as empPos from '../repositories/employeePositionsRepo';
+import * as schema from '../schema';
 
 export async function listByDepartment(departmentId: string) {
   const db = await getDatabase();
@@ -65,6 +69,7 @@ export async function patch(id: string, body: any) {
   if ('email' in body) patch.email = f(body.email);
   if ('emergencyContactName' in body) patch.emergencyContactName = f(body.emergencyContactName);
   if ('emergencyContactPhone' in body) patch.emergencyContactPhone = f(body.emergencyContactPhone);
+  if ('departmentId' in body) patch.departmentId = f(body.departmentId);
   patch.updatedAt = new Date();
 
   // Handle automatic name composition if only first/last updated
@@ -76,8 +81,34 @@ export async function patch(id: string, body: any) {
     if (composed) patch.name = composed;
   }
 
+  // If departmentId is set, optionally validate it exists
+  let departmentChanged = false;
+  let newDepartmentId: string | null = null;
+  if (Object.prototype.hasOwnProperty.call(patch, 'departmentId')) {
+    const nextDeptId = typeof patch.departmentId === 'string' ? String(patch.departmentId) : null;
+    if (nextDeptId) {
+      const exists = await depts.getDepartmentById(db as any, nextDeptId);
+      if (!exists) {
+        const err: any = new Error('Unknown departmentId');
+        err.code = 'BadRequest';
+        throw err;
+      }
+    }
+    // Determine if it actually changes
+    const current = await repo.getEmployeeById(db, id);
+    if (!current) { const e: any = new Error('NotFound'); e.code = 'NotFound'; throw e; }
+    departmentChanged = (nextDeptId || null) !== (current.departmentId || null);
+    newDepartmentId = nextDeptId || null;
+  }
+
   const updated = await repo.updateEmployeeById(db, id, patch);
   if (!updated) { const e: any = new Error('NotFound'); e.code = 'NotFound'; throw e; }
+
+  // Cleanup employee_positions if department changed
+  if (departmentChanged && newDepartmentId) {
+    await empPos.deleteAllForEmployeeNotInDepartment(db as any, id, newDepartmentId);
+  }
+
   const fullName = `${String(updated.firstName ?? '').trim()}${updated.firstName && updated.lastName ? ' ' : ''}${String(updated.lastName ?? '').trim()}`.trim() || updated.name;
   return { ...updated, fullName };
 }

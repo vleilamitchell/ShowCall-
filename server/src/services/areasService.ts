@@ -8,7 +8,7 @@ export async function list(params: { q?: string; active?: boolean | null }) {
   return repo.listAreas(db, params);
 }
 
-export async function create(input: { name: string; description?: string | null; color?: string | null; active?: boolean }) {
+export async function create(input: { id?: string; name: string; description?: string | null; color?: string | null; active?: boolean }) {
   const db = await getDatabase();
   if (!validateAreaName(input.name)) throw new Error('invalid name');
   const name = input.name.trim();
@@ -19,11 +19,16 @@ export async function create(input: { name: string; description?: string | null;
 
   let id: string | undefined;
   const g: any = globalThis as any;
-  if (g?.crypto?.randomUUID) id = g.crypto.randomUUID();
-  if (!id) {
-    try { const nodeCrypto = await import('node:crypto'); if (nodeCrypto.randomUUID) id = nodeCrypto.randomUUID(); } catch {}
+  const requestedId = typeof input.id === 'string' && input.id.trim() ? input.id.trim() : undefined;
+  if (requestedId) {
+    id = requestedId;
+  } else {
+    if (g?.crypto?.randomUUID) id = g.crypto.randomUUID();
+    if (!id) {
+      try { const nodeCrypto = await import('node:crypto'); if (nodeCrypto.randomUUID) id = nodeCrypto.randomUUID(); } catch {}
+    }
+    if (!id) id = `area_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
   }
-  if (!id) id = `area_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
 
   try {
     return await repo.insertArea(db, { id, name, description, color, active } as any);

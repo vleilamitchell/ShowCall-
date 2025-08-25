@@ -44,7 +44,7 @@ export default function Scheduling() {
   const [createWarnings, setCreateWarnings] = useState<string[] | null>(null);
 
   const filters: FilterState = useMemo(() => ({
-    departmentId: params.departmentId || searchParams.get('departmentId') || undefined,
+    departmentId: params.departmentId || searchParams.get('departmentId') || (typeof window !== 'undefined' ? localStorage.getItem('sc_sched_departmentId') || undefined : undefined),
     q: searchParams.get('q') || undefined,
   }), [params.departmentId, searchParams]);
 
@@ -113,6 +113,26 @@ export default function Scheduling() {
     }
     setSearchParams(sp, { replace: true });
   };
+  
+  const onDepartmentChange = (value: string) => {
+    // Move department selection into the route path so it works from nested routes
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.delete('departmentId');
+    const qs = sp.toString();
+    const suffix = qs ? `?${qs}` : '';
+    if (value) {
+      navigate(`/departments/${value}/scheduling${suffix}`);
+    } else {
+      navigate(`/scheduling${suffix}`);
+    }
+  };
+  // Persist departmentId selection
+  useEffect(() => {
+    try {
+      if (filters.departmentId) localStorage.setItem('sc_sched_departmentId', filters.departmentId);
+      else localStorage.removeItem('sc_sched_departmentId');
+    } catch {}
+  }, [filters.departmentId]);
   
   const onCreateShift = async () => {
     if (!filters.departmentId) return;
@@ -223,7 +243,7 @@ export default function Scheduling() {
                 <select
                   className="border rounded px-2 py-1"
                   value={filters.departmentId || ''}
-                  onChange={(e) => updateQuery({ departmentId: e.target.value || undefined })}
+                  onChange={(e) => onDepartmentChange(e.target.value)}
                 >
                   <option value="">All</option>
                   {departments.map(d => (<option key={d.id} value={d.id}>{d.name}</option>))}

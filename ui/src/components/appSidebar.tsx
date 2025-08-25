@@ -49,6 +49,14 @@ export function AppSidebar() {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
+  // Consider Scheduling active when routed via departments nested path
+  const isSchedulingRoute = (
+    location.pathname === '/scheduling' ||
+    location.pathname.startsWith('/scheduling/') ||
+    /^\/departments\/[^/]+\/scheduling(\/|$)/.test(location.pathname)
+  );
+  const isDepartmentsRouteActive = isActive('/departments') && !isSchedulingRoute;
+
   const inventoryOpen = isActive('/inventory');
   const eventsOpen = isActive('/events');
   const inventoryIsOpen = inventoryOpen || hoverInventory || expandInventory;
@@ -249,18 +257,18 @@ export function AppSidebar() {
                   </div>
                 </div>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/scheduling')}
+                  <SidebarMenuButton asChild isActive={isSchedulingRoute}
                     className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
-                    <NavLink to="/scheduling" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
+                    <NavLink to="/scheduling" className={() => `navLink flex items-center gap-1.5${isSchedulingRoute ? ' navLink--active' : ''}` }>
                       <CalendarRange className="w-4 h-4" />
                       <span className="truncate">Scheduling</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/departments')}
+                  <SidebarMenuButton asChild isActive={isDepartmentsRouteActive}
                     className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
-                    <NavLink to="/departments" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
+                    <NavLink to="/departments" className={() => `navLink flex items-center gap-1.5${isDepartmentsRouteActive ? ' navLink--active' : ''}` }>
                       <Building2 className="w-4 h-4" />
                       <span className="truncate">Departments</span>
                     </NavLink>

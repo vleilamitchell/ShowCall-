@@ -89,6 +89,29 @@ Notes:
   - macOS example: `psql postgresql://postgres:password@localhost:<port>/showcall_import`
 - The script path is `scripts/db-import-latest.js`.
 
+### Legacy Import (from showcall_import to active DB)
+
+```bash
+# Dry run (plan only)
+pnpm run db:import:legacy
+
+# Execute import
+pnpm run db:import:legacy -- --execute
+
+# Limit to specific tables
+pnpm run db:import:legacy -- --execute --tables=departments,employees,events
+```
+
+Notes:
+- Source (legacy) database defaults to the embedded Postgres with database `showcall_import`.
+- Override URLs via environment variables:
+  - `IMPORT_DATABASE_URL` – base URL for the source (legacy) server; db will be set to `showcall_import` if no path.
+  - `ACTIVE_DATABASE_URL` – URL for the target active database (falls back to `DATABASE_URL` or embedded URL).
+- The importer runs in FK-safe order and performs best-effort column mapping for critical entities:
+  - departments, areas, positions, contacts, employees, events, recurring_series, schedules, shifts, assignments, inventory_items
+- Conflicts are ignored (`ON CONFLICT DO NOTHING`). You can safely re-run after fixing mappings.
+- Script path: `scripts/db-import-legacy.js`.
+
 ## 🔗 **Connecting Production Services**
 
 Your app defaults to everything running locally. Connect to production services when you're ready:

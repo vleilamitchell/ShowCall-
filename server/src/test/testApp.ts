@@ -1,4 +1,5 @@
 import buildApp from '../app';
+import { setEnvContext } from '../lib/env';
 
 type BuildOptions = {
   stubAuth?: { userId: string; email?: string } | null;
@@ -6,7 +7,17 @@ type BuildOptions = {
 };
 
 export function buildTestApp(options: BuildOptions = {}) {
+  // Ensure env context reflects test environment and current process env
+  const mergedEnv = {
+    ...process.env,
+    NODE_ENV: 'test',
+    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ?? 'demo-project',
+    FIREBASE_AUTH_EMULATOR_HOST: process.env.FIREBASE_AUTH_EMULATOR_HOST ?? 'http://localhost:9099',
+  } as any;
+  setEnvContext(mergedEnv);
   const app = buildApp({ injectAuth: options.stubAuth ?? undefined, disableLogger: !options.logRequests });
+  // buildApp sets env context from process.env; re-apply test overrides for downstream reads
+  setEnvContext(mergedEnv);
   return app as any;
 }
 

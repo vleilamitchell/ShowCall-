@@ -184,7 +184,7 @@ export async function preview(c: Context) {
   const seriesId = c.req.param('seriesId');
   const body = await c.req.json();
   const untilDate = String(body.untilDate || '').trim();
-  const fromDate = body.fromDate ? String(body.fromDate).trim() : undefined;
+  let fromDate = body.fromDate ? String(body.fromDate).trim() : undefined;
   if (!isValidDateStr(untilDate)) return c.json({ error: 'invalid untilDate' }, 400);
   const sRows = await db.select().from(schema.eventSeries).where(eq(schema.eventSeries.id, seriesId)).limit(1);
   const series = sRows[0];
@@ -192,6 +192,8 @@ export async function preview(c: Context) {
   const rRows = await db.select().from(schema.eventSeriesRules).where(eq(schema.eventSeriesRules.seriesId, seriesId)).limit(1);
   const rule = rRows[0];
   if (!rule) return c.json({ error: 'Series rule not found' }, 404);
+  // Default fromDate to series.startDate if not provided
+  if (!fromDate && series.startDate) fromDate = series.startDate as any;
   const dates = computeOccurrences(series as any, rule as any, { fromDate, untilDate });
   return c.json({ dates, template: ((): any => { const t = (series as any); return { status: t.defaultStatus, startTime: t.defaultStartTime, endTime: t.defaultEndTime, title: t.titleTemplate, promoter: t.promoterTemplate, artists: t.artistsTemplate }; })() });
 }
@@ -200,10 +202,17 @@ export async function generate(c: Context) {
   const seriesId = c.req.param('seriesId');
   const body = await c.req.json();
   const untilDate = String(body.untilDate || '').trim();
-  const fromDate = body.fromDate ? String(body.fromDate).trim() : undefined;
+  let fromDate = body.fromDate ? String(body.fromDate).trim() : undefined;
   const overwriteExisting = Boolean(body.overwriteExisting);
   const setAreasMode = (body.setAreasMode === 'replace') ? 'replace' : 'skip';
   if (!isValidDateStr(untilDate)) return c.json({ error: 'invalid untilDate' }, 400);
+  // Default fromDate by fetching series if necessary
+  if (!fromDate) {
+    const db = await getDatabase();
+    const sRows = await db.select().from(schema.eventSeries).where(eq(schema.eventSeries.id, seriesId)).limit(1);
+    const series = sRows[0];
+    if (series?.startDate) fromDate = series.startDate as any;
+  }
   const res = await upsertEventsForSeries(seriesId, { fromDate, untilDate, overwriteExisting, setAreasMode });
   return c.json(res, 201);
 }

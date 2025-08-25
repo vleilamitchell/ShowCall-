@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import * as schema from '../schema';
 
 type Database = Awaited<ReturnType<typeof import('../lib/db').getDatabase>>;
@@ -41,6 +41,23 @@ export async function deleteEmployeePositionByComposite(
     )
     .returning();
   return deleted.length > 0;
+}
+
+export async function deleteAllForEmployeeNotInDepartment(
+  db: Database,
+  employeeId: string,
+  departmentId: string,
+) {
+  await db
+    .delete(schema.employeePositions)
+    .where(
+      and(
+        eq(schema.employeePositions.employeeId, employeeId),
+        // department_id <> newDepartmentId
+        sql`${schema.employeePositions.departmentId.name} <> ${departmentId}`
+      )
+    );
+  return true;
 }
 
 
