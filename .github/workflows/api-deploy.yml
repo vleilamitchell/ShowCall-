@@ -50,11 +50,11 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Azure Web App
+      - name: Deploy to Azure Web App (Zip Deploy)
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          package: server
+          package: src/server/api.zip
 
       - name: Post-deploy health check
         run: |
