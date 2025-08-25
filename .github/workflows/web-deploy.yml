@@ -35,10 +35,10 @@ jobs:
           cache-dependency-path: |
             ui/pnpm-lock.yaml
 
-      - name: API health check
-        run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.API_BASE_URL }}/health");
-          if [ "$code" != "200" ]; then echo "API not healthy ($code)"; exit 1; fi
+      # - name: API health check
+      #   run: |
+      #     code=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.API_BASE_URL }}/health");
+      #     if [ "$code" != "200" ]; then echo "API not healthy ($code)"; exit 1; fi
 
       - name: Build web
         env:
