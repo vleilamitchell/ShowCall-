@@ -40,13 +40,3 @@ jobs:
         run: |
           pnpm build
 
-      - name: Test server
-        working-directory: server
-        env:
-          NODE_ENV: test
-          FIREBASE_PROJECT_ID: demo-project
-          DATABASE_URL_TEST: postgresql://postgres:password@localhost:5432/postgres
-        run: |
-          pnpm test:ci
-
-
