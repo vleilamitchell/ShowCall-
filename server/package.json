@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "echo 'Skipping tsc build; using tsx at runtime'",
-    "start": "tsx src/server.ts",
-    "start:prod": "npm run dev",
+    "build": "esbuild src/server.ts --platform=node --format=cjs --bundle --sourcemap --outfile=dist/server.js",
+    "start": "node dist/server.js",
+    "start:prod": "node dist/server.js",
     "deploy": "npm run deploy:cf",
     "deploy:cf": "node scripts/deploy-cloudflare.js",
     "test": "vitest run",
@@ -31,6 +31,7 @@
     "tsx": "^4.7.0"
   },
   "devDependencies": {
+    "esbuild": "^0.23.0",
     "@cloudflare/workers-types": "^4.20240208.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.15.21",
