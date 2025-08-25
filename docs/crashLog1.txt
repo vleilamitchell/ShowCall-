@@ -1,0 +1,1001 @@
+Unable to open a connection to your app. This may be due to any network security groups or IP restriction rules that you have placed on your app. To use log streaming, please make sure you are able to access your app directly from your current network.
+2025-08-25T19:51:27.4425804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T19:51:27.6091107Z node not running, starting node /opt/webssh/index.js
+2025-08-25T19:51:40.3974960Z Mon Aug 25 19:51:40 UTC 2025 running .net core
+2025-08-25T19:51:41.7428766Z Startup : 07.51.41.722395
+2025-08-25T19:51:41.7714466Z Configure Services : 07.51.41.771176
+2025-08-25T19:51:42.2454779Z Configure : 07.51.42.244537
+2025-08-25T19:51:42.7842826Z Setting Up Routes : 07.51.42.775795
+2025-08-25T19:51:43.4622844Z Exiting Configure : 07.51.43.461390
+2025-08-25T19:51:44.1061404Z Hosting environment: Production
+2025-08-25T19:51:44.1088651Z Content root path: /opt/Kudu
+2025-08-25T19:51:44.1178923Z Now listening on: http://0.0.0.0:8181
+2025-08-25T19:51:44.1179099Z Application started. Press Ctrl+C to shut down.
+2025-08-25T20:25:21.6874549Z     __ __          __      __    _ __
+2025-08-25T20:25:21.6936287Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T20:25:21.6936501Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T20:25:21.6936536Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T20:25:21.6936571Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T20:25:21.6936627Z
+2025-08-25T20:25:21.6936676Z
+2025-08-25T20:25:21.6936707Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T20:25:21.6936736Z
+2025-08-25T20:25:21.6936788Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T20:25:21.6936820Z Kudu Version : 20250623.5
+2025-08-25T20:25:21.6936854Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T20:25:21.6936883Z
+2025-08-25T20:25:22.7959037Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T20:25:22.8142254Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T20:25:26.2773861Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T20:25:26.3945490Z node not running, starting node /opt/webssh/index.js
+2025-08-25T20:25:39.0327173Z Mon Aug 25 20:25:39 UTC 2025 running .net core
+2025-08-25T20:25:40.2773044Z Startup : 08.25.40.252659
+2025-08-25T20:25:40.3111645Z Configure Services : 08.25.40.303858
+2025-08-25T20:25:40.7649990Z Configure : 08.25.40.764783
+2025-08-25T20:25:41.1411860Z Setting Up Routes : 08.25.41.139775
+2025-08-25T20:25:42.0435124Z Exiting Configure : 08.25.42.043240
+2025-08-25T20:25:42.4155763Z Hosting environment: Production
+2025-08-25T20:25:42.4157284Z Content root path: /opt/Kudu
+2025-08-25T20:25:42.4159659Z Now listening on: http://0.0.0.0:8181
+2025-08-25T20:25:42.4160297Z Application started. Press Ctrl+C to shut down.
+2025-08-25T02:06:25.5251738Z     __ __          __      __    _ __
+2025-08-25T02:06:25.5523796Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T02:06:25.5524014Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T02:06:25.5524052Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T02:06:25.5524090Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T02:06:25.5524129Z
+2025-08-25T02:06:25.5524207Z
+2025-08-25T02:06:25.5524243Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T02:06:25.5524554Z
+2025-08-25T02:06:25.5524605Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T02:06:25.5624185Z Kudu Version : 20250623.5
+2025-08-25T02:06:25.5624327Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T02:06:25.5624365Z
+2025-08-25T02:06:26.7629840Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T02:06:26.7919067Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T02:06:31.7838849Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T02:06:32.1351314Z node not running, starting node /opt/webssh/index.js
+2025-08-25T02:06:50.9467279Z Mon Aug 25 02:06:50 UTC 2025 running .net core
+2025-08-25T02:06:52.5129819Z Startup : 02.06.52.493939
+2025-08-25T02:06:52.5519895Z Configure Services : 02.06.52.551500
+2025-08-25T02:06:53.2060247Z Configure : 02.06.53.205774
+2025-08-25T02:06:53.5969271Z Setting Up Routes : 02.06.53.588168
+2025-08-25T02:06:55.1596201Z Exiting Configure : 02.06.55.152702
+2025-08-25T02:06:55.5099781Z Hosting environment: Production
+2025-08-25T02:06:55.5213370Z Content root path: /opt/Kudu
+2025-08-25T02:06:55.5367231Z Now listening on: http://0.0.0.0:8181
+2025-08-25T02:06:55.5367421Z Application started. Press Ctrl+C to shut down.
+2025-08-25T02:39:58.0309506Z Deploy Async
+2025-08-25T04:25:31.5898266Z     __ __          __      __    _ __
+2025-08-25T04:25:31.6098204Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T04:25:31.6098470Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T04:25:31.6098506Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T04:25:31.6098540Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T04:25:31.6098592Z
+2025-08-25T04:25:31.6098631Z
+2025-08-25T04:25:31.6098663Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T04:25:31.6098692Z
+2025-08-25T04:25:31.6098748Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T04:25:31.6098782Z Kudu Version : 20250623.5
+2025-08-25T04:25:31.6098816Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T04:25:31.6098848Z
+2025-08-25T04:25:31.8470496Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T04:25:31.8822914Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T04:25:35.0065188Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T04:25:35.1684775Z node not running, starting node /opt/webssh/index.js
+2025-08-25T04:25:48.6613404Z Mon Aug 25 04:25:48 UTC 2025 running .net core
+2025-08-25T04:25:50.1035074Z Startup : 04.25.50.025506
+2025-08-25T04:25:50.1545159Z Configure Services : 04.25.50.153650
+2025-08-25T04:25:50.6937147Z Configure : 04.25.50.693020
+2025-08-25T04:25:51.1024575Z Setting Up Routes : 04.25.51.102255
+2025-08-25T04:25:51.9574414Z Exiting Configure : 04.25.51.957169
+2025-08-25T04:25:52.1950028Z Hosting environment: Production
+2025-08-25T04:25:52.1976781Z Content root path: /opt/Kudu
+2025-08-25T04:25:52.2052563Z Now listening on: http://0.0.0.0:8181
+2025-08-25T04:25:52.2052913Z Application started. Press Ctrl+C to shut down.
+2025-08-25T04:26:00.7870238Z Deploy Async
+2025-08-25T14:58:29.9498953Z Deploy Async
+2025-08-25T15:04:44.7234446Z Deploy Async
+2025-08-25T18:00:13.9668421Z Deploy Async
+2025-08-25T18:18:46.2034958Z Deploy Async
+2025-08-25T18:20:33.0416496Z     __ __          __      __    _ __
+2025-08-25T18:20:33.0838678Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T18:20:33.0838914Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T18:20:33.0839021Z  / /| //_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T18:20:33.0839055Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T18:20:33.0839113Z
+2025-08-25T18:20:33.0839151Z
+2025-08-25T18:20:33.0839183Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T18:20:33.0839212Z
+2025-08-25T18:20:33.0839247Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T18:20:33.0839279Z Kudu Version : 20250623.5
+2025-08-25T18:20:33.0839331Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T18:20:33.0839361Z
+2025-08-25T18:20:34.4713420Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T18:20:34.4825818Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T18:20:39.4478804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T18:20:39.5900538Z node not running, starting node /opt/webssh/index.js
+2025-08-25T18:20:58.1557172Z Mon Aug 25 18:20:58 UTC 2025 running .net core
+2025-08-25T18:20:59.8555292Z Startup : 06.20.59.836152
+2025-08-25T18:20:59.8946948Z Configure Services : 06.20.59.888229
+2025-08-25T18:21:00.4425610Z Configure : 06.21.00.442389
+2025-08-25T18:21:00.9362706Z Setting Up Routes : 06.21.00.936063
+2025-08-25T18:21:01.7641325Z Exiting Configure : 06.21.01.756132
+2025-08-25T18:21:02.6721578Z Hosting environment: Production
+2025-08-25T18:21:02.6742626Z Content root path: /opt/Kudu
+2025-08-25T18:21:02.6839163Z Now listening on: http://0.0.0.0:8181
+2025-08-25T18:21:02.6839355Z Application started. Press Ctrl+C to shut down.
+2025-08-25T19:50:10.4423300Z Deploy Async
+2025-08-25T19:51:23.7968524Z     __ __          __      __    _ __
+2025-08-25T19:51:23.8883094Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T19:51:23.8883391Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T19:51:23.8883426Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T19:51:23.8883521Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T19:51:23.8883553Z
+2025-08-25T19:51:23.8883618Z
+2025-08-25T19:51:23.8883651Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T19:51:23.8883680Z
+2025-08-25T19:51:23.8883711Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T19:51:23.8883747Z Kudu Version : 20250623.5
+2025-08-25T19:51:23.8883781Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T19:51:23.8883836Z
+2025-08-25T19:51:24.9557038Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T19:51:24.9820415Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T19:51:27.4425804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T19:51:27.6091107Z node not running, starting node /opt/webssh/index.js
+2025-08-25T19:51:40.3974960Z Mon Aug 25 19:51:40 UTC 2025 running .net core
+2025-08-25T19:51:41.7428766Z Startup : 07.51.41.722395
+2025-08-25T19:51:41.7714466Z Configure Services : 07.51.41.771176
+2025-08-25T19:51:42.2454779Z Configure : 07.51.42.244537
+2025-08-25T19:51:42.7842826Z Setting Up Routes : 07.51.42.775795
+2025-08-25T19:51:43.4622844Z Exiting Configure : 07.51.43.461390
+2025-08-25T19:51:44.1061404Z Hosting environment: Production
+2025-08-25T19:51:44.1088651Z Content root path: /opt/Kudu
+2025-08-25T19:51:44.1178923Z Now listening on: http://0.0.0.0:8181
+2025-08-25T19:51:44.1179099Z Application started. Press Ctrl+C to shut down.
+2025-08-25T20:25:21.6874549Z     __ __          __      __    _ __
+2025-08-25T20:25:21.6936287Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T20:25:21.6936501Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T20:25:21.6936536Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T20:25:21.6936571Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T20:25:21.6936627Z
+2025-08-25T20:25:21.6936676Z
+2025-08-25T20:25:21.6936707Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T20:25:21.6936736Z
+2025-08-25T20:25:21.6936788Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T20:25:21.6936820Z Kudu Version : 20250623.5
+2025-08-25T20:25:21.6936854Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T20:25:21.6936883Z
+2025-08-25T20:25:22.7959037Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T20:25:22.8142254Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T20:25:26.2773861Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T20:25:26.3945490Z node not running, starting node /opt/webssh/index.js
+2025-08-25T20:25:39.0327173Z Mon Aug 25 20:25:39 UTC 2025 running .net core
+2025-08-25T20:25:40.2773044Z Startup : 08.25.40.252659
+2025-08-25T20:25:40.3111645Z Configure Services : 08.25.40.303858
+2025-08-25T20:25:40.7649990Z Configure : 08.25.40.764783
+2025-08-25T20:25:41.1411860Z Setting Up Routes : 08.25.41.139775
+2025-08-25T20:25:42.0435124Z Exiting Configure : 08.25.42.043240
+2025-08-25T20:25:42.4155763Z Hosting environment: Production
+2025-08-25T20:25:42.4157284Z Content root path: /opt/Kudu
+2025-08-25T20:25:42.4159659Z Now listening on: http://0.0.0.0:8181
+2025-08-25T20:25:42.4160297Z Application started. Press Ctrl+C to shut down.
+2025-08-25T20:25:44.1121013Z Container is terminating. Grace period: 5 seconds.
+2025-08-25T20:25:44.1285141Z Stop and delete container. Retry count = 0
+2025-08-25T20:25:44.1294964Z Stopping container: cc0f775090c6_showcall-api-dev.
+2025-08-25T20:25:49.6120124Z Deleting container: cc0f775090c6_showcall-api-dev. Retry count = 0
+2025-08-25T02:06:25.5251738Z     __ __          __      __    _ __
+2025-08-25T02:06:25.5523796Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T02:06:25.5524014Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T02:06:25.5524052Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T02:06:25.5524090Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T02:06:25.5524129Z
+2025-08-25T02:06:25.5524207Z
+2025-08-25T02:06:25.5524243Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T02:06:25.5524554Z
+2025-08-25T02:06:25.5524605Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T02:06:25.5624185Z Kudu Version : 20250623.5
+2025-08-25T02:06:25.5624327Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T02:06:25.5624365Z
+2025-08-25T02:06:26.7629840Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T02:06:26.7919067Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T02:06:31.7838849Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T02:06:32.1351314Z node not running, starting node /opt/webssh/index.js
+2025-08-25T02:06:50.9467279Z Mon Aug 25 02:06:50 UTC 2025 running .net core
+2025-08-25T02:06:52.5129819Z Startup : 02.06.52.493939
+2025-08-25T02:06:52.5519895Z Configure Services : 02.06.52.551500
+2025-08-25T02:06:53.2060247Z Configure : 02.06.53.205774
+2025-08-25T02:06:53.5969271Z Setting Up Routes : 02.06.53.588168
+2025-08-25T02:06:55.1596201Z Exiting Configure : 02.06.55.152702
+2025-08-25T02:06:55.5099781Z Hosting environment: Production
+2025-08-25T02:06:55.5213370Z Content root path: /opt/Kudu
+2025-08-25T02:06:55.5367231Z Now listening on: http://0.0.0.0:8181
+2025-08-25T02:06:55.5367421Z Application started. Press Ctrl+C to shut down.
+2025-08-25T02:39:58.0309506Z Deploy Async
+2025-08-25T04:25:31.5898266Z     __ __          __      __    _ __
+2025-08-25T04:25:31.6098204Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T04:25:31.6098470Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T04:25:31.6098506Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T04:25:31.6098540Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T04:25:31.6098592Z
+2025-08-25T04:25:31.6098631Z
+2025-08-25T04:25:31.6098663Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T04:25:31.6098692Z
+2025-08-25T04:25:31.6098748Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T04:25:31.6098782Z Kudu Version : 20250623.5
+2025-08-25T04:25:31.6098816Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T04:25:31.6098848Z
+2025-08-25T04:25:31.8470496Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T04:25:31.8822914Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T04:25:35.0065188Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T04:25:35.1684775Z node not running, starting node /opt/webssh/index.js
+2025-08-25T04:25:48.6613404Z Mon Aug 25 04:25:48 UTC 2025 running .net core
+2025-08-25T04:25:50.1035074Z Startup : 04.25.50.025506
+2025-08-25T04:25:50.1545159Z Configure Services : 04.25.50.153650
+2025-08-25T04:25:50.6937147Z Configure : 04.25.50.693020
+2025-08-25T04:25:51.1024575Z Setting Up Routes : 04.25.51.102255
+2025-08-25T04:25:51.9574414Z Exiting Configure : 04.25.51.957169
+2025-08-25T04:25:52.1950028Z Hosting environment: Production
+2025-08-25T04:25:52.1976781Z Content root path: /opt/Kudu
+2025-08-25T04:25:52.2052563Z Now listening on: http://0.0.0.0:8181
+2025-08-25T04:25:52.2052913Z Application started. Press Ctrl+C to shut down.
+2025-08-25T04:26:00.7870238Z Deploy Async
+2025-08-25T14:58:29.9498953Z Deploy Async
+2025-08-25T15:04:44.7234446Z Deploy Async
+2025-08-25T18:00:13.9668421Z Deploy Async
+2025-08-25T18:18:46.2034958Z Deploy Async
+2025-08-25T18:20:33.0416496Z     __ __          __      __    _ __
+2025-08-25T18:20:33.0838678Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T18:20:33.0838914Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T18:20:33.0839021Z  / /| //_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T18:20:33.0839055Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T18:20:33.0839113Z
+2025-08-25T18:20:33.0839151Z
+2025-08-25T18:20:33.0839183Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T18:20:33.0839212Z
+2025-08-25T18:20:33.0839247Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T18:20:33.0839279Z Kudu Version : 20250623.5
+2025-08-25T18:20:33.0839331Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T18:20:33.0839361Z
+2025-08-25T18:20:34.4713420Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T18:20:34.4825818Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T18:20:39.4478804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T18:20:39.5900538Z node not running, starting node /opt/webssh/index.js
+2025-08-25T18:20:58.1557172Z Mon Aug 25 18:20:58 UTC 2025 running .net core
+2025-08-25T18:20:59.8555292Z Startup : 06.20.59.836152
+2025-08-25T18:20:59.8946948Z Configure Services : 06.20.59.888229
+2025-08-25T18:21:00.4425610Z Configure : 06.21.00.442389
+2025-08-25T18:21:00.9362706Z Setting Up Routes : 06.21.00.936063
+2025-08-25T18:21:01.7641325Z Exiting Configure : 06.21.01.756132
+2025-08-25T18:21:02.6721578Z Hosting environment: Production
+2025-08-25T18:21:02.6742626Z Content root path: /opt/Kudu
+2025-08-25T18:21:02.6839163Z Now listening on: http://0.0.0.0:8181
+2025-08-25T18:21:02.6839355Z Application started. Press Ctrl+C to shut down.
+2025-08-25T19:50:10.4423300Z Deploy Async
+2025-08-25T19:51:23.7968524Z     __ __          __      __    _ __
+2025-08-25T19:51:23.8883094Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T19:51:23.8883391Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T19:51:23.8883426Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T19:51:23.8883521Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T19:51:23.8883553Z
+2025-08-25T19:51:23.8883618Z
+2025-08-25T19:51:23.8883651Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T19:51:23.8883680Z
+2025-08-25T19:51:23.8883711Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T19:51:23.8883747Z Kudu Version : 20250623.5
+2025-08-25T19:51:23.8883781Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T19:51:23.8883836Z
+2025-08-25T19:51:24.9557038Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T19:51:24.9820415Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T19:51:27.4425804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T19:51:27.6091107Z node not running, starting node /opt/webssh/index.js
+2025-08-25T19:51:40.3974960Z Mon Aug 25 19:51:40 UTC 2025 running .net core
+2025-08-25T19:51:41.7428766Z Startup : 07.51.41.722395
+2025-08-25T19:51:41.7714466Z Configure Services : 07.51.41.771176
+2025-08-25T19:51:42.2454779Z Configure : 07.51.42.244537
+2025-08-25T19:51:42.7842826Z Setting Up Routes : 07.51.42.775795
+2025-08-25T19:51:43.4622844Z Exiting Configure : 07.51.43.461390
+2025-08-25T19:51:44.1061404Z Hosting environment: Production
+2025-08-25T19:51:44.1088651Z Content root path: /opt/Kudu
+2025-08-25T19:51:44.1178923Z Now listening on: http://0.0.0.0:8181
+2025-08-25T19:51:44.1179099Z Application started. Press Ctrl+C to shut down.
+2025-08-25T20:25:21.6874549Z     __ __          __      __    _ __
+2025-08-25T20:25:21.6936287Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T20:25:21.6936501Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T20:25:21.6936536Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T20:25:21.6936571Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T20:25:21.6936627Z
+2025-08-25T20:25:21.6936676Z
+2025-08-25T20:25:21.6936707Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T20:25:21.6936736Z
+2025-08-25T20:25:21.6936788Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T20:25:21.6936820Z Kudu Version : 20250623.5
+2025-08-25T20:25:21.6936854Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T20:25:21.6936883Z
+2025-08-25T20:25:22.7959037Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T20:25:22.8142254Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T20:25:26.2773861Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T20:25:26.3945490Z node not running, starting node /opt/webssh/index.js
+2025-08-25T20:25:39.0327173Z Mon Aug 25 20:25:39 UTC 2025 running .net core
+2025-08-25T20:25:40.2773044Z Startup : 08.25.40.252659
+2025-08-25T20:25:40.3111645Z Configure Services : 08.25.40.303858
+2025-08-25T20:25:40.7649990Z Configure : 08.25.40.764783
+2025-08-25T20:25:41.1411860Z Setting Up Routes : 08.25.41.139775
+2025-08-25T20:25:42.0435124Z Exiting Configure : 08.25.42.043240
+2025-08-25T20:25:42.4155763Z Hosting environment: Production
+2025-08-25T20:25:42.4157284Z Content root path: /opt/Kudu
+2025-08-25T20:25:42.4159659Z Now listening on: http://0.0.0.0:8181
+2025-08-25T20:25:42.4160297Z Application started. Press Ctrl+C to shut down.
+2025-08-25T20:25:50.1587098Z Container spec TerminationMessagePolicy  path
+2025-08-25T20:25:50.1600901Z Container is terminated. Total time elapsed: 6046 ms.
+2025-08-25T20:25:50.1601465Z Site: showcall-api-dev stopped.
+2025-08-25T02:06:25.5251738Z     __ __          __      __    _ __
+2025-08-25T02:06:25.5523796Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T02:06:25.5524014Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T02:06:25.5524052Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T02:06:25.5524090Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T02:06:25.5524129Z
+2025-08-25T02:06:25.5524207Z
+2025-08-25T02:06:25.5524243Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T02:06:25.5524554Z
+2025-08-25T02:06:25.5524605Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T02:06:25.5624185Z Kudu Version : 20250623.5
+2025-08-25T02:06:25.5624327Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T02:06:25.5624365Z
+2025-08-25T02:06:26.7629840Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T02:06:26.7919067Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T02:06:31.7838849Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T02:06:32.1351314Z node not running, starting node /opt/webssh/index.js
+2025-08-25T02:06:50.9467279Z Mon Aug 25 02:06:50 UTC 2025 running .net core
+2025-08-25T02:06:52.5129819Z Startup : 02.06.52.493939
+2025-08-25T02:06:52.5519895Z Configure Services : 02.06.52.551500
+2025-08-25T02:06:53.2060247Z Configure : 02.06.53.205774
+2025-08-25T02:06:53.5969271Z Setting Up Routes : 02.06.53.588168
+2025-08-25T02:06:55.1596201Z Exiting Configure : 02.06.55.152702
+2025-08-25T02:06:55.5099781Z Hosting environment: Production
+2025-08-25T02:06:55.5213370Z Content root path: /opt/Kudu
+2025-08-25T02:06:55.5367231Z Now listening on: http://0.0.0.0:8181
+2025-08-25T02:06:55.5367421Z Application started. Press Ctrl+C to shut down.
+2025-08-25T02:39:58.0309506Z Deploy Async
+2025-08-25T04:25:31.5898266Z     __ __          __      __    _ __
+2025-08-25T04:25:31.6098204Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T04:25:31.6098470Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T04:25:31.6098506Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T04:25:31.6098540Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T04:25:31.6098592Z
+2025-08-25T04:25:31.6098631Z
+2025-08-25T04:25:31.6098663Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T04:25:31.6098692Z
+2025-08-25T04:25:31.6098748Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T04:25:31.6098782Z Kudu Version : 20250623.5
+2025-08-25T04:25:31.6098816Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T04:25:31.6098848Z
+2025-08-25T04:25:31.8470496Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T04:25:31.8822914Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T04:25:35.0065188Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T04:25:35.1684775Z node not running, starting node /opt/webssh/index.js
+2025-08-25T04:25:48.6613404Z Mon Aug 25 04:25:48 UTC 2025 running .net core
+2025-08-25T04:25:50.1035074Z Startup : 04.25.50.025506
+2025-08-25T04:25:50.1545159Z Configure Services : 04.25.50.153650
+2025-08-25T04:25:50.6937147Z Configure : 04.25.50.693020
+2025-08-25T04:25:51.1024575Z Setting Up Routes : 04.25.51.102255
+2025-08-25T04:25:51.9574414Z Exiting Configure : 04.25.51.957169
+2025-08-25T04:25:52.1950028Z Hosting environment: Production
+2025-08-25T04:25:52.1976781Z Content root path: /opt/Kudu
+2025-08-25T04:25:52.2052563Z Now listening on: http://0.0.0.0:8181
+2025-08-25T04:25:52.2052913Z Application started. Press Ctrl+C to shut down.
+2025-08-25T04:26:00.7870238Z Deploy Async
+2025-08-25T14:58:29.9498953Z Deploy Async
+2025-08-25T15:04:44.7234446Z Deploy Async
+2025-08-25T18:00:13.9668421Z Deploy Async
+2025-08-25T18:18:46.2034958Z Deploy Async
+2025-08-25T18:20:33.0416496Z     __ __          __      __    _ __
+2025-08-25T18:20:33.0838678Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T18:20:33.0838914Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T18:20:33.0839021Z  / /| //_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T18:20:33.0839055Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T18:20:33.0839113Z
+2025-08-25T18:20:33.0839151Z
+2025-08-25T18:20:33.0839183Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T18:20:33.0839212Z
+2025-08-25T18:20:33.0839247Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T18:20:33.0839279Z Kudu Version : 20250623.5
+2025-08-25T18:20:33.0839331Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T18:20:33.0839361Z
+2025-08-25T18:20:34.4713420Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T18:20:34.4825818Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T18:20:39.4478804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T18:20:39.5900538Z node not running, starting node /opt/webssh/index.js
+2025-08-25T18:20:58.1557172Z Mon Aug 25 18:20:58 UTC 2025 running .net core
+2025-08-25T18:20:59.8555292Z Startup : 06.20.59.836152
+2025-08-25T18:20:59.8946948Z Configure Services : 06.20.59.888229
+2025-08-25T18:21:00.4425610Z Configure : 06.21.00.442389
+2025-08-25T18:21:00.9362706Z Setting Up Routes : 06.21.00.936063
+2025-08-25T18:21:01.7641325Z Exiting Configure : 06.21.01.756132
+2025-08-25T18:21:02.6721578Z Hosting environment: Production
+2025-08-25T18:21:02.6742626Z Content root path: /opt/Kudu
+2025-08-25T18:21:02.6839163Z Now listening on: http://0.0.0.0:8181
+2025-08-25T18:21:02.6839355Z Application started. Press Ctrl+C to shut down.
+2025-08-25T19:50:10.4423300Z Deploy Async
+2025-08-25T19:51:23.7968524Z     __ __          __      __    _ __
+2025-08-25T19:51:23.8883094Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T19:51:23.8883391Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T19:51:23.8883426Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T19:51:23.8883521Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T19:51:23.8883553Z
+2025-08-25T19:51:23.8883618Z
+2025-08-25T19:51:23.8883651Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T19:51:23.8883680Z
+2025-08-25T19:51:23.8883711Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T19:51:23.8883747Z Kudu Version : 20250623.5
+2025-08-25T19:51:23.8883781Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T19:51:23.8883836Z
+2025-08-25T19:51:24.9557038Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T19:51:24.9820415Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T19:51:27.4425804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T19:51:27.6091107Z node not running, starting node /opt/webssh/index.js
+2025-08-25T19:51:40.3974960Z Mon Aug 25 19:51:40 UTC 2025 running .net core
+2025-08-25T19:51:41.7428766Z Startup : 07.51.41.722395
+2025-08-25T19:51:41.7714466Z Configure Services : 07.51.41.771176
+2025-08-25T19:51:42.2454779Z Configure : 07.51.42.244537
+2025-08-25T19:51:42.7842826Z Setting Up Routes : 07.51.42.775795
+2025-08-25T19:51:43.4622844Z Exiting Configure : 07.51.43.461390
+2025-08-25T19:51:44.1061404Z Hosting environment: Production
+2025-08-25T19:51:44.1088651Z Content root path: /opt/Kudu
+2025-08-25T19:51:44.1178923Z Now listening on: http://0.0.0.0:8181
+2025-08-25T19:51:44.1179099Z Application started. Press Ctrl+C to shut down.
+2025-08-25T20:25:21.6874549Z     __ __          __      __    _ __
+2025-08-25T20:25:21.6936287Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T20:25:21.6936501Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T20:25:21.6936536Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T20:25:21.6936571Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T20:25:21.6936627Z
+2025-08-25T20:25:21.6936676Z
+2025-08-25T20:25:21.6936707Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T20:25:21.6936736Z
+2025-08-25T20:25:21.6936788Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T20:25:21.6936820Z Kudu Version : 20250623.5
+2025-08-25T20:25:21.6936854Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T20:25:21.6936883Z
+2025-08-25T20:25:22.7959037Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T20:25:22.8142254Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T20:25:26.2773861Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T20:25:26.3945490Z node not running, starting node /opt/webssh/index.js
+2025-08-25T20:25:39.0327173Z Mon Aug 25 20:25:39 UTC 2025 running .net core
+2025-08-25T20:25:40.2773044Z Startup : 08.25.40.252659
+2025-08-25T20:25:40.3111645Z Configure Services : 08.25.40.303858
+2025-08-25T20:25:40.7649990Z Configure : 08.25.40.764783
+2025-08-25T20:25:41.1411860Z Setting Up Routes : 08.25.41.139775
+2025-08-25T20:25:42.0435124Z Exiting Configure : 08.25.42.043240
+2025-08-25T20:25:42.4155763Z Hosting environment: Production
+2025-08-25T20:25:42.4157284Z Content root path: /opt/Kudu
+2025-08-25T20:25:42.4159659Z Now listening on: http://0.0.0.0:8181
+2025-08-25T20:25:42.4160297Z Application started. Press Ctrl+C to shut down.
+2025-08-25T02:06:25.5251738Z     __ __          __      __    _ __
+2025-08-25T02:06:25.5523796Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T02:06:25.5524014Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T02:06:25.5524052Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T02:06:25.5524090Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T02:06:25.5524129Z
+2025-08-25T02:06:25.5524207Z
+2025-08-25T02:06:25.5524243Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T02:06:25.5524554Z
+2025-08-25T02:06:25.5524605Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T02:06:25.5624185Z Kudu Version : 20250623.5
+2025-08-25T02:06:25.5624327Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T02:06:25.5624365Z
+2025-08-25T02:06:26.7629840Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T02:06:26.7919067Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T02:06:31.7838849Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T02:06:32.1351314Z node not running, starting node /opt/webssh/index.js
+2025-08-25T02:06:50.9467279Z Mon Aug 25 02:06:50 UTC 2025 running .net core
+2025-08-25T02:06:52.5129819Z Startup : 02.06.52.493939
+2025-08-25T02:06:52.5519895Z Configure Services : 02.06.52.551500
+2025-08-25T02:06:53.2060247Z Configure : 02.06.53.205774
+2025-08-25T02:06:53.5969271Z Setting Up Routes : 02.06.53.588168
+2025-08-25T02:06:55.1596201Z Exiting Configure : 02.06.55.152702
+2025-08-25T02:06:55.5099781Z Hosting environment: Production
+2025-08-25T02:06:55.5213370Z Content root path: /opt/Kudu
+2025-08-25T02:06:55.5367231Z Now listening on: http://0.0.0.0:8181
+2025-08-25T02:06:55.5367421Z Application started. Press Ctrl+C to shut down.
+2025-08-25T02:39:58.0309506Z Deploy Async
+2025-08-25T04:25:31.5898266Z     __ __          __      __    _ __
+2025-08-25T04:25:31.6098204Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T04:25:31.6098470Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T04:25:31.6098506Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T04:25:31.6098540Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T04:25:31.6098592Z
+2025-08-25T04:25:31.6098631Z
+2025-08-25T04:25:31.6098663Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T04:25:31.6098692Z
+2025-08-25T04:25:31.6098748Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T04:25:31.6098782Z Kudu Version : 20250623.5
+2025-08-25T04:25:31.6098816Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T04:25:31.6098848Z
+2025-08-25T04:25:31.8470496Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T04:25:31.8822914Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T04:25:35.0065188Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T04:25:35.1684775Z node not running, starting node /opt/webssh/index.js
+2025-08-25T04:25:48.6613404Z Mon Aug 25 04:25:48 UTC 2025 running .net core
+2025-08-25T04:25:50.1035074Z Startup : 04.25.50.025506
+2025-08-25T04:25:50.1545159Z Configure Services : 04.25.50.153650
+2025-08-25T04:25:50.6937147Z Configure : 04.25.50.693020
+2025-08-25T04:25:51.1024575Z Setting Up Routes : 04.25.51.102255
+2025-08-25T04:25:51.9574414Z Exiting Configure : 04.25.51.957169
+2025-08-25T04:25:52.1950028Z Hosting environment: Production
+2025-08-25T04:25:52.1976781Z Content root path: /opt/Kudu
+2025-08-25T04:25:52.2052563Z Now listening on: http://0.0.0.0:8181
+2025-08-25T04:25:52.2052913Z Application started. Press Ctrl+C to shut down.
+2025-08-25T04:26:00.7870238Z Deploy Async
+2025-08-25T14:58:29.9498953Z Deploy Async
+2025-08-25T15:04:44.7234446Z Deploy Async
+2025-08-25T18:00:13.9668421Z Deploy Async
+2025-08-25T18:18:46.2034958Z Deploy Async
+2025-08-25T18:20:33.0416496Z     __ __          __      __    _ __
+2025-08-25T18:20:33.0838678Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T18:20:33.0838914Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T18:20:33.0839021Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T18:20:33.0839055Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T18:20:33.0839113Z
+2025-08-25T18:20:33.0839151Z
+2025-08-25T18:20:33.0839183Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T18:20:33.0839212Z
+2025-08-25T18:20:33.0839247Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T18:20:33.0839279Z Kudu Version : 20250623.5
+2025-08-25T18:20:33.0839331Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T18:20:33.0839361Z
+2025-08-25T18:20:34.4713420Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T18:20:34.4825818Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T18:20:39.4478804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T18:20:39.5900538Z node not running, starting node /opt/webssh/index.js
+2025-08-25T18:20:58.1557172Z Mon Aug 25 18:20:58 UTC 2025 running .net core
+2025-08-25T18:20:59.8555292Z Startup : 06.20.59.836152
+2025-08-25T18:20:59.8946948Z Configure Services : 06.20.59.888229
+2025-08-25T18:21:00.4425610Z Configure : 06.21.00.442389
+2025-08-25T18:21:00.9362706Z Setting Up Routes : 06.21.00.936063
+2025-08-25T18:21:01.7641325Z Exiting Configure : 06.21.01.756132
+2025-08-25T18:21:02.6721578Z Hosting environment: Production
+2025-08-25T18:21:02.6742626Z Content root path: /opt/Kudu
+2025-08-25T18:21:02.6839163Z Now listening on: http://0.0.0.0:8181
+2025-08-25T18:21:02.6839355Z Application started. Press Ctrl+C to shut down.
+2025-08-25T19:50:10.4423300Z Deploy Async
+2025-08-25T19:51:23.7968524Z     __ __          __      __    _ __
+2025-08-25T19:51:23.8883094Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T19:51:23.8883391Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T19:51:23.8883426Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T19:51:23.8883521Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T19:51:23.8883553Z
+2025-08-25T19:51:23.8883618Z
+2025-08-25T19:51:23.8883651Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T19:51:23.8883680Z
+2025-08-25T19:51:23.8883711Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T19:51:23.8883747Z Kudu Version : 20250623.5
+2025-08-25T19:51:23.8883781Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T19:51:23.8883836Z
+2025-08-25T19:51:24.9557038Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T19:51:24.9820415Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T19:51:27.4425804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T19:51:27.6091107Z node not running, starting node /opt/webssh/index.js
+2025-08-25T19:51:40.3974960Z Mon Aug 25 19:51:40 UTC 2025 running .net core
+2025-08-25T19:51:41.7428766Z Startup : 07.51.41.722395
+2025-08-25T19:51:41.7714466Z Configure Services : 07.51.41.771176
+2025-08-25T19:51:42.2454779Z Configure : 07.51.42.244537
+2025-08-25T19:51:42.7842826Z Setting Up Routes : 07.51.42.775795
+2025-08-25T19:51:43.4622844Z Exiting Configure : 07.51.43.461390
+2025-08-25T19:51:44.1061404Z Hosting environment: Production
+2025-08-25T19:51:44.1088651Z Content root path: /opt/Kudu
+2025-08-25T19:51:44.1178923Z Now listening on: http://0.0.0.0:8181
+2025-08-25T19:51:44.1179099Z Application started. Press Ctrl+C to shut down.
+2025-08-25T20:25:21.6874549Z     __ __          __      __    _ __
+2025-08-25T20:25:21.6936287Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T20:25:21.6936501Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T20:25:21.6936536Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T20:25:21.6936571Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T20:25:21.6936627Z
+2025-08-25T20:25:21.6936676Z
+2025-08-25T20:25:21.6936707Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T20:25:21.6936736Z
+2025-08-25T20:25:21.6936788Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T20:25:21.6936820Z Kudu Version : 20250623.5
+2025-08-25T20:25:21.6936854Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T20:25:21.6936883Z
+2025-08-25T20:25:22.7959037Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T20:25:22.8142254Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T20:25:26.2773861Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T20:25:26.3945490Z node not running, starting node /opt/webssh/index.js
+2025-08-25T20:25:39.0327173Z Mon Aug 25 20:25:39 UTC 2025 running .net core
+2025-08-25T20:25:40.2773044Z Startup : 08.25.40.252659
+2025-08-25T20:25:40.3111645Z Configure Services : 08.25.40.303858
+2025-08-25T20:25:40.7649990Z Configure : 08.25.40.764783
+2025-08-25T20:25:41.1411860Z Setting Up Routes : 08.25.41.139775
+2025-08-25T20:25:42.0435124Z Exiting Configure : 08.25.42.043240
+2025-08-25T20:25:42.4155763Z Hosting environment: Production
+2025-08-25T20:25:42.4157284Z Content root path: /opt/Kudu
+2025-08-25T20:25:42.4159659Z Now listening on: http://0.0.0.0:8181
+2025-08-25T20:25:42.4160297Z Application started. Press Ctrl+C to shut down.
+2025-08-25T02:06:25.5251738Z     __ __          __      __    _ __
+2025-08-25T02:06:25.5523796Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T02:06:25.5524014Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T02:06:25.5524052Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T02:06:25.5524090Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T02:06:25.5524129Z
+2025-08-25T02:06:25.5524207Z
+2025-08-25T02:06:25.5524243Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T02:06:25.5524554Z
+2025-08-25T02:06:25.5524605Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T02:06:25.5624185Z Kudu Version : 20250623.5
+2025-08-25T02:06:25.5624327Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T02:06:25.5624365Z
+2025-08-25T02:06:26.7629840Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T02:06:26.7919067Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T02:06:31.7838849Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T02:06:32.1351314Z node not running, starting node /opt/webssh/index.js
+2025-08-25T02:06:50.9467279Z Mon Aug 25 02:06:50 UTC 2025 running .net core
+2025-08-25T02:06:52.5129819Z Startup : 02.06.52.493939
+2025-08-25T02:06:52.5519895Z Configure Services : 02.06.52.551500
+2025-08-25T02:06:53.2060247Z Configure : 02.06.53.205774
+2025-08-25T02:06:53.5969271Z Setting Up Routes : 02.06.53.588168
+2025-08-25T02:06:55.1596201Z Exiting Configure : 02.06.55.152702
+2025-08-25T02:06:55.5099781Z Hosting environment: Production
+2025-08-25T02:06:55.5213370Z Content root path: /opt/Kudu
+2025-08-25T02:06:55.5367231Z Now listening on: http://0.0.0.0:8181
+2025-08-25T02:06:55.5367421Z Application started. Press Ctrl+C to shut down.
+2025-08-25T02:39:58.0309506Z Deploy Async
+2025-08-25T04:25:31.5898266Z     __ __          __      __    _ __
+2025-08-25T04:25:31.6098204Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T04:25:31.6098470Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T04:25:31.6098506Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T04:25:31.6098540Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T04:25:31.6098592Z
+2025-08-25T04:25:31.6098631Z
+2025-08-25T04:25:31.6098663Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T04:25:31.6098692Z
+2025-08-25T04:25:31.6098748Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T04:25:31.6098782Z Kudu Version : 20250623.5
+2025-08-25T04:25:31.6098816Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T04:25:31.6098848Z
+2025-08-25T04:25:31.8470496Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T04:25:31.8822914Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T04:25:35.0065188Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T04:25:35.1684775Z node not running, starting node /opt/webssh/index.js
+2025-08-25T04:25:48.6613404Z Mon Aug 25 04:25:48 UTC 2025 running .net core
+2025-08-25T04:25:50.1035074Z Startup : 04.25.50.025506
+2025-08-25T04:25:50.1545159Z Configure Services : 04.25.50.153650
+2025-08-25T04:25:50.6937147Z Configure : 04.25.50.693020
+2025-08-25T04:25:51.1024575Z Setting Up Routes : 04.25.51.102255
+2025-08-25T04:25:51.9574414Z Exiting Configure : 04.25.51.957169
+2025-08-25T04:25:52.1950028Z Hosting environment: Production
+2025-08-25T04:25:52.1976781Z Content root path: /opt/Kudu
+2025-08-25T04:25:52.2052563Z Now listening on: http://0.0.0.0:8181
+2025-08-25T04:25:52.2052913Z Application started. Press Ctrl+C to shut down.
+2025-08-25T04:26:00.7870238Z Deploy Async
+2025-08-25T14:58:29.9498953Z Deploy Async
+2025-08-25T15:04:44.7234446Z Deploy Async
+2025-08-25T18:00:13.9668421Z Deploy Async
+2025-08-25T18:18:46.2034958Z Deploy Async
+2025-08-25T18:20:33.0416496Z     __ __          __      __    _ __
+2025-08-25T18:20:33.0838678Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T18:20:33.0838914Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T18:20:33.0839021Z  / /| //_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T18:20:33.0839055Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T18:20:33.0839113Z
+2025-08-25T18:20:33.0839151Z
+2025-08-25T18:20:33.0839183Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T18:20:33.0839212Z
+2025-08-25T18:20:33.0839247Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T18:20:33.0839279Z Kudu Version : 20250623.5
+2025-08-25T18:20:33.0839331Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T18:20:33.0839361Z
+2025-08-25T18:20:34.4713420Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T18:20:34.4825818Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T18:20:39.4478804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T18:20:39.5900538Z node not running, starting node /opt/webssh/index.js
+2025-08-25T18:20:58.1557172Z Mon Aug 25 18:20:58 UTC 2025 running .net core
+2025-08-25T18:20:59.8555292Z Startup : 06.20.59.836152
+2025-08-25T18:20:59.8946948Z Configure Services : 06.20.59.888229
+2025-08-25T18:21:00.4425610Z Configure : 06.21.00.442389
+2025-08-25T18:21:00.9362706Z Setting Up Routes : 06.21.00.936063
+2025-08-25T18:21:01.7641325Z Exiting Configure : 06.21.01.756132
+2025-08-25T18:21:02.6721578Z Hosting environment: Production
+2025-08-25T18:21:02.6742626Z Content root path: /opt/Kudu
+2025-08-25T18:21:02.6839163Z Now listening on: http://0.0.0.0:8181
+2025-08-25T18:21:02.6839355Z Application started. Press Ctrl+C to shut down.
+2025-08-25T19:50:10.4423300Z Deploy Async
+2025-08-25T19:51:23.7968524Z     __ __          __      __    _ __
+2025-08-25T19:51:23.8883094Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T19:51:23.8883391Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T19:51:23.8883426Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T19:51:23.8883521Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T19:51:23.8883553Z
+2025-08-25T19:51:23.8883618Z
+2025-08-25T19:51:23.8883651Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T19:51:23.8883680Z
+2025-08-25T19:51:23.8883711Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T19:51:23.8883747Z Kudu Version : 20250623.5
+2025-08-25T19:51:23.8883781Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T19:51:23.8883836Z
+2025-08-25T19:51:24.9557038Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T19:51:24.9820415Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T19:51:27.4425804Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T19:51:27.6091107Z node not running, starting node /opt/webssh/index.js
+2025-08-25T19:51:40.3974960Z Mon Aug 25 19:51:40 UTC 2025 running .net core
+2025-08-25T19:51:41.7428766Z Startup : 07.51.41.722395
+2025-08-25T19:51:41.7714466Z Configure Services : 07.51.41.771176
+2025-08-25T19:51:42.2454779Z Configure : 07.51.42.244537
+2025-08-25T19:51:42.7842826Z Setting Up Routes : 07.51.42.775795
+2025-08-25T19:51:43.4622844Z Exiting Configure : 07.51.43.461390
+2025-08-25T19:51:44.1061404Z Hosting environment: Production
+2025-08-25T19:51:44.1088651Z Content root path: /opt/Kudu
+2025-08-25T19:51:44.1178923Z Now listening on: http://0.0.0.0:8181
+2025-08-25T19:51:44.1179099Z Application started. Press Ctrl+C to shut down.
+2025-08-25T20:25:21.6874549Z     __ __          __      __    _ __
+2025-08-25T20:25:21.6936287Z    / //_/_  _ ____/ /_  __/ /   (_) /____
+2025-08-25T20:25:21.6936501Z   / ,< / / / / __  / / / / /   / / __/ _
+2025-08-25T20:25:21.6936536Z  / /| / /_/ / /_/ / /_/ / /___/ / /_/  __/
+2025-08-25T20:25:21.6936571Z /_/ |_\__,_/\__,_/\__,_/_____/_/\__/\___/
+2025-08-25T20:25:21.6936627Z
+2025-08-25T20:25:21.6936676Z
+2025-08-25T20:25:21.6936707Z DEBUG CONSOLE | AZURE APP SERVICE ON LINUX
+2025-08-25T20:25:21.6936736Z
+2025-08-25T20:25:21.6936788Z Documentation: http://aka.ms/webapp-linux
+2025-08-25T20:25:21.6936820Z Kudu Version : 20250623.5
+2025-08-25T20:25:21.6936854Z Commit       : 353543ec4c45fcbfd4750522d32c94e23b31927a
+2025-08-25T20:25:21.6936883Z
+2025-08-25T20:25:22.7959037Z chown: changing ownership of '/temp': Operation not permitted
+2025-08-25T20:25:22.8142254Z chmod: changing permissions of '/temp': Operation not permitted
+2025-08-25T20:25:26.2773861Z Restarting OpenBSD Secure Shell server: sshd.
+2025-08-25T20:25:26.3945490Z node not running, starting node /opt/webssh/index.js
+2025-08-25T20:25:39.0327173Z Mon Aug 25 20:25:39 UTC 2025 running .net core
+2025-08-25T20:25:40.2773044Z Startup : 08.25.40.252659
+2025-08-25T20:25:40.3111645Z Configure Services : 08.25.40.303858
+2025-08-25T20:25:40.7649990Z Configure : 08.25.40.764783
+2025-08-25T20:25:41.1411860Z Setting Up Routes : 08.25.41.139775
+2025-08-25T20:25:42.0435124Z Exiting Configure : 08.25.42.043240
+2025-08-25T20:25:42.4155763Z Hosting environment: Production
+2025-08-25T20:25:42.4157284Z Content root path: /opt/Kudu
+2025-08-25T20:25:42.4159659Z Now listening on: http://0.0.0.0:8181
+2025-08-25T20:25:42.4160297Z Application started. Press Ctrl+C to shut down.
+2025-08-25T20:26:07  Welcome, you are now connected to log-streaming service.Starting Log Tail -n 10 of existing logs ----/home/LogFiles/__lastCheckTime.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/__lastCheckTime.txt)08/25/2025 03:06:54/home/LogFiles/kudu/deployment/92e29532e825-f9a80338-3497-40fd-bada-e64e6e4982a0.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/92e29532e825-f9a80338-3497-40fd-bada-e64e6e4982a0.txt)
+2025-08-21T03:49:27    total size is 41.04M  speedup is 1.01
+2025-08-21T03:49:27    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T03:49:27    Completed successfully in 3 seconds
+2025-08-21T03:49:27  Rsync completed to /home/site/wwwroot
+2025-08-21T03:49:27  Manifest created at /home/site/wwwroot
+2025-08-21T03:49:28  Optimized build done with success: True
+2025-08-21T03:49:28  Build completed succesfully.
+2025-08-21T03:49:28  Running post deployment command(s)...
+2025-08-21T03:49:28  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T03:49:28  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/c1f5261a0620-37167f43-7e48-4296-9dc9-8d751bc9ae8e.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/c1f5261a0620-37167f43-7e48-4296-9dc9-8d751bc9ae8e.txt)
+2025-08-21T01:37:51    total size is 47.00M  speedup is 1.01
+2025-08-21T01:37:51    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T01:37:51    Completed successfully in 3 seconds
+2025-08-21T01:37:51  Rsync completed to /home/site/wwwroot
+2025-08-21T01:37:51  Manifest created at /home/site/wwwroot
+2025-08-21T01:37:51  Optimized build done with success: True
+2025-08-21T01:37:51  Build completed succesfully.
+2025-08-21T01:37:51  Running post deployment command(s)...
+2025-08-21T01:37:52  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T01:37:52  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/c1f5261a0620-7d8f0f64-2f28-4d43-a9b2-cce8812a14a6.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/c1f5261a0620-7d8f0f64-2f28-4d43-a9b2-cce8812a14a6.txt)
+2025-08-21T01:29:06    total size is 47.00M  speedup is 1.01
+2025-08-21T01:29:06    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T01:29:06    Completed successfully in 5 seconds
+2025-08-21T01:29:06  Rsync completed to /home/site/wwwroot
+2025-08-21T01:29:07  Manifest created at /home/site/wwwroot
+2025-08-21T01:29:07  Optimized build done with success: True
+2025-08-21T01:29:07  Build completed succesfully.
+2025-08-21T01:29:07  Running post deployment command(s)...
+2025-08-21T01:29:07  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T01:29:07  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/c1f5261a0620-84d7d67a-d7c0-41a5-a1bb-30e803be4ca3.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/c1f5261a0620-84d7d67a-d7c0-41a5-a1bb-30e803be4ca3.txt)
+2025-08-21T01:40:26    total size is 47.00M  speedup is 1.01
+2025-08-21T01:40:26    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T01:40:26    Completed successfully in 4 seconds
+2025-08-21T01:40:26  Rsync completed to /home/site/wwwroot
+2025-08-21T01:40:26  Manifest created at /home/site/wwwroot
+2025-08-21T01:40:27  Optimized build done with success: True
+2025-08-21T01:40:27  Build completed succesfully.
+2025-08-21T01:40:27  Running post deployment command(s)...
+2025-08-21T01:40:27  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T01:40:27  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/c1f5261a0620-8937472f-17b6-475b-b86e-197afac6b755.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/c1f5261a0620-8937472f-17b6-475b-b86e-197afac6b755.txt)
+2025-08-21T01:50:01  Updating submodules.
+2025-08-21T01:50:02  Preparing deployment for commit id '3f4539a2-5'.
+2025-08-21T01:50:04  PreDeployment: context.CleanOutputPath False
+2025-08-21T01:50:04  PreDeployment: context.OutputPath /home/site/wwwroot
+2025-08-21T01:50:05  Running build. Project type: OneDeploy
+2025-08-21T01:50:05  Copying the manifest
+2025-08-21T01:50:05  NodeProjectOptimizer Initialized with repository path: /tmp/zipdeploy/extracted and output path: /home/site/wwwroot
+2025-08-21T01:50:06  Optimizing build...
+2025-08-21T01:50:06  Zipping node_modules...
+2025-08-21T01:50:07    Command: /opt/Kudu/Scripts/absoluteTar.sh /tmp/zipdeploy/extracted/node_modules /tmp/zipdeploy/extracted/node_modules.tar.gz/home/LogFiles/kudu/deployment/c666f7eb7e22-0d5e152c-e7fa-4b81-9a36-2c07cd49b019.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/c666f7eb7e22-0d5e152c-e7fa-4b81-9a36-2c07cd49b019.txt)
+2025-08-21T03:56:06    total size is 41.04M  speedup is 1.01
+2025-08-21T03:56:07    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T03:56:07    Completed successfully in 3 seconds
+2025-08-21T03:56:07  Rsync completed to /home/site/wwwroot
+2025-08-21T03:56:07  Manifest created at /home/site/wwwroot
+2025-08-21T03:56:07  Optimized build done with success: True
+2025-08-21T03:56:07  Build completed succesfully.
+2025-08-21T03:56:07  Running post deployment command(s)...
+2025-08-21T03:56:08  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T03:56:08  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/df7cdd720b5b-a9f4c6d1-f94e-45c3-978e-51a493e81a2a.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/df7cdd720b5b-a9f4c6d1-f94e-45c3-978e-51a493e81a2a.txt)
+2025-08-21T02:09:35    total size is 41.04M  speedup is 1.01
+2025-08-21T02:09:35    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T02:09:35    Completed successfully in 3 seconds
+2025-08-21T02:09:36  Rsync completed to /home/site/wwwroot
+2025-08-21T02:09:36  Manifest created at /home/site/wwwroot
+2025-08-21T02:09:36  Optimized build done with success: True
+2025-08-21T02:09:36  Build completed succesfully.
+2025-08-21T02:09:36  Running post deployment command(s)...
+2025-08-21T02:09:36  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T02:09:37  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/f84bb0a7c1e6-3896b221-f609-48ff-acfe-063d646f6831.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/f84bb0a7c1e6-3896b221-f609-48ff-acfe-063d646f6831.txt)
+2025-08-21T00:33:02    total size is 44.89M  speedup is 1.01
+2025-08-21T00:33:02    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T00:33:02    Completed successfully in 3 seconds
+2025-08-21T00:33:02  Rsync completed to /home/site/wwwroot
+2025-08-21T00:33:02  Manifest created at /home/site/wwwroot
+2025-08-21T00:33:02  Optimized build done with success: True
+2025-08-21T00:33:02  Build completed succesfully.
+2025-08-21T00:33:02  Running post deployment command(s)...
+2025-08-21T00:33:03  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T00:33:03  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/f84bb0a7c1e6-8b387555-83bc-4449-9cc3-c61e3c55a8e0.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/f84bb0a7c1e6-8b387555-83bc-4449-9cc3-c61e3c55a8e0.txt)
+2025-08-21T00:09:53    total size is 44.89M  speedup is 1.01
+2025-08-21T00:09:53    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T00:09:53    Completed successfully in 3 seconds
+2025-08-21T00:09:53  Rsync completed to /home/site/wwwroot
+2025-08-21T00:09:53  Manifest created at /home/site/wwwroot
+2025-08-21T00:09:53  Optimized build done with success: True
+2025-08-21T00:09:53  Build completed succesfully.
+2025-08-21T00:09:53  Running post deployment command(s)...
+2025-08-21T00:09:54  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T00:09:54  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/f84bb0a7c1e6-b8727670-ceb4-4cc6-be6a-9bdb907d623a.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/f84bb0a7c1e6-b8727670-ceb4-4cc6-be6a-9bdb907d623a.txt)
+2025-08-21T00:41:22    total size is 44.90M  speedup is 1.01
+2025-08-21T00:41:22    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T00:41:22    Completed successfully in 3 seconds
+2025-08-21T00:41:22  Rsync completed to /home/site/wwwroot
+2025-08-21T00:41:22  Manifest created at /home/site/wwwroot
+2025-08-21T00:41:22  Optimized build done with success: True
+2025-08-21T00:41:22  Build completed succesfully.
+2025-08-21T00:41:23  Running post deployment command(s)...
+2025-08-21T00:41:23  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T00:41:23  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/f84bb0a7c1e6-bd6b955d-354f-40a2-a2f8-d39801aa373f.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/f84bb0a7c1e6-bd6b955d-354f-40a2-a2f8-d39801aa373f.txt)
+2025-08-20T23:55:44    total size is 44.89M  speedup is 1.01
+2025-08-20T23:55:44    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-20T23:55:44    Completed successfully in 3 seconds
+2025-08-20T23:55:44  Rsync completed to /home/site/wwwroot
+2025-08-20T23:55:44  Manifest created at /home/site/wwwroot
+2025-08-20T23:55:45  Optimized build done with success: True
+2025-08-20T23:55:45  Build completed succesfully.
+2025-08-20T23:55:45  Running post deployment command(s)...
+2025-08-20T23:55:45  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-20T23:55:45  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/f84bb0a7c1e6-d84baa92-bca0-4658-b6a9-1adfc4c46053.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/f84bb0a7c1e6-d84baa92-bca0-4658-b6a9-1adfc4c46053.txt)
+2025-08-21T01:08:40    total size is 47.00M  speedup is 1.01
+2025-08-21T01:08:40    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T01:08:40    Completed successfully in 4 seconds
+2025-08-21T01:08:40  Rsync completed to /home/site/wwwroot
+2025-08-21T01:08:41  Manifest created at /home/site/wwwroot
+2025-08-21T01:08:41  Optimized build done with success: True
+2025-08-21T01:08:41  Build completed succesfully.
+2025-08-21T01:08:41  Running post deployment command(s)...
+2025-08-21T01:08:41  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T01:08:41  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/f84bb0a7c1e6-f2a7cefa-c320-4c66-a003-1ef37040b197.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/f84bb0a7c1e6-f2a7cefa-c320-4c66-a003-1ef37040b197.txt)
+2025-08-21T00:58:47    total size is 47.00M  speedup is 1.01
+2025-08-21T00:58:47    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T00:58:47    Completed successfully in 3 seconds
+2025-08-21T00:58:47  Rsync completed to /home/site/wwwroot
+2025-08-21T00:58:47  Manifest created at /home/site/wwwroot
+2025-08-21T00:58:47  Optimized build done with success: True
+2025-08-21T00:58:47  Build completed succesfully.
+2025-08-21T00:58:47  Running post deployment command(s)...
+2025-08-21T00:58:48  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T00:58:48  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/deployment/f84bb0a7c1e6-f3998af5-74da-4454-9aaa-f542654785fa.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/deployment/f84bb0a7c1e6-f3998af5-74da-4454-9aaa-f542654785fa.txt)
+2025-08-21T00:03:42    total size is 44.89M  speedup is 1.01
+2025-08-21T00:03:42    Attempt 1: Rsync for filelist /tmp//splits/split.ad completed with exit code 0
+2025-08-21T00:03:42    Completed successfully in 3 seconds
+2025-08-21T00:03:42  Rsync completed to /home/site/wwwroot
+2025-08-21T00:03:43  Manifest created at /home/site/wwwroot
+2025-08-21T00:03:43  Optimized build done with success: True
+2025-08-21T00:03:43  Build completed succesfully.
+2025-08-21T00:03:43  Running post deployment command(s)...
+2025-08-21T00:03:43  Triggering container recycle for OneDeploy by adding/updating restartTrigger.txt to the site root path
+2025-08-21T00:03:43  Deployment successful. deployer = OneDeploy deploymentPath = OneDeploy/home/LogFiles/kudu/trace/0731f3761544-10319955-00bd-49bc-95bb-4e1acf22dbc5.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/0731f3761544-10319955-00bd-49bc-95bb-4e1acf22dbc5.txt)
+2025-08-21T02:14:45  Startup Request, url: /api/logstream/, method: GET, type: request, pid: 823,1,5, ScmType: None/home/LogFiles/kudu/trace/0fef937db093-a83ace4d-09a2-4e19-b8d5-b39b407edb86.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/0fef937db093-a83ace4d-09a2-4e19-b8d5-b39b407edb86.txt)
+2025-08-21T04:23:39  Startup Request, url: /api/publish?type=zip&async=True, method: POST, type: request, pid: 821,1,7, ScmType: None, SCM_DO_BUILD_DURING_DEPLOYMENT: false/home/LogFiles/kudu/trace/12f9f0fbdd4e-e75562e9-4883-45fa-9823-3146ab5cd085.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/12f9f0fbdd4e-e75562e9-4883-45fa-9823-3146ab5cd085.txt)
+2025-08-21T01:14:59  Startup Request, url: /api/logstream/, method: GET, type: request, pid: 823,1,5, ScmType: None/home/LogFiles/kudu/trace/2819117ad885-b525c06c-d44c-4ded-841f-e2df1d26b1f1.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/2819117ad885-b525c06c-d44c-4ded-841f-e2df1d26b1f1.txt)
+2025-08-25T04:25:54  Startup Request, url: /api/settings, method: GET, type: request, pid: 823,1,15, SCM_DO_BUILD_DURING_DEPLOYMENT: false, ScmType: None/home/LogFiles/kudu/trace/304451eff734-f033bb9d-fb6b-4985-818b-8273a4424639.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/304451eff734-f033bb9d-fb6b-4985-818b-8273a4424639.txt)
+2025-08-21T06:19:17  Startup Request, url: /webssh/socket.io/?EIO=4&transport=polling&t=PZBI1hB&sid=kx6a4drhh4-FPUmMAAAA, method: POST, type: request, pid: 823,1,5, ScmType: None, SCM_DO_BUILD_DURING_DEPLOYMENT: false/home/LogFiles/kudu/trace/478d3c44fb7c-fb8511d1-abbe-4555-9c15-30a10b450932.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/478d3c44fb7c-fb8511d1-abbe-4555-9c15-30a10b450932.txt)
+2025-08-20T23:06:31  Startup Request, url: /api/deployments/?$orderby=ReceivedTime%20desc&$top=20&api-version=2022-03-01, method: GET, type: request, pid: 822,1,15, ScmType: None/home/LogFiles/kudu/trace/4c8455da9226-4c2418ef-eacb-439b-945d-279f298cc68a.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/4c8455da9226-4c2418ef-eacb-439b-945d-279f298cc68a.txt)
+2025-08-21T01:13:42  Startup Request, url: /api/deployments/?$orderby=ReceivedTime%20desc&$top=20&api-version=2022-03-01, method: GET, type: request, pid: 823,1,17, ScmType: None/home/LogFiles/kudu/trace/57cdf1adb96e-1a0cfa03-4b3e-41c4-98cb-7d163807e847.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/57cdf1adb96e-1a0cfa03-4b3e-41c4-98cb-7d163807e847.txt)
+2025-08-21T05:26:29  Startup Request, url: /api/logstream/, method: GET, type: request, pid: 823,1,5, ScmType: None, SCM_DO_BUILD_DURING_DEPLOYMENT: false/home/LogFiles/kudu/trace/769e1d76858a-d5d88de0-0885-4dd7-8f9e-84300fec66ef.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/769e1d76858a-d5d88de0-0885-4dd7-8f9e-84300fec66ef.txt)
+2025-08-20T23:08:29  Startup Request, url: /api/deployments/?$orderby=ReceivedTime%20desc&$top=20&api-version=2022-03-01, method: GET, type: request, pid: 823,1,5, ScmType: None/home/LogFiles/kudu/trace/7b7f53a390f1-9855f092-e6b3-4b47-9e49-59b256833366.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/7b7f53a390f1-9855f092-e6b3-4b47-9e49-59b256833366.txt)
+2025-08-25T02:06:58  Startup Request, url: /api/deployments/?$orderby=ReceivedTime%20desc&$top=20&api-version=2022-03-01, method: GET, type: request, pid: 823,1,15, ScmType: None, SCM_DO_BUILD_DURING_DEPLOYMENT: false/home/LogFiles/kudu/trace/8297b1d61cc4-093b1056-4f18-449f-97ea-c01849b4c0b3.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/8297b1d61cc4-093b1056-4f18-449f-97ea-c01849b4c0b3.txt)
+2025-08-25T20:26:07  Startup Request, url: /api/logstream/, method: GET, type: request, pid: 823,1,7, ScmType: None, SCM_DO_BUILD_DURING_DEPLOYMENT: false/home/LogFiles/kudu/trace/8dd259986884-489b4cc1-1db4-412c-bb5d-dc02b6f96dbf.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/8dd259986884-489b4cc1-1db4-412c-bb5d-dc02b6f96dbf.txt)
+2025-08-25T19:52:06  Startup Request, url: /api/logstream/, method: GET, type: request, pid: 823,1,5, SCM_DO_BUILD_DURING_DEPLOYMENT: false, ScmType: None/home/LogFiles/kudu/trace/92e29532e825-f9a80338-3497-40fd-bada-e64e6e4982a0.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/92e29532e825-f9a80338-3497-40fd-bada-e64e6e4982a0.txt)
+2025-08-21T03:48:31  Startup Request, url: /api/publish?type=zip, method: POST, type: request, pid: 821,1,7, ScmType: None/home/LogFiles/kudu/trace/c1f5261a0620-839b16cc-d53e-4745-96a1-fde679465553.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/c1f5261a0620-839b16cc-d53e-4745-96a1-fde679465553.txt)
+2025-08-21T01:21:17  Startup Request, url: /api/logstream/, method: GET, type: request, pid: 823,1,5, ScmType: None/home/LogFiles/kudu/trace/c666f7eb7e22-0d5e152c-e7fa-4b81-9a36-2c07cd49b019.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/c666f7eb7e22-0d5e152c-e7fa-4b81-9a36-2c07cd49b019.txt)
+2025-08-21T03:55:18  Startup Request, url: /api/publish?type=zip, method: POST, type: request, pid: 821,1,5, SCM_DO_BUILD_DURING_DEPLOYMENT: false, ScmType: None/home/LogFiles/kudu/trace/d45d1467e94e-9a28ceef-4ef4-4b10-9de7-7a7f78d3f1dc.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/d45d1467e94e-9a28ceef-4ef4-4b10-9de7-7a7f78d3f1dc.txt)
+2025-08-21T04:05:06  Startup Request, url: /api/deployments/latest, method: GET, type: request, pid: 823,1,5, SCM_DO_BUILD_DURING_DEPLOYMENT: false, ScmType: None/home/LogFiles/kudu/trace/d8e54ac63148-f5a96fb2-1e0a-4281-b310-96d515964af2.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/d8e54ac63148-f5a96fb2-1e0a-4281-b310-96d515964af2.txt)
+2025-08-21T05:07:04  Startup Request, url: /api/settings, method: GET, type: request, pid: 825,1,19, SCM_DO_BUILD_DURING_DEPLOYMENT: false, ScmType: None/home/LogFiles/kudu/trace/df7cdd720b5b-90649b67-ed16-4b5a-ac21-13b49dbf9132.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/df7cdd720b5b-90649b67-ed16-4b5a-ac21-13b49dbf9132.txt)
+2025-08-21T02:08:42  Startup Request, url: /api/deployments?warmup=true, method: GET, type: request, pid: 824,1,36, ScmType: None/home/LogFiles/kudu/trace/e0b62c5fb6ae-f8f090c2-9f07-4865-9e3e-5abeffb622e7.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/e0b62c5fb6ae-f8f090c2-9f07-4865-9e3e-5abeffb622e7.txt)
+2025-08-21T05:33:12  Startup Request, url: /api/logstream/, method: GET, type: request, pid: 825,1,7, ScmType: None, SCM_DO_BUILD_DURING_DEPLOYMENT: false/home/LogFiles/kudu/trace/e5fdb293e7db-81f5b1ed-c781-48f5-b8e0-7faec6bbc340.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/e5fdb293e7db-81f5b1ed-c781-48f5-b8e0-7faec6bbc340.txt)
+2025-08-21T04:13:51  Startup Request, url: /api/deployments/65d81d42-5021-451b-b112-28f37dd85ce2, method: GET, type: request, pid: 823,1,7, SCM_DO_BUILD_DURING_DEPLOYMENT: false, ScmType: None/home/LogFiles/kudu/trace/f7814aa9873b-94b050a8-870d-4cba-92b3-8acac4b2d523.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/f7814aa9873b-94b050a8-870d-4cba-92b3-8acac4b2d523.txt)
+2025-08-25T18:21:26  Startup Request, url: /api/logstream/, method: GET, type: request, pid: 823,1,7, ScmType: None, SCM_DO_BUILD_DURING_DEPLOYMENT: false/home/LogFiles/kudu/trace/f84bb0a7c1e6-9c60a574-87cf-4906-b06d-16a01912a606.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/f84bb0a7c1e6-9c60a574-87cf-4906-b06d-16a01912a606.txt)
+2025-08-20T23:50:10  Startup Request, url: /api/deployments/?$orderby=ReceivedTime%20desc&$top=20&api-version=2022-03-01, method: GET, type: request, pid: 823,1,7, ScmType: None/home/LogFiles/kudu/trace/f8b06d91a45f-6290d49e-4d4d-4901-ad0c-aefabe58153d.txt  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/kudu/trace/f8b06d91a45f-6290d49e-4d4d-4901-ad0c-aefabe58153d.txt)
+2025-08-21T06:11:41  Startup Request, url: /webssh/socket.io/?EIO=4&transport=polling&t=PZBGIHo&sid=rjyshYt6vbmahc-yAAAA, method: POST, type: request, pid: 823,1,15, ScmType: None, SCM_DO_BUILD_DURING_DEPLOYMENT: false/home/LogFiles/2025_08_23_lw1sdlwk0008CM_default_docker.log  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/2025_08_23_lw1sdlwk0008CM_default_docker.log)
+2025-08-23T23:08:43.9667204Z > showcall-server@0.1.0 start:prod
+2025-08-23T23:08:43.9749729Z > node dist/index.js
+2025-08-23T23:08:43.9749874Z
+2025-08-23T23:08:47.4473337Z [boot] Showcall API starting
+2025-08-23T23:08:47.4547946Z [boot] node v22.17.0
+2025-08-23T23:08:47.4551190Z [boot] PORT 8080
+2025-08-23T23:08:47.4555112Z [boot] DATABASE_URL set? true
+2025-08-23T23:08:47.4559783Z [boot] TWILIO enabled? false
+2025-08-23T23:08:47.4562100Z [boot] TWILIO configured? false
+2025-08-23T23:08:47.5037003Z [boot] Server listening on :8080/home/LogFiles/2025_08_23_lw1sdlwk0008CM_default_scm_docker.log  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/2025_08_23_lw1sdlwk0008CM_default_scm_docker.log)
+2025-08-23T23:08:13.2638088Z Sat Aug 23 23:08:13 UTC 2025 running .net core
+2025-08-23T23:08:21.3955161Z Startup : 11.08.21.066798
+2025-08-23T23:08:21.5538870Z Configure Services : 11.08.21.553605
+2025-08-23T23:08:24.4053659Z Configure : 11.08.24.405165
+2025-08-23T23:08:25.7550841Z Setting Up Routes : 11.08.25.754883
+2025-08-23T23:08:28.8431837Z Exiting Configure : 11.08.28.786832
+2025-08-23T23:08:30.0511853Z Hosting environment: Production
+2025-08-23T23:08:30.0691094Z Content root path: /opt/Kudu
+2025-08-23T23:08:30.0691609Z Now listening on: http://0.0.0.0:8181
+2025-08-23T23:08:30.0691662Z Application started. Press Ctrl+C to shut down./home/LogFiles/2025_08_23_lw1sdlwk0008CM_docker.log  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/2025_08_23_lw1sdlwk0008CM_docker.log)
+2025-08-23T23:07:08.3707461Z Successfully removed non-blocking flag from /podr/container/pipe/ed6f57a07db8_showcall-api-dev/stderr_6baf9a72eda64cf28246e0070b5e4526.
+2025-08-23T23:07:08.3708360Z Creating container with image: appsvc/node:22-lts_20250724.2.tuxprod from registry: 10.1.0.7:13209 and fully qualified image name: 10.1.0.7:13209/appsvc/node:22-lts_20250724.2.tuxprod
+2025-08-23T23:07:10.7822910Z Starting container: ed6f57a07db8_showcall-api-dev.
+2025-08-23T23:07:11.1309896Z Starting watchers and probes.
+2025-08-23T23:07:11.1598644Z Starting metrics collection.
+2025-08-23T23:07:11.1612143Z Container is running.
+2025-08-23T23:07:12.3697659Z Container start method finished after 18813 ms.
+2025-08-23T23:08:48.5985254Z Site startup probe succeeded after 96.1869797 seconds.
+2025-08-23T23:08:48.9377317Z Site is running with deployment version: 03ed7a5d-7977-4ba5-847b-29799e90147f
+2025-08-23T23:08:48.9425287Z Site started./home/LogFiles/2025_08_24_lw1sdlwk0007WO_default_docker.log  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/2025_08_24_lw1sdlwk0007WO_default_docker.log)
+2025-08-24T04:07:59.9819302Z > showcall-server@0.1.0 start:prod
+2025-08-24T04:07:59.9819470Z > node dist/index.js
+2025-08-24T04:07:59.9819519Z
+2025-08-24T04:08:14.4227736Z [boot] Showcall API starting
+2025-08-24T04:08:14.4228344Z [boot] node v22.17.0
+2025-08-24T04:08:14.4228396Z [boot] PORT 8080
+2025-08-24T04:08:14.4228435Z [boot] DATABASE_URL set? true
+2025-08-24T04:08:14.4228554Z [boot] TWILIO enabled? false
+2025-08-24T04:08:14.4228592Z [boot] TWILIO configured? false
+2025-08-24T04:08:14.5587231Z [boot] Server listening on :8080/home/LogFiles/2025_08_24_lw1sdlwk0007WO_docker.log  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/2025_08_24_lw1sdlwk0007WO_docker.log)
+2025-08-24T04:06:13.4572389Z Successfully removed non-blocking flag from /podr/container/pipe/961a96f4e980_showcall-api-dev/stderr_6dd7c904f6ae4018899967368e13cdeb.
+2025-08-24T04:06:13.4584677Z Creating container with image: appsvc/node:22-lts_20250724.2.tuxprod from registry: 10.1.0.7:13209 and fully qualified image name: 10.1.0.7:13209/appsvc/node:22-lts_20250724.2.tuxprod
+2025-08-24T04:06:15.8192191Z Starting container: 961a96f4e980_showcall-api-dev.
+2025-08-24T04:06:15.9378306Z Starting watchers and probes.
+2025-08-24T04:06:15.9492289Z Starting metrics collection.
+2025-08-24T04:06:15.9504015Z Container is running.
+2025-08-24T04:06:16.4166923Z Container start method finished after 282779 ms.
+2025-08-24T04:08:17.2991914Z Site startup probe succeeded after 120.8133903 seconds.
+2025-08-24T04:08:17.6721592Z Site is running with deployment version: 03ed7a5d-7977-4ba5-847b-29799e90147f
+2025-08-24T04:08:18.0867833Z Site started./home/LogFiles/2025_08_25_lw1sdlwk0007WO_default_docker.log  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/2025_08_25_lw1sdlwk0007WO_default_docker.log)
+2025-08-25T20:24:50.9999371Z
+2025-08-25T20:24:51.0085711Z PATH="$PATH:/home/site/wwwroot" npm run start:prod
+2025-08-25T20:24:51.9685414Z <-- GET /health
+2025-08-25T20:24:51.9855787Z --> GET /health [33m404[0m 1ms
+2025-08-25T20:25:00.9340019Z npm info using npm@10.9.2
+2025-08-25T20:25:00.9351052Z npm info using node@v22.17.0
+2025-08-25T20:25:13.4039456Z
+2025-08-25T20:25:13.4039767Z > server@0.1.0 start:prod
+2025-08-25T20:25:13.4039800Z > node dist/server.js
+2025-08-25T20:25:13.4039826Z/home/LogFiles/2025_08_25_lw1sdlwk0007WO_default_scm_docker.log  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/2025_08_25_lw1sdlwk0007WO_default_scm_docker.log)
+2025-08-25T20:25:39.0327173Z Mon Aug 25 20:25:39 UTC 2025 running .net core
+2025-08-25T20:25:40.2773044Z Startup : 08.25.40.252659
+2025-08-25T20:25:40.3111645Z Configure Services : 08.25.40.303858
+2025-08-25T20:25:40.7649990Z Configure : 08.25.40.764783
+2025-08-25T20:25:41.1411860Z Setting Up Routes : 08.25.41.139775
+2025-08-25T20:25:42.0435124Z Exiting Configure : 08.25.42.043240
+2025-08-25T20:25:42.4155763Z Hosting environment: Production
+2025-08-25T20:25:42.4157284Z Content root path: /opt/Kudu
+2025-08-25T20:25:42.4159659Z Now listening on: http://0.0.0.0:8181
+2025-08-25T20:25:42.4160297Z Application started. Press Ctrl+C to shut down./home/LogFiles/2025_08_25_lw1sdlwk0007WO_docker.log  (https://showcall-api-dev-g3gucsgne2abc6ax.scm.eastus2-01.azurewebsites.net/api/vfs/LogFiles/2025_08_25_lw1sdlwk0007WO_docker.log)
+2025-08-25T20:25:17.0094454Z Container is terminated. Total time elapsed: 7964 ms.
+2025-08-25T20:25:17.0096763Z Site container: showcall-api-dev terminated during site startup.
+2025-08-25T20:25:17.0294312Z Site: showcall-api-dev stopped.
+2025-08-25T20:25:44.1121013Z Container is terminating. Grace period: 5 seconds.
+2025-08-25T20:25:44.1285141Z Stop and delete container. Retry count = 0
+2025-08-25T20:25:44.1294964Z Stopping container: cc0f775090c6_showcall-api-dev.
+2025-08-25T20:25:49.6120124Z Deleting container: cc0f775090c6_showcall-api-dev. Retry count = 0
+2025-08-25T20:25:50.1587098Z Container spec TerminationMessagePolicy  path
+2025-08-25T20:25:50.1600901Z Container is terminated. Total time elapsed: 6046 ms.
+2025-08-25T20:25:50.1601465Z Site: showcall-api-dev stopped.Ending Log Tail of existing logs ---Starting Live Log Stream ---

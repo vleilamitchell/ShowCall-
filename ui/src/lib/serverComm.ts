@@ -1,7 +1,17 @@
 import { getAuth } from 'firebase/auth';
 import { app } from './firebase';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+// Normalize API base URL: ensure scheme and no trailing slash
+const resolveApiBaseUrl = (): string => {
+  const raw = (import.meta as any)?.env?.VITE_API_URL || 'http://localhost:8787';
+  let url = String(raw).trim();
+  if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url}`;
+  }
+  return url.replace(/\/+$/, '');
+};
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 class APIError extends Error {
   constructor(public status: number, message: string) {
