@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
-import firebaseConfig from 'src/lib/firebase-config.json';
+import firebaseConfig from '../../firebase-config.json';
 
 
 // Initialize Firebase
