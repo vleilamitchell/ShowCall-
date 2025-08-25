@@ -71,7 +71,27 @@ export async function verifyFirebaseToken(token: string, projectId: string): Pro
       id: payload.sub as string,
       email: payload.email as string | undefined,
     };
-  } catch (error) {
+  } catch (error: any) {
+    if (getEnv('DEBUG_AUTH') === '1') {
+      try {
+        // Best-effort decode header/payload for diagnostics without secrets
+        const parts = token.split('.')
+        const payloadStr = parts[1] ? Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8') : '{}';
+        const payload = JSON.parse(payloadStr);
+        console.error('[AUTH] Token verification failed', {
+          reason: error?.message || String(error),
+          expectedIssuer: `https://securetoken.google.com/${projectId}`,
+          expectedAudience: projectId,
+          tokenIss: payload.iss,
+          tokenAud: payload.aud,
+          tokenSubPresent: !!payload.sub,
+          tokenIat: payload.iat,
+          tokenExp: payload.exp,
+        });
+      } catch (e) {
+        console.error('[AUTH] Token verification failed; unable to decode payload', { reason: error?.message || String(error) });
+      }
+    }
     throw new Error('Invalid token');
   }
 } 

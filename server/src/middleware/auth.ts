@@ -61,12 +61,32 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
 
     const authHeader = c.req.header('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (getEnv('DEBUG_AUTH') === '1') {
+        console.warn('[AUTH] Missing/invalid Authorization header', {
+          method: c.req.method,
+          path: c.req.path,
+          origin: c.req.header('origin'),
+          requestId: (c as any).get?.('requestId') || undefined,
+        });
+      }
       throw new AuthError('Missing or invalid Authorization header');
     }
 
     const token = authHeader.split('Bearer ')[1];
     const firebaseProjectId = getFirebaseProjectId();
-    const firebaseUser = await verifyFirebaseToken(token, firebaseProjectId);
+    let firebaseUser;
+    try {
+      firebaseUser = await verifyFirebaseToken(token, firebaseProjectId);
+    } catch (e: any) {
+      if (getEnv('DEBUG_AUTH') === '1') {
+        console.error('[AUTH] verifyFirebaseToken failed', {
+          requestId: (c as any).get?.('requestId') || undefined,
+          reason: e?.message || String(e),
+          projectId: firebaseProjectId,
+        });
+      }
+      throw e;
+    }
 
     const databaseUrl = getDatabaseUrl();
     const db = await getDatabase(databaseUrl);
@@ -94,6 +114,12 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
     c.set('user', user);
     await next();
   } catch (error) {
+    if (getEnv('DEBUG_AUTH') === '1') {
+      console.error('[AUTH] Unauthorized', {
+        requestId: (c as any).get?.('requestId') || undefined,
+        reason: (error as any)?.message || String(error),
+      });
+    }
     throw new AuthError('Unauthorized');
   }
 }; 
