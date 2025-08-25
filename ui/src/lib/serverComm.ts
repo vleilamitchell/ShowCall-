@@ -1,4 +1,4 @@
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from './firebase';
 
 // Normalize API base URL: ensure scheme and no trailing slash
@@ -22,11 +22,32 @@ class APIError extends Error {
 
 async function getAuthToken(): Promise<string | null> {
   const auth = getAuth(app);
-  const user = auth.currentUser;
+  let user = auth.currentUser;
   if (!user) {
+    // Wait briefly for Firebase to initialize the current user
+    user = await new Promise<any>((resolve) => {
+      const timeout = setTimeout(() => {
+        unsubscribe();
+        resolve(null);
+      }, 3000);
+      const unsubscribe = onAuthStateChanged(auth, (u) => {
+        clearTimeout(timeout);
+        unsubscribe();
+        resolve(u);
+      });
+    });
+  }
+  if (!user) {
+    if ((import.meta as any)?.env?.DEV) {
+      console.warn('No Firebase user; Authorization header will be omitted');
+    }
     return null;
   }
-  return user.getIdToken();
+  try {
+    return await user.getIdToken();
+  } catch {
+    return null;
+  }
 }
 
 async function fetchWithAuth(
