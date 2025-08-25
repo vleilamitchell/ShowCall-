@@ -142,7 +142,6 @@ export default function Employees() {
 
   const onDepartmentChange = async (newDeptId: string) => {
     if (!selected) return;
-    const prevDeptId = selected.departmentId;
     try {
       const updated = await updateEmployee(selected.id, { departmentId: newDeptId });
       mutateItems(prev => {
