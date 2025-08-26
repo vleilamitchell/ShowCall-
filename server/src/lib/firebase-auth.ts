@@ -6,23 +6,33 @@ type FirebaseUser = {
   email: string | undefined;
 };
 
+// Memoize JWKS instances so key metadata and HTTP caching persist across requests
+let cachedProdJWKS: ReturnType<typeof createRemoteJWKSet> | null = null;
+let cachedEmulatorJWKS: ReturnType<typeof createRemoteJWKSet> | null = null;
+
 const getJWKS = () => {
   if (isDevelopment()) {
-    // Use emulator JWKS endpoint with dynamic port
-    const firebaseAuthHost = getEnv('FIREBASE_AUTH_EMULATOR_HOST') ?? 'localhost:5503';
-    const emulatorUrl = firebaseAuthHost.startsWith('http') 
-      ? firebaseAuthHost 
-      : `http://${firebaseAuthHost}`;
-    
-    return createRemoteJWKSet(
-      new URL(`${emulatorUrl}/www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com`)
-    );
-  } else {
+    if (!cachedEmulatorJWKS) {
+      // Use emulator JWKS endpoint with dynamic port
+      const firebaseAuthHost = getEnv('FIREBASE_AUTH_EMULATOR_HOST') ?? 'localhost:5503';
+      const emulatorUrl = firebaseAuthHost.startsWith('http')
+        ? firebaseAuthHost
+        : `http://${firebaseAuthHost}`;
+
+      cachedEmulatorJWKS = createRemoteJWKSet(
+        new URL(`${emulatorUrl}/www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com`)
+      );
+    }
+    return cachedEmulatorJWKS;
+  }
+
+  if (!cachedProdJWKS) {
     // Use production Firebase JWKS
-    return createRemoteJWKSet(
+    cachedProdJWKS = createRemoteJWKSet(
       new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com')
     );
   }
+  return cachedProdJWKS;
 };
 
 export async function verifyFirebaseToken(token: string, projectId: string): Promise<FirebaseUser> {

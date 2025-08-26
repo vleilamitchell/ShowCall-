@@ -6,6 +6,25 @@ import { User, users } from '../schema/users';
 import { getEnv, getFirebaseProjectId, getDatabaseUrl } from '../lib/env';
 import { AuthError } from '../errors';
 
+// Lightweight in-memory cache to avoid frequent DB reads on hot paths
+type CachedUser = { user: User; expiresAt: number };
+const userCacheById = new Map<string, CachedUser>();
+const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
+const getCachedUserById = (id: string): User | undefined => {
+  const entry = userCacheById.get(id);
+  if (!entry) return undefined;
+  if (entry.expiresAt <= Date.now()) {
+    userCacheById.delete(id);
+    return undefined;
+  }
+  return entry.user;
+};
+
+const setCachedUserById = (id: string, user: User): void => {
+  userCacheById.set(id, { user, expiresAt: Date.now() + CACHE_TTL_MS });
+};
+
 declare module 'hono' {
   interface ContextVariableMap {
     user: User;
@@ -38,7 +57,8 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
           .insert(users)
           .values({
             id: stub.userId,
-            email: stub.email ?? null,
+            // Ensure non-null email to satisfy schema
+            email: stub.email ?? `${stub.userId}@test.local`,
             display_name: null,
             photo_url: null,
           })
@@ -92,16 +112,30 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
     const databaseUrl = getDatabaseUrl();
     const db = await getDatabase(databaseUrl);
 
-    // Upsert: insert if not exists, do nothing if exists
+    // Fast-path: return cached user if available
+    const cached = getCachedUserById(firebaseUser.id);
+    if (cached) {
+      c.set('user', cached);
+      return next();
+    }
+
+    // Attempt single-roundtrip insert with DO NOTHING; return row if inserted
+    let user: User | undefined;
     try {
-      await db.insert(users)
+      const inserted = await (db as any)
+        .insert(users)
         .values({
           id: firebaseUser.id,
           email: firebaseUser.email!,
           display_name: null,
           photo_url: null,
         })
-        .onConflictDoNothing();
+        .onConflictDoNothing()
+        .returning();
+
+      if (Array.isArray(inserted) && inserted.length > 0) {
+        user = inserted[0] as User;
+      }
     } catch (e: any) {
       if (getEnv('DEBUG_AUTH') === '1') {
         console.error('[AUTH] DB insert users failed', { reason: e?.message || String(e) });
@@ -109,18 +143,20 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
       throw e;
     }
 
-    // Get the user (either just created or already existing)
-    let user;
-    try {
-      [user] = await db.select()
-        .from(users)
-        .where(eq(users.id, firebaseUser.id))
-        .limit(1);
-    } catch (e: any) {
-      if (getEnv('DEBUG_AUTH') === '1') {
-        console.error('[AUTH] DB select user failed', { reason: e?.message || String(e) });
+    // If not inserted (already exists), fetch by id then email as legacy fallback
+    if (!user) {
+      try {
+        const rowsById = await db.select()
+          .from(users)
+          .where(eq(users.id, firebaseUser.id))
+          .limit(1);
+        user = rowsById[0];
+      } catch (e: any) {
+        if (getEnv('DEBUG_AUTH') === '1') {
+          console.error('[AUTH] DB select user by id failed', { reason: e?.message || String(e) });
+        }
+        throw e;
       }
-      throw e;
     }
 
     // Fallback: legacy datasets may have a different user id but same email (unique)
@@ -149,6 +185,7 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
       throw new Error('Failed to create or retrieve user');
     }
 
+    setCachedUserById(user.id, user);
     c.set('user', user);
     await next();
   } catch (error: any) {
