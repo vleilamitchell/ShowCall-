@@ -4,7 +4,7 @@ import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { listEvents, createEvent, updateEvent, deleteEvent, type EventRecord, getEvent, getEventAreas, getAreasForEvents, bootstrapEvents, type Area, type EventsBootstrapResponse } from '@/lib/serverComm';
+import { createEvent, updateEvent, deleteEvent, type EventRecord, getEvent, getEventAreas, getAreasForEvents, bootstrapEvents, type Area } from '@/lib/serverComm';
 import { useParams } from 'react-router-dom';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
