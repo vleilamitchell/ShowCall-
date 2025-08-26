@@ -49,12 +49,19 @@ export async function create(c: Context) {
     startTime: (typeof body.startTime === 'string' && body.startTime.trim()) || '00:00',
     endTime: (typeof body.endTime === 'string' && body.endTime.trim()) || '23:59',
     description: normalize(body.description),
+    eventType: normalize(body.eventType) as any,
+    priority: (body.priority == null || String(body.priority).trim() === '') ? null as any : Number(body.priority) as any,
     ticketUrl: normalize(body.ticketUrl),
     eventPageUrl: normalize(body.eventPageUrl),
     promoAssetsUrl: normalize(body.promoAssetsUrl),
     seriesId: body.seriesId ? String(body.seriesId).trim() : null as any,
     updatedAt: new Date() as any,
   } as any;
+
+  // Validate priority
+  if (!(record.priority == null || (Number.isFinite(record.priority as any) && (record.priority as any) >= 0 && (record.priority as any) <= 5))) {
+    return c.json({ error: 'invalid priority: must be 0-5' }, 400);
+  }
 
   if (!isValidUrl(record.ticketUrl)) return c.json({ error: 'invalid ticketUrl: must be http(s) URL' }, 400);
   if (!isValidUrl(record.eventPageUrl)) return c.json({ error: 'invalid eventPageUrl: must be http(s) URL' }, 400);
@@ -85,6 +92,12 @@ export async function patch(c: Context) {
   if (typeof body.startTime === 'string') patch.startTime = body.startTime.trim();
   if (typeof body.endTime === 'string') patch.endTime = body.endTime.trim();
   if (body.description !== undefined) patch.description = s(body.description) as any;
+  if ('eventType' in body) patch.eventType = s(body.eventType) as any;
+  if ('priority' in body) {
+    const p = (body.priority == null || String(body.priority).trim() === '') ? null : Number(body.priority);
+    if (!(p == null || (Number.isFinite(p) && p >= 0 && p <= 5))) return c.json({ error: 'invalid priority: must be 0-5' }, 400);
+    (patch as any).priority = p as any;
+  }
   if ('seriesId' in body) patch.seriesId = (typeof body.seriesId === 'string' && body.seriesId.trim()) ? String(body.seriesId).trim() : null as any;
   if ('ticketUrl' in body) patch.ticketUrl = s(body.ticketUrl) as any;
   if ('eventPageUrl' in body) patch.eventPageUrl = s(body.eventPageUrl) as any;

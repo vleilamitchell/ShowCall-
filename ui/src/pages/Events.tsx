@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
 import { Button } from '@/components/ui/button';
+import StarRating from '@/components/StarRating';
 import { Switch } from '@/components/ui/switch';
 import { createEvent, updateEvent, deleteEvent, type EventRecord, getEvent, getEventAreas, getAreasForEvents, bootstrapEvents, bootstrapEventDetail, type Area } from '@/lib/serverComm';
 import { useParams } from 'react-router-dom';
@@ -135,6 +136,8 @@ type CreateForm = {
   promoter: string;
   description: string;
   seriesId?: string | null;
+  eventType?: string | null;
+  priority?: number | null;
 };
 
 const defaultCreate: CreateForm = {
@@ -146,6 +149,8 @@ const defaultCreate: CreateForm = {
   promoter: '',
   description: '',
   seriesId: null,
+  eventType: null,
+  priority: null,
 };
 
 export function Events() {
@@ -262,6 +267,8 @@ export function Events() {
         promoter: draftForm.promoter || undefined,
         seriesId: draftForm.seriesId || undefined,
         description: draftForm.description || undefined,
+        eventType: (draftForm.eventType || undefined),
+        priority: (draftForm.priority == null ? undefined : draftForm.priority),
       };
       await create(payload as any);
       setDraftOpen(false);
@@ -284,6 +291,20 @@ export function Events() {
   });
 
   const { onChange: onPromoterChange, onBlurFlush: onPromoterBlur } = useDebouncedPatch<Partial<EventRecord>>({
+    applyPatch: async (patch) => {
+      if (!selected) return;
+      const updated = await updateEvent(selected.id, patch);
+      mutateItems(prev => prev.map(i => (i.id === updated.id ? updated : i)));
+    }
+  });
+  const { onChange: onEventTypeChange, onBlurFlush: onEventTypeBlur } = useDebouncedPatch<Partial<EventRecord>>({
+    applyPatch: async (patch) => {
+      if (!selected) return;
+      const updated = await updateEvent(selected.id, patch);
+      mutateItems(prev => prev.map(i => (i.id === updated.id ? updated : i)));
+    }
+  });
+  const { onChange: onPriorityChange } = useDebouncedPatch<Partial<EventRecord>>({
     applyPatch: async (patch) => {
       if (!selected) return;
       const updated = await updateEvent(selected.id, patch);
@@ -475,6 +496,18 @@ export function Events() {
                     <Input value={draftForm.status} onChange={(e) => setDraftForm({ ...draftForm, status: e.target.value })} />
                   </div>
                   <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Event Type</label>
+                    <Input value={draftForm.eventType || ''} onChange={(e) => setDraftForm({ ...draftForm, eventType: e.target.value })} placeholder="e.g., Concert, Conference" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Priority</label>
+                    <StarRating
+                      value={draftForm.priority || 0}
+                      onChange={(n) => setDraftForm({ ...draftForm, priority: n })}
+                      aria-label="Priority"
+                    />
+                  </div>
+                  <div>
                     <label className="block text-xs text-muted-foreground mb-1">Date</label>
                     <DateField value={draftForm.date} onChange={(v) => setDraftForm({ ...draftForm, date: v || '' })} />
                   </div>
@@ -508,6 +541,29 @@ export function Events() {
                   <div>
                     <label className="block text-xs text-muted-foreground mb-1">Status</label>
                     <Input value={selected.status} onChange={(e) => { mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, status: e.target.value } : i))); onStatusChange({ status: e.target.value }); }} onBlur={() => onStatusBlur()} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Event Type</label>
+                    <Input
+                      value={selected.eventType || ''}
+                      onChange={(e) => {
+                        mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, eventType: e.target.value } : i)));
+                        onEventTypeChange({ eventType: e.target.value || undefined });
+                      }}
+                      onBlur={() => onEventTypeBlur()}
+                      placeholder="e.g., Concert, Conference"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Priority</label>
+                    <StarRating
+                      value={selected.priority || 0}
+                      onChange={(n) => {
+                        mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, priority: n } : i)));
+                        onPriorityChange({ priority: n });
+                      }}
+                      aria-label="Priority"
+                    />
                   </div>
                   <div>
                     <label className="block text-xs text-muted-foreground mb-1">Date</label>

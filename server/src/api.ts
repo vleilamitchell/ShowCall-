@@ -236,6 +236,8 @@ eventsRoutes.post('/', async (c) => {
       startTime: (typeof body.startTime === 'string' && body.startTime.trim()) || '00:00',
       endTime: (typeof body.endTime === 'string' && body.endTime.trim()) || '23:59',
       description: normalize(body.description),
+      eventType: normalize(body.eventType),
+      priority: (body.priority == null || String(body.priority).trim() === '') ? null : Number(body.priority),
       ticketUrl: normalize(body.ticketUrl),
       eventPageUrl: normalize(body.eventPageUrl),
       promoAssetsUrl: normalize(body.promoAssetsUrl),
@@ -246,6 +248,11 @@ eventsRoutes.post('/', async (c) => {
     if (!isValidUrl(record.ticketUrl)) return c.json({ error: 'invalid ticketUrl: must be http(s) URL' }, 400);
     if (!isValidUrl(record.eventPageUrl)) return c.json({ error: 'invalid eventPageUrl: must be http(s) URL' }, 400);
     if (!isValidUrl(record.promoAssetsUrl)) return c.json({ error: 'invalid promoAssetsUrl: must be http(s) URL' }, 400);
+
+    // Validate priority range if provided
+    if (!(record.priority == null || (Number.isFinite(record.priority) && record.priority >= 0 && record.priority <= 5))) {
+      return c.json({ error: 'invalid priority: must be 0-5' }, 400);
+    }
 
     const inserted = await db.insert(schema.events).values(record).returning();
     return c.json(inserted[0]);
@@ -298,6 +305,12 @@ eventsRoutes.patch('/:eventId', async (c) => {
     if (typeof body.startTime === 'string') patch.startTime = body.startTime.trim();
     if (typeof body.endTime === 'string') patch.endTime = body.endTime.trim();
     if (body.description !== undefined) patch.description = normalize(body.description);
+    if ('eventType' in body) patch.eventType = normalize(body.eventType);
+    if ('priority' in body) {
+      const p = (body.priority == null || String(body.priority).trim() === '') ? null : Number(body.priority);
+      if (!(p == null || (Number.isFinite(p) && p >= 0 && p <= 5))) return c.json({ error: 'invalid priority: must be 0-5' }, 400);
+      patch.priority = p;
+    }
     if ('seriesId' in body) patch.seriesId = (typeof body.seriesId === 'string' && body.seriesId.trim()) ? body.seriesId.trim() : null;
     if ('ticketUrl' in body) patch.ticketUrl = normalize(body.ticketUrl);
     if ('eventPageUrl' in body) patch.eventPageUrl = normalize(body.eventPageUrl);

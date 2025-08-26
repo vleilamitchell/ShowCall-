@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer } from 'drizzle-orm/pg-core';
 
 // Standardize on public schema for events table to match migrations
 export const events = pgTable('events', {
@@ -10,6 +10,8 @@ export const events = pgTable('events', {
   startTime: text('start_time').notNull(), // HH:mm
   endTime: text('end_time').notNull(), // HH:mm
   description: text('description'),
+  eventType: text('event_type'),
+  priority: integer('priority'),
   ticketUrl: text('ticket_url'),
   eventPageUrl: text('event_page_url'),
   promoAssetsUrl: text('promo_assets_url'),

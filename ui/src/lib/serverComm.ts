@@ -102,6 +102,8 @@ export type EventRecord = {
   date: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   endTime: string; // HH:mm
+  eventType?: string | null;
+  priority?: number | null;
   description?: string | null;
   ticketUrl?: string | null;
   eventPageUrl?: string | null;
