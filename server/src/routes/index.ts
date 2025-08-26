@@ -18,6 +18,7 @@ import { shiftsRouter } from './shifts';
 import { assignmentsRouter } from './assignments';
 import { schedulesRouter } from './schedules';
 import { contactsRouter } from './contacts';
+import { bootstrapRouter } from './bootstrap';
 
 /**
  * mountV1Routers mounts all v1 domain routers onto the provided API router.
@@ -44,6 +45,8 @@ export function mountV1Routers(api: Hono) {
   api.route('/inventory/transactions', inventoryTransactionsRouter);
   api.route('/inventory/reservations', inventoryReservationsRouter);
   api.route('/inventory/locations', inventoryLocationsRouter);
+  // Bootstrap aggregate endpoints
+  api.route('/bootstrap', bootstrapRouter);
   api.route('/', legacyRouter);
   // Mount new auth router under /protected alongside legacy routes
   api.route('/protected', authRouter);

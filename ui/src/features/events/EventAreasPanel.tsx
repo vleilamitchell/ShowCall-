@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { Rollup } from '@/components/ui/rollup';
-import { addEventArea, getEventAreas, listAreas, removeEventArea, type Area } from '@/lib/serverComm';
+import { addEventArea, getEventAreas, listAreas, type Area } from '@/lib/serverComm';
 
 export function EventAreasPanel({ eventId }: { eventId: string }) {
   
@@ -15,17 +15,23 @@ export function EventAreasPanel({ eventId }: { eventId: string }) {
   useEffect(() => {
     let ignore = false;
     setError(null);
-    Promise.all([
-      getEventAreas(eventId),
-      listAreas({ active: true }),
-    ]).then(([attached, all]) => {
-      if (ignore) return;
-      setAreas(attached);
-      setAllAreas(all);
-    }).catch((e: any) => {
-      if (ignore) return;
-      setError(e?.message || 'Failed to load areas');
-    });
+    const boot: any = (window as any).__bootstrap || {};
+    const preAttached: Area[] | undefined = (boot.areasByEvent && boot.areasByEvent[eventId]) || undefined;
+    const preActive: Area[] | undefined = boot.areasActive;
+
+    const loadAttached = preAttached ? Promise.resolve(preAttached) : getEventAreas(eventId);
+    const loadActive = preActive ? Promise.resolve(preActive) : listAreas({ active: true });
+
+    Promise.all([loadAttached, loadActive])
+      .then(([attached, all]) => {
+        if (ignore) return;
+        setAreas(attached);
+        setAllAreas(all);
+      })
+      .catch((e: any) => {
+        if (ignore) return;
+        setError(e?.message || 'Failed to load areas');
+      });
     return () => { ignore = true; };
   }, [eventId]);
 
@@ -38,7 +44,7 @@ export function EventAreasPanel({ eventId }: { eventId: string }) {
     if (submitting) return;
     setSubmitting(true);
     try {
-      await removeEventArea(eventId, areaId);
+      // Optimistic update; server call handled elsewhere now
       setAreas(prev => {
         const next = prev.filter(a => a.id !== areaId);
         try {
@@ -46,6 +52,8 @@ export function EventAreasPanel({ eventId }: { eventId: string }) {
         } catch {}
         return next;
       });
+      // Fire-and-forget to server for removal
+      try { (await import('@/lib/serverComm')).removeEventArea(eventId, areaId); } catch {}
     } catch (e: any) {
       alert(e?.message || 'Failed to remove area');
     } finally {

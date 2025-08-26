@@ -126,6 +126,28 @@ export async function listEvents(params?: { q?: string; status?: string; include
   return response.json() as Promise<EventRecord[]>;
 }
 
+// Bootstrap API
+export type EventsBootstrapResponse = {
+  events: EventRecord[];
+  areasActive: Area[];
+  areasByEvent: Record<string, Area[]>;
+  departments: DepartmentRecord[];
+  selected?: { event: EventRecord; shifts: ShiftRecord[] } | undefined;
+};
+
+export async function bootstrapEvents(params?: { q?: string; status?: string; includePast?: boolean; from?: string; to?: string; selectedId?: string }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.status) query.set('status', params.status);
+  if (params?.includePast != null) query.set('includePast', params.includePast ? 'true' : 'false');
+  if (params?.from) query.set('from', params.from);
+  if (params?.to) query.set('to', params.to);
+  if (params?.selectedId) query.set('selectedId', params.selectedId);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/bootstrap/events${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<EventsBootstrapResponse>;
+}
+
 export async function createEvent(payload: Partial<EventRecord> & { title: string }) {
   const response = await fetchWithAuth('/api/v1/events', {
     method: 'POST',
@@ -255,6 +277,7 @@ export const api: {
   addEventArea?: typeof addEventArea;
   removeEventArea?: typeof removeEventArea;
   reorderAreas?: typeof reorderAreas;
+  bootstrapEvents?: typeof bootstrapEvents;
   // Contacts
   listContacts?: typeof listContacts;
   createContact?: typeof createContact;
@@ -1030,6 +1053,7 @@ api.removeEventArea = removeEventArea as any;
 api.getEventAreas = getEventAreas as any;
 api.getAreasForEvents = getAreasForEvents as any;
 api.reorderAreas = reorderAreas as any;
+api.bootstrapEvents = bootstrapEvents as any;
 api.getEventAreas = getEventAreas as any;
 api.replaceEventAreas = replaceEventAreas as any;
 api.addEventArea = addEventArea as any;

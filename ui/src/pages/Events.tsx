@@ -4,7 +4,8 @@ import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { listEvents, createEvent, updateEvent, deleteEvent, type EventRecord, getEvent, getEventAreas, getAreasForEvents, type Area } from '@/lib/serverComm';
+import { listEvents, createEvent, updateEvent, deleteEvent, type EventRecord, getEvent, getEventAreas, getAreasForEvents, bootstrapEvents, type Area, type EventsBootstrapResponse } from '@/lib/serverComm';
+import { useParams } from 'react-router-dom';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { EventShiftsPanel } from '@/features/events/EventShiftsPanel';
@@ -154,8 +155,35 @@ export function Events() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
 
+  const params = useParams<{ id?: string; eventId?: string }>();
+  const selectedIdFromRoute = (params.eventId || params.id) as string | undefined;
+
   const eventsAdapter: ResourceAdapter<EventRecord, { includePast: boolean }, { q?: string }> = {
-    list: async (query, filters) => listEvents({ q: query?.q, includePast: filters?.includePast }),
+    list: async (query, filters) => {
+      const boot = await bootstrapEvents({ q: query?.q, includePast: filters?.includePast, selectedId: selectedIdFromRoute });
+      // seed caches for areas-by-event
+      Object.entries(boot.areasByEvent || {}).forEach(([eventId, areas]) => {
+        eventAreasCache.set(eventId, areas);
+        try { window.dispatchEvent(new CustomEvent('event-areas-updated', { detail: { eventId, areas } })); } catch {}
+      });
+      try {
+        // Persist bootstrap on window for detail panels
+        (window as any).__bootstrap = (window as any).__bootstrap || {};
+        (window as any).__bootstrap.events = boot.events;
+        (window as any).__bootstrap.areasActive = boot.areasActive;
+        (window as any).__bootstrap.areasByEvent = boot.areasByEvent;
+        (window as any).__bootstrap.departments = boot.departments;
+        if (boot.selected?.event && boot.selected?.shifts) {
+          (window as any).__bootstrap.shiftsByEvent = (window as any).__bootstrap.shiftsByEvent || {};
+          (window as any).__bootstrap.shiftsByEvent[boot.selected.event.id] = boot.selected.shifts;
+          window.dispatchEvent(new CustomEvent('event-shifts-updated', { detail: { eventId: boot.selected.event.id, shifts: boot.selected.shifts } }));
+        }
+        window.dispatchEvent(new CustomEvent('departments-bootstrap', { detail: { departments: boot.departments } }));
+        window.dispatchEvent(new CustomEvent('areas-active-bootstrap', { detail: { areas: boot.areasActive } }));
+      } catch {}
+      // optionally seed any other global caches here (e.g., departments)
+      return boot.events;
+    },
     get: async (id) => getEvent(String(id)),
     create: async (partial) => createEvent(partial as any),
     update: async (id, patch) => updateEvent(String(id), patch as any),

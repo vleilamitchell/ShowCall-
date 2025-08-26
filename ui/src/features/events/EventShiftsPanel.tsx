@@ -19,10 +19,15 @@ export function EventShiftsPanel({ eventId }: { eventId: string }) {
     let ignore = false;
     setLoading(true);
     setError(null);
-    Promise.all([
-      listShiftsForEvent(eventId),
-      listDepartments(),
-    ])
+    // Try bootstrap caches first
+    const boot: any = (window as any).__bootstrap || {};
+    const preShifts: ShiftRecord[] | undefined = boot.shiftsByEvent?.[eventId];
+    const preDeps: DepartmentRecord[] | undefined = boot.departments;
+
+    const loadShifts = preShifts ? Promise.resolve(preShifts) : listShiftsForEvent(eventId);
+    const loadDeps = preDeps ? Promise.resolve(preDeps) : listDepartments();
+
+    Promise.all([loadShifts, loadDeps])
       .then(([s, deps]) => {
         if (ignore) return;
         setShifts(s);
