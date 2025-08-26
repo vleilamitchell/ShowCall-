@@ -4,7 +4,7 @@ import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { createEvent, updateEvent, deleteEvent, type EventRecord, getEvent, getEventAreas, getAreasForEvents, bootstrapEvents, type Area } from '@/lib/serverComm';
+import { createEvent, updateEvent, deleteEvent, type EventRecord, getEvent, getEventAreas, getAreasForEvents, bootstrapEvents, bootstrapEventDetail, type Area } from '@/lib/serverComm';
 import { useParams } from 'react-router-dom';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
@@ -229,6 +229,23 @@ export function Events() {
         eventAreasBulkIds.clear();
       });
   }, [items]);
+
+  // Prefetch optimized event-detail (event + areas + shifts) whenever selection changes
+  useEffect(() => {
+    if (!selectedId) return;
+    bootstrapEventDetail(String(selectedId)).then((detail) => {
+      // seed areas cache
+      eventAreasCache.set(detail.event.id, detail.areas);
+      try {
+        window.dispatchEvent(new CustomEvent('event-areas-updated', { detail: { eventId: detail.event.id, areas: detail.areas } }));
+      } catch {}
+      // seed shifts/departments bootstrap cache
+      (window as any).__bootstrap = (window as any).__bootstrap || {};
+      (window as any).__bootstrap.shiftsByEvent = (window as any).__bootstrap.shiftsByEvent || {};
+      (window as any).__bootstrap.shiftsByEvent[detail.event.id] = detail.shifts;
+      window.dispatchEvent(new CustomEvent('event-shifts-updated', { detail: { eventId: detail.event.id, shifts: detail.shifts } }));
+    }).catch(() => { /* ignore */ });
+  }, [selectedId]);
 
   const onSaveDraft = async () => {
     if (!draftForm.title.trim() || draftSubmitting) return;

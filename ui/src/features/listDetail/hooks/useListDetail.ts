@@ -35,8 +35,17 @@ export function useListDetail<TItem extends ListItem, TFilters extends FilterSta
       // Try common param name patterns: singular form (e.g., itemId), generic id, or any *Id param
       const singularKey = `${resourceKey.slice(0, -1)}Id`;
       const anyIdKey = Object.keys(params || {}).find((k) => k.endsWith('Id') && (params as any)[k]);
-      const routeId = (params as any)[singularKey] || (params as any)[anyIdKey as any] || (params as any).id; // attempt multiple forms
-      const found = routeId ? rows.some(r => String(r.id) === String(routeId)) : false;
+      const routeIdRaw = (params as any)[singularKey] || (params as any)[anyIdKey as any] || (params as any).id; // attempt multiple forms
+      let routeId = routeIdRaw as any;
+      let found = routeId ? rows.some(r => String(r.id) === String(routeId)) : false;
+      // Special-case events: support stripped legacy prefix in URL
+      if (!found && routeId && resourceKey === 'events') {
+        const legacyRouteId = `legacy-ev:${routeId}`;
+        if (rows.some(r => String(r.id) === legacyRouteId)) {
+          routeId = legacyRouteId as any;
+          found = true;
+        }
+      }
 
       if (routeId && found) {
         setSelectedId(routeId as any);
@@ -64,11 +73,17 @@ export function useListDetail<TItem extends ListItem, TFilters extends FilterSta
   useEffect(() => {
     const singularKey = `${resourceKey.slice(0, -1)}Id`;
     const anyIdKey = Object.keys(params || {}).find((k) => k.endsWith('Id') && (params as any)[k]);
-    const routeId = (params as any)[singularKey] || (params as any)[anyIdKey as any] || (params as any).id;
-    if (!routeId) return;
-    const exists = items.some(r => String(r.id) === String(routeId));
+    const routeIdRaw = (params as any)[singularKey] || (params as any)[anyIdKey as any] || (params as any).id;
+    if (!routeIdRaw) return;
+    let internalRouteId: any = routeIdRaw;
+    let exists = items.some(r => String(r.id) === String(internalRouteId));
+    if (!exists && resourceKey === 'events') {
+      const legacyRouteId = `legacy-ev:${routeIdRaw}`;
+      exists = items.some(r => String(r.id) === legacyRouteId);
+      if (exists) internalRouteId = legacyRouteId;
+    }
     if (exists) {
-      if (String(selectedId) !== String(routeId)) setSelectedId(routeId as any);
+      if (String(selectedId) !== String(internalRouteId)) setSelectedId(internalRouteId as any);
     } else if (!loading) {
       // If current items are loaded and the id does not exist, navigate to base route
       navigate(`/${resourceKey}`, { replace: true });
@@ -80,8 +95,9 @@ export function useListDetail<TItem extends ListItem, TFilters extends FilterSta
     if (!selectedId) return;
     const routeParamName = `${resourceKey.slice(0, -1)}Id`;
     const current = (params as any)[routeParamName] || params.id;
-    if (String(current) !== String(selectedId)) {
-      navigate(`/${resourceKey}/${encodeURIComponent(String(selectedId))}`, { replace: false });
+    const urlId = resourceKey === 'events' ? String(selectedId).replace(/^legacy-ev:/, '') : String(selectedId);
+    if (String(current) !== String(urlId)) {
+      navigate(`/${resourceKey}/${encodeURIComponent(urlId)}`, { replace: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);

@@ -48,4 +48,17 @@ export async function events(c: Context) {
   });
 }
 
+export async function eventDetail(c: Context) {
+  const db = await getDatabase();
+  const eventId = c.req.query('eventId') || '';
+  if (!eventId) return c.json({ error: 'eventId required' }, 400);
+  const event = await eventsRepo.getEventById(db as any, eventId);
+  if (!event) return c.json({ error: 'Not found' }, 404);
+  const [areas, shifts] = await Promise.all([
+    eventAreasRepo.listAreasForEvent(db as any, eventId),
+    eventsRepo.listShiftsByEventId(db as any, eventId),
+  ]);
+  return c.json({ event, areas, shifts });
+}
+
 

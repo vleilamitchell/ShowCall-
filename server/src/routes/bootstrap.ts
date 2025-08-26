@@ -8,5 +8,7 @@ bootstrapRouter.use('*', authMiddleware);
 
 // GET /bootstrap/events — initial payload for events page
 bootstrapRouter.get('/events', ctrl.events);
+// GET /bootstrap/event-detail?eventId=... — optimized detail payload
+bootstrapRouter.get('/event-detail', ctrl.eventDetail);
 
 

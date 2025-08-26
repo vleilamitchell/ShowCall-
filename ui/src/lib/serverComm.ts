@@ -148,6 +148,17 @@ export async function bootstrapEvents(params?: { q?: string; status?: string; in
   return response.json() as Promise<EventsBootstrapResponse>;
 }
 
+export type EventDetailBootstrapResponse = {
+  event: EventRecord;
+  areas: Area[];
+  shifts: ShiftRecord[];
+};
+
+export async function bootstrapEventDetail(eventId: string) {
+  const response = await fetchWithAuth(`/api/v1/bootstrap/event-detail?eventId=${encodeURIComponent(eventId)}`);
+  return response.json() as Promise<EventDetailBootstrapResponse>;
+}
+
 export async function createEvent(payload: Partial<EventRecord> & { title: string }) {
   const response = await fetchWithAuth('/api/v1/events', {
     method: 'POST',
@@ -278,6 +289,7 @@ export const api: {
   removeEventArea?: typeof removeEventArea;
   reorderAreas?: typeof reorderAreas;
   bootstrapEvents?: typeof bootstrapEvents;
+  bootstrapEventDetail?: typeof bootstrapEventDetail;
   // Contacts
   listContacts?: typeof listContacts;
   createContact?: typeof createContact;
@@ -1054,6 +1066,7 @@ api.getEventAreas = getEventAreas as any;
 api.getAreasForEvents = getAreasForEvents as any;
 api.reorderAreas = reorderAreas as any;
 api.bootstrapEvents = bootstrapEvents as any;
+api.bootstrapEventDetail = bootstrapEventDetail as any;
 api.getEventAreas = getEventAreas as any;
 api.replaceEventAreas = replaceEventAreas as any;
 api.addEventArea = addEventArea as any;
