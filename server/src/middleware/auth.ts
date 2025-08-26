@@ -59,7 +59,8 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
       }
     }
 
-    const authHeader = c.req.header('Authorization');
+    // Hono normalizes headers to lowercase; read header case-insensitively
+    const authHeader = c.req.header('authorization') || c.req.header('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       if (getEnv('DEBUG_AUTH') === '1') {
         console.warn('[AUTH] Missing/invalid Authorization header', {
