@@ -13,7 +13,7 @@ import {
   startOfWeek,
 } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { listEvents, type EventRecord, getEventAreas, listAreas, type Area } from '@/lib/serverComm';
+import { bootstrapEvents, type EventRecord, getEventAreas, type Area } from '@/lib/serverComm';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { formatTimeTo12Hour } from '@/lib/time';
 
@@ -86,8 +86,18 @@ export default function EventsCalendar() {
       try {
         setLoading(true);
         setError(null);
-        const rows = await listEvents({ from: fromStr, to: toStr, includePast: true });
-        if (!aborted) setEvents(rows);
+        const boot = await bootstrapEvents({ from: fromStr, to: toStr, includePast: true });
+        if (aborted) return;
+        setEvents(boot.events);
+        // Seed area color map from active areas
+        const colorMap = new Map<string, string>();
+        for (const a of boot.areasActive || []) colorMap.set(a.id, a.color || 'var(--secondary)');
+        setAreaColors(colorMap);
+        // Seed areas-by-event cache and notify listeners
+        Object.entries(boot.areasByEvent || {}).forEach(([eventId, areas]) => {
+          eventAreasCache.set(eventId, areas);
+          try { window.dispatchEvent(new CustomEvent('event-areas-updated', { detail: { eventId, areas } })); } catch {}
+        });
       } catch (e: any) {
         if (!aborted) {
           setEvents([]);
@@ -100,22 +110,7 @@ export default function EventsCalendar() {
     return () => { aborted = true; };
   }, [fromStr, toStr]);
 
-  // Load authoritative area color mapping (ensures updated colors are reflected)
-  useEffect(() => {
-    let aborted = false;
-    (async () => {
-      try {
-        const all = await listAreas({ active: true });
-        if (aborted) return;
-        const map = new Map<string, string>();
-        for (const a of all || []) {
-          map.set(a.id, a.color || 'var(--secondary)');
-        }
-        setAreaColors(map);
-      } catch {}
-    })();
-    return () => { aborted = true; };
-  }, []);
+  // Area colors now come from bootstrap; no extra call needed
 
   const onMonthChange = (next: Date) => {
     setVisibleMonth(startOfMonth(next));
@@ -370,7 +365,10 @@ export default function EventsCalendar() {
                       <button
                         key={ev.id}
                         type="button"
-                        onClick={() => navigate(`/events/${encodeURIComponent(ev.id)}`)}
+                        onClick={() => {
+                          const urlId = String(ev.id).replace(/^legacy-ev:/, '');
+                          navigate(`/events/${encodeURIComponent(urlId)}`);
+                        }}
                         className={`relative w-full text-left text-[11px] leading-tight truncate rounded px-[4px] pt-0.5 pb-[3px] focus:outline-none focus:ring-2 hover:ring-2 ring-offset-1 ring-offset-white dark:ring-offset-[#0a0f1c] transition ${color}`}
                         title={`${ev.title}`}
                       >
