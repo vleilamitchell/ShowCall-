@@ -11,7 +11,6 @@ export const eventSeries = pgTable('event_series', {
   defaultEndTime: text('default_end_time').notNull().default('23:59'),
   titleTemplate: text('title_template'),
   promoterTemplate: text('promoter_template'),
-  artistsTemplate: text('artists_template'),
   templateJson: jsonb('template_json'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

@@ -49,7 +49,6 @@ export async function create(c: Context) {
     startTime: (typeof body.startTime === 'string' && body.startTime.trim()) || '00:00',
     endTime: (typeof body.endTime === 'string' && body.endTime.trim()) || '23:59',
     description: normalize(body.description),
-    artists: normalize(body.artists),
     ticketUrl: normalize(body.ticketUrl),
     eventPageUrl: normalize(body.eventPageUrl),
     promoAssetsUrl: normalize(body.promoAssetsUrl),
@@ -86,7 +85,7 @@ export async function patch(c: Context) {
   if (typeof body.startTime === 'string') patch.startTime = body.startTime.trim();
   if (typeof body.endTime === 'string') patch.endTime = body.endTime.trim();
   if (body.description !== undefined) patch.description = s(body.description) as any;
-  if (body.artists !== undefined) patch.artists = s(body.artists) as any;
+  if ('seriesId' in body) patch.seriesId = (typeof body.seriesId === 'string' && body.seriesId.trim()) ? String(body.seriesId).trim() : null as any;
   if ('ticketUrl' in body) patch.ticketUrl = s(body.ticketUrl) as any;
   if ('eventPageUrl' in body) patch.eventPageUrl = s(body.eventPageUrl) as any;
   if ('promoAssetsUrl' in body) patch.promoAssetsUrl = s(body.promoAssetsUrl) as any;

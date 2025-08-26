@@ -562,7 +562,6 @@ async function main() {
             startTime: normalizeTime(pick(ev, ['start_time', 'start']) ?? '00:00'),
             endTime: normalizeTime(pick(ev, ['end_time', 'end']) ?? '23:59'),
             description: asString(pick(ev, ['description', 'desc'])),
-            artists: asString(pick(ev, ['artists'])),
             ticketUrl: asString(pick(ev, ['ticket_url'])),
             eventPageUrl: asString(pick(ev, ['event_page_url'])),
             promoAssetsUrl: asString(pick(ev, ['promo_assets_url'])),
@@ -597,7 +596,6 @@ async function main() {
             defaultEndTime: String(pick(s, ['default_end_time']) ?? '23:59'),
             titleTemplate: asString(pick(s, ['title_template'])),
             promoterTemplate: asString(pick(s, ['promoter_template'])),
-            artistsTemplate: asString(pick(s, ['artists_template'])),
             templateJson: safeJson(pick(s, ['template_json'])),
           }).onConflictDoNothing();
           stats.seriesInserted += 1;

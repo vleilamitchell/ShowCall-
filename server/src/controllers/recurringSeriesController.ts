@@ -51,7 +51,6 @@ export async function create(c: Context) {
     defaultEndTime,
     titleTemplate: (typeof body.titleTemplate === 'string' ? body.titleTemplate.trim() : null),
     promoterTemplate: (typeof body.promoterTemplate === 'string' ? body.promoterTemplate.trim() : null),
-    artistsTemplate: (typeof body.artistsTemplate === 'string' ? body.artistsTemplate.trim() : null),
     templateJson: body.templateJson ?? null,
   } as const;
 
@@ -98,7 +97,6 @@ export async function patch(c: Context) {
   if ('defaultEndTime' in body) { if (!isValidTimeStr(body.defaultEndTime)) return c.json({ error: 'invalid defaultEndTime' }, 400); patch.defaultEndTime = body.defaultEndTime; }
   if ('titleTemplate' in body) patch.titleTemplate = (typeof body.titleTemplate === 'string' ? body.titleTemplate.trim() : null);
   if ('promoterTemplate' in body) patch.promoterTemplate = (typeof body.promoterTemplate === 'string' ? body.promoterTemplate.trim() : null);
-  if ('artistsTemplate' in body) patch.artistsTemplate = (typeof body.artistsTemplate === 'string' ? body.artistsTemplate.trim() : null);
   if ('templateJson' in body) patch.templateJson = body.templateJson ?? null;
   patch.updatedAt = new Date();
   if (patch.startDate && patch.endDate && patch.startDate > patch.endDate) return c.json({ error: 'startDate must be <= endDate' }, 400);
@@ -195,7 +193,7 @@ export async function preview(c: Context) {
   // Default fromDate to series.startDate if not provided
   if (!fromDate && series.startDate) fromDate = series.startDate as any;
   const dates = computeOccurrences(series as any, rule as any, { fromDate, untilDate });
-  return c.json({ dates, template: ((): any => { const t = (series as any); return { status: t.defaultStatus, startTime: t.defaultStartTime, endTime: t.defaultEndTime, title: t.titleTemplate, promoter: t.promoterTemplate, artists: t.artistsTemplate }; })() });
+  return c.json({ dates, template: ((): any => { const t = (series as any); return { status: t.defaultStatus, startTime: t.defaultStartTime, endTime: t.defaultEndTime, title: t.titleTemplate, promoter: t.promoterTemplate }; })() });
 }
 
 export async function generate(c: Context) {

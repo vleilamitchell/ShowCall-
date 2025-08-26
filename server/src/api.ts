@@ -124,8 +124,7 @@ eventsRoutes.get('/', async (c) => {
       conditions.push(
         or(
           ilike(schema.events.title, pattern),
-          ilike(schema.events.promoter, pattern),
-          ilike(schema.events.artists, pattern)
+          ilike(schema.events.promoter, pattern)
         )
       );
     }
@@ -237,10 +236,10 @@ eventsRoutes.post('/', async (c) => {
       startTime: (typeof body.startTime === 'string' && body.startTime.trim()) || '00:00',
       endTime: (typeof body.endTime === 'string' && body.endTime.trim()) || '23:59',
       description: normalize(body.description),
-      artists: normalize(body.artists),
       ticketUrl: normalize(body.ticketUrl),
       eventPageUrl: normalize(body.eventPageUrl),
       promoAssetsUrl: normalize(body.promoAssetsUrl),
+      seriesId: (typeof body.seriesId === 'string' && body.seriesId.trim()) || null,
     } as const;
 
     // Validate URLs if provided
@@ -299,7 +298,7 @@ eventsRoutes.patch('/:eventId', async (c) => {
     if (typeof body.startTime === 'string') patch.startTime = body.startTime.trim();
     if (typeof body.endTime === 'string') patch.endTime = body.endTime.trim();
     if (body.description !== undefined) patch.description = normalize(body.description);
-    if (body.artists !== undefined) patch.artists = normalize(body.artists);
+    if ('seriesId' in body) patch.seriesId = (typeof body.seriesId === 'string' && body.seriesId.trim()) ? body.seriesId.trim() : null;
     if ('ticketUrl' in body) patch.ticketUrl = normalize(body.ticketUrl);
     if ('eventPageUrl' in body) patch.eventPageUrl = normalize(body.eventPageUrl);
     if ('promoAssetsUrl' in body) patch.promoAssetsUrl = normalize(body.promoAssetsUrl);

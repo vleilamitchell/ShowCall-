@@ -12,6 +12,7 @@ import { EventShiftsPanel } from '@/features/events/EventShiftsPanel';
 import { EventAreasPanel } from '@/features/events/EventAreasPanel';
 import { EventMarketingPanel } from '@/features/events/EventMarketingPanel';
 import { ListDetailLayout, List, FilterBar, useListDetail, useDebouncedPatch, type ResourceAdapter } from '@/features/listDetail';
+import SeriesAutocomplete from '@/components/SeriesAutocomplete';
 // removed time formatting from list row
 
 // Cache event areas in-memory to avoid repeated fetches while navigating
@@ -132,8 +133,8 @@ type CreateForm = {
   startTime: string;
   endTime: string;
   promoter: string;
-  artists: string;
   description: string;
+  seriesId?: string | null;
 };
 
 const defaultCreate: CreateForm = {
@@ -143,8 +144,8 @@ const defaultCreate: CreateForm = {
   startTime: '00:00',
   endTime: '23:59',
   promoter: '',
-  artists: '',
   description: '',
+  seriesId: null,
 };
 
 export function Events() {
@@ -187,7 +188,7 @@ export function Events() {
     get: async (id) => getEvent(String(id)),
     create: async (partial) => createEvent(partial as any),
     update: async (id, patch) => updateEvent(String(id), patch as any),
-    searchableFields: ['title', 'promoter', 'artists']
+    searchableFields: ['title', 'promoter']
   };
 
   const {
@@ -259,7 +260,7 @@ export function Events() {
         startTime: draftForm.startTime,
         endTime: draftForm.endTime,
         promoter: draftForm.promoter || undefined,
-        artists: draftForm.artists || undefined,
+        seriesId: draftForm.seriesId || undefined,
         description: draftForm.description || undefined,
       };
       await create(payload as any);
@@ -317,7 +318,7 @@ export function Events() {
       mutateItems(prev => prev.map(i => (i.id === updated.id ? updated : i)));
     }
   });
-  const { onChange: onArtistsChange, onBlurFlush: onArtistsBlur } = useDebouncedPatch<Partial<EventRecord>>({
+  const { onChange: onSeriesChange, onBlurFlush: onSeriesBlur } = useDebouncedPatch<Partial<EventRecord>>({
     applyPatch: async (patch) => {
       if (!selected) return;
       const updated = await updateEvent(selected.id, patch);
@@ -487,9 +488,9 @@ export function Events() {
                       <TimeField value={draftForm.endTime} onChange={(v) => setDraftForm({ ...draftForm, endTime: v || '' })} />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1">Artists</label>
-                    <Input value={draftForm.artists} onChange={(e) => setDraftForm({ ...draftForm, artists: e.target.value })} />
+                  <div className="col-span-2">
+                    <label className="block text-xs text-muted-foreground mb-1">Recurring Series</label>
+                    <SeriesAutocomplete value={draftForm.seriesId || null} onChange={(id) => setDraftForm({ ...draftForm, seriesId: id })} />
                   </div>
                   <div className="col-span-2">
                     <label className="block text-xs text-muted-foreground mb-1">Description</label>
@@ -522,9 +523,16 @@ export function Events() {
                       <TimeField value={selected.endTime} onChange={(v) => { const val = v || ''; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, endTime: val } : i))); onEndChange({ endTime: val }); onEndBlur(); }} />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1">Artists</label>
-                    <Input value={selected.artists || ''} onChange={(e) => { mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, artists: e.target.value } : i))); onArtistsChange({ artists: e.target.value || undefined }); }} onBlur={() => onArtistsBlur()} />
+                  <div className="col-span-2">
+                    <label className="block text-xs text-muted-foreground mb-1">Recurring Series</label>
+                    <SeriesAutocomplete
+                      value={selected.seriesId || null}
+                      onChange={(id) => {
+                        mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, seriesId: id } : i)));
+                        onSeriesChange({ seriesId: id || null });
+                        onSeriesBlur();
+                      }}
+                    />
                   </div>
                   <div className="col-span-2">
                     <label className="block text-xs text-muted-foreground mb-1">Description</label>

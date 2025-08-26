@@ -47,8 +47,7 @@ export async function listEvents(db: Database, params: ListEventsParams) {
     conditions.push(
       or(
         ilike(schema.events.title, pattern),
-        ilike(schema.events.promoter, pattern),
-        ilike(schema.events.artists, pattern)
+        ilike(schema.events.promoter, pattern)
       )
     );
   }

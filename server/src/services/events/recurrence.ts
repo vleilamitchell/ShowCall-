@@ -63,7 +63,6 @@ export function buildEventTemplate(series: any): { template: any; mergeStrategy:
   };
   if (series.titleTemplate) template.title = series.titleTemplate;
   if (series.promoterTemplate) template.promoter = series.promoterTemplate;
-  if (series.artistsTemplate) template.artists = series.artistsTemplate;
 
   const mergeStrategy: Record<string, 'overwrite' | 'fillEmpty' | 'append'> = {
     status: 'overwrite',
@@ -71,7 +70,6 @@ export function buildEventTemplate(series: any): { template: any; mergeStrategy:
     endTime: 'overwrite',
     title: 'fillEmpty',
     promoter: 'fillEmpty',
-    artists: 'fillEmpty',
     ticketUrl: 'fillEmpty',
     eventPageUrl: 'fillEmpty',
     promoAssetsUrl: 'fillEmpty',
@@ -143,7 +141,6 @@ export async function upsertEventsForSeries(seriesId: string, params: { fromDate
           startTime: template.startTime,
           endTime: template.endTime,
           promoter: template.promoter || null,
-          artists: template.artists || null,
           ticketUrl: template.ticketUrl || null,
           eventPageUrl: template.eventPageUrl || null,
           promoAssetsUrl: template.promoAssetsUrl || null,
@@ -175,7 +172,6 @@ export async function upsertEventsForSeries(seriesId: string, params: { fromDate
             startTime: next.startTime,
             endTime: next.endTime,
             promoter: next.promoter,
-            artists: next.artists,
             ticketUrl: next.ticketUrl,
             eventPageUrl: next.eventPageUrl,
             promoAssetsUrl: next.promoAssetsUrl,

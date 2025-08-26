@@ -103,10 +103,10 @@ export type EventRecord = {
   startTime: string; // HH:mm
   endTime: string; // HH:mm
   description?: string | null;
-  artists?: string | null;
   ticketUrl?: string | null;
   eventPageUrl?: string | null;
   promoAssetsUrl?: string | null;
+  seriesId?: string | null;
   updatedAt?: string;
 };
 
@@ -513,7 +513,6 @@ export type EventSeries = {
   defaultEndTime: string;
   titleTemplate?: string | null;
   promoterTemplate?: string | null;
-  artistsTemplate?: string | null;
   templateJson?: any;
   updatedAt?: string;
 };
