@@ -249,6 +249,7 @@ export const api: {
   createArea?: typeof createArea;
   updateArea?: typeof updateArea;
   deleteArea?: typeof deleteArea;
+  getAreasForEvents?: typeof getAreasForEvents;
   getEventAreas?: typeof getEventAreas;
   replaceEventAreas?: typeof replaceEventAreas;
   addEventArea?: typeof addEventArea;
@@ -994,6 +995,13 @@ export async function getEventAreas(eventId: string) {
   return response.json() as Promise<Area[]>;
 }
 
+export async function getAreasForEvents(eventIds: string[]) {
+  if (!Array.isArray(eventIds) || eventIds.length === 0) return {} as Record<string, Area[]>;
+  const ids = eventIds.join(',');
+  const response = await fetchWithAuth(`/api/v1/events/_bulk/areas?ids=${encodeURIComponent(ids)}`);
+  return response.json() as Promise<Record<string, Area[]>>;
+}
+
 export async function replaceEventAreas(eventId: string, areaIds: string[]) {
   const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}/areas`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ areaIds }),
@@ -1020,6 +1028,7 @@ api.replaceEventAreas = replaceEventAreas as any;
 api.addEventArea = addEventArea as any;
 api.removeEventArea = removeEventArea as any;
 api.getEventAreas = getEventAreas as any;
+api.getAreasForEvents = getAreasForEvents as any;
 api.reorderAreas = reorderAreas as any;
 api.getEventAreas = getEventAreas as any;
 api.replaceEventAreas = replaceEventAreas as any;

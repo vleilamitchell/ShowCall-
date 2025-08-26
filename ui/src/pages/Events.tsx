@@ -4,7 +4,7 @@ import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { listEvents, createEvent, updateEvent, deleteEvent, type EventRecord, getEvent, getEventAreas, type Area } from '@/lib/serverComm';
+import { listEvents, createEvent, updateEvent, deleteEvent, type EventRecord, getEvent, getEventAreas, getAreasForEvents, type Area } from '@/lib/serverComm';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { EventShiftsPanel } from '@/features/events/EventShiftsPanel';
@@ -159,6 +159,24 @@ export function Events() {
     resourceKey: 'events',
     adapter: eventsAdapter,
   });
+
+  // Prefetch area chips in bulk to avoid N requests on first render
+  useEffect(() => {
+    if (!items || items.length === 0) return;
+    const idsToFetch = items
+      .map((e) => e.id)
+      .filter((id) => !eventAreasCache.has(id));
+    if (idsToFetch.length === 0) return;
+    getAreasForEvents(idsToFetch)
+      .then((map) => {
+        Object.entries(map).forEach(([eventId, areas]) => {
+          eventAreasCache.set(eventId, areas);
+          const evt = new CustomEvent('event-areas-updated', { detail: { eventId, areas } });
+          window.dispatchEvent(evt);
+        });
+      })
+      .catch(() => { /* ignore; per-item components will fallback to individual fetch */ });
+  }, [items]);
 
   const onSaveDraft = async () => {
     if (!draftForm.title.trim() || draftSubmitting) return;

@@ -13,6 +13,24 @@ export async function listAreasForEvent(db: Database, eventId: string) {
     .orderBy(asc(schema.areas.sortOrder), asc(schema.areas.name));
 }
 
+export async function listAreasForEventIds(db: Database, eventIds: string[]) {
+  if (eventIds.length === 0) return [] as Array<{ eventId: string; id: string; name: string; description: string | null; color: string | null; active: boolean; updatedAt: Date | null }>;
+  return db
+    .select({
+      eventId: schema.eventAreas.eventId,
+      id: schema.areas.id,
+      name: schema.areas.name,
+      description: schema.areas.description,
+      color: schema.areas.color,
+      active: schema.areas.active,
+      updatedAt: schema.areas.updatedAt,
+    })
+    .from(schema.eventAreas)
+    .innerJoin(schema.areas, eq(schema.eventAreas.areaId, schema.areas.id))
+    .where((inArray as any)(schema.eventAreas.eventId, eventIds))
+    .orderBy(asc(schema.areas.sortOrder), asc(schema.areas.name));
+}
+
 export async function replaceAreasForEvent(db: Database, eventId: string, incomingIds: string[]) {
   return withTransaction(async (tx) => {
     if (incomingIds.length > 0) {

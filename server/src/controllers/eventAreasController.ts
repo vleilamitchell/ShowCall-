@@ -10,6 +10,21 @@ export async function list(c: Context) {
   return c.json(rows);
 }
 
+export async function listForMany(c: Context) {
+  const db = await getDatabase();
+  const idsParam = c.req.query('ids') || '';
+  const ids = idsParam.split(',').map((s) => s.trim()).filter(Boolean);
+  if (ids.length === 0) return c.json({});
+  const rows = await repo.listAreasForEventIds(db, ids);
+  const map: Record<string, any[]> = {};
+  for (const r of rows as any[]) {
+    const eid = r.eventId as string;
+    if (!map[eid]) map[eid] = [];
+    map[eid].push({ id: r.id, name: r.name, description: r.description, color: r.color, active: r.active, updatedAt: r.updatedAt });
+  }
+  return c.json(map);
+}
+
 export async function replace(c: Context) {
   const db = await getDatabase();
   const eventId = c.req.param('eventId');
