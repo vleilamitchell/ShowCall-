@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
-import { api, DepartmentRecord, ScheduleRecord, ShiftRecord, PositionRecord, EligibleEmployee, Area } from '@/lib/serverComm';
+import { api, DepartmentRecord, ScheduleRecord, ShiftRecord, PositionRecord, EligibleEmployee, Area, EmployeeRecord } from '@/lib/serverComm';
 import { ListDetailLayout } from '@/features/listDetail/components/ListDetailLayout';
 import { List } from '@/features/listDetail';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,8 @@ import { DateField } from '@/components/date-field';
 import { TimeField } from '@/components/time-field';
 import { formatTimeTo12Hour } from '@/lib/time';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreVertical, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Rollup } from '@/components/ui/rollup';
 import { AssignmentPicker } from '@/components/assignment-picker';
@@ -420,7 +422,7 @@ function ShiftDetail({ selectedId, schedules }: { selectedId: string | null; sch
 }
 
 function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shiftId: string }) {
-  const [assignments, setAssignments] = useState<Array<{ id: string; requiredPositionId: string; assigneeEmployeeId: string | null }>>([]);
+  const [assignments, setAssignments] = useState<Array<{ id: string; requiredPositionId: string; assigneeEmployeeId: string | null; areaId: string | null }>>([]);
   const [positions, setPositions] = useState<PositionRecord[]>([]);
   const [eligible, setEligible] = useState<Record<string, EligibleEmployee[]>>({});
   const [selectedPositionId, setSelectedPositionId] = useState<string>('');
@@ -428,10 +430,12 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
   const [selectedAreaId, setSelectedAreaId] = useState<string>('');
   const [busy, setBusy] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>('');
+  const [employeesById, setEmployeesById] = useState<Record<string, string>>({});
 
   const load = async () => {
     try {
-      const [rows, pos, evtAreas] = await Promise.all([
+      const [rows, pos, evtAreas, emps] = await Promise.all([
         api.listAssignments?.(departmentId, shiftId),
         api.listPositions?.(departmentId),
         (async () => {
@@ -444,11 +448,20 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
           } catch {}
           return [] as Area[];
         })(),
+        (async () => {
+          try {
+            const list = await api.listEmployees?.(departmentId);
+            return list || [];
+          } catch { return [] as EmployeeRecord[]; }
+        })(),
       ]);
-      setAssignments((rows || []).map((r) => ({ id: r.id, requiredPositionId: r.requiredPositionId, assigneeEmployeeId: r.assigneeEmployeeId ?? null })));
+      setAssignments((rows || []).map((r) => ({ id: r.id, requiredPositionId: r.requiredPositionId, assigneeEmployeeId: r.assigneeEmployeeId ?? null, areaId: r.areaId ?? null })));
       const ps = pos || [];
       setPositions(ps);
       setAreas(evtAreas || []);
+      const empMap: Record<string, string> = {};
+      (emps || []).forEach((e) => { empMap[e.id] = e.fullName || e.name || e.id; });
+      setEmployeesById(empMap);
       // Default selected position: first with any assignment or first available
       setSelectedPositionId((prev) => {
         if (prev) return prev;
@@ -457,6 +470,8 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
       });
       // Default area: first area if present
       setSelectedAreaId((prev) => prev || (evtAreas && evtAreas.length > 0 ? evtAreas[0].id : ''));
+      // Default selected assignment: first in list
+      setSelectedAssignmentId((prev) => prev || ((rows && rows[0]?.id) || ''));
     } catch (e: any) {
       setErr(e?.message || 'Failed to load assignments');
     }
@@ -475,41 +490,32 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
 
   useEffect(() => { if (selectedPositionId) { void ensureEligibleLoaded(selectedPositionId); } }, [selectedPositionId]);
 
-  const assignedForSelected = useMemo(() => assignments.filter(a => a.requiredPositionId === selectedPositionId), [assignments, selectedPositionId]);
-  const assignedEmployeeIds = useMemo(() => new Set(assignedForSelected.filter(a => a.assigneeEmployeeId).map(a => a.assigneeEmployeeId as string)), [assignedForSelected]);
+  const selectedAssignment = useMemo(() => assignments.find(a => a.id === selectedAssignmentId) || null, [assignments, selectedAssignmentId]);
   const pickerItems = useMemo(() => {
     const elig = eligible[selectedPositionId] || [];
     return elig.map(e => ({ id: e.id, label: e.name }));
   }, [eligible, selectedPositionId]);
 
   const assignEmployee = async (employeeId: string) => {
-    if (!selectedPositionId) return;
+    if (!selectedAssignment) return;
     setBusy(true);
     setErr(null);
     try {
-      // Reuse an open slot if present; otherwise create one
-      const open = assignments.find(a => a.requiredPositionId === selectedPositionId && !a.assigneeEmployeeId);
-      if (open) {
-        const updated = await api.updateAssignment?.(open.id, { assigneeEmployeeId: employeeId });
-        if (updated) setAssignments(prev => prev.map(a => a.id === open.id ? { ...a, assigneeEmployeeId: updated.assigneeEmployeeId ?? null } : a));
-      } else {
-        const created = await api.createAssignment?.(departmentId, { shiftId, requiredPositionId: selectedPositionId, assigneeEmployeeId: employeeId, areaId: selectedAreaId || undefined });
-        if (created) setAssignments(prev => [...prev, { id: created.id, requiredPositionId: created.requiredPositionId, assigneeEmployeeId: created.assigneeEmployeeId ?? null }]);
-      }
+      const updated = await api.updateAssignment?.(selectedAssignment.id, { assigneeEmployeeId: employeeId });
+      if (updated) setAssignments(prev => prev.map(a => a.id === selectedAssignment.id ? { ...a, assigneeEmployeeId: updated.assigneeEmployeeId ?? null } : a));
     } catch (e: any) {
       setErr(e?.message || 'Failed to assign');
     } finally { setBusy(false); }
   };
 
   const unassignEmployee = async (employeeId: string) => {
-    if (!selectedPositionId) return;
+    if (!selectedAssignment) return;
     setBusy(true);
     setErr(null);
     try {
-      const row = assignments.find(a => a.requiredPositionId === selectedPositionId && a.assigneeEmployeeId === employeeId);
-      if (!row) return;
-      await api.deleteAssignment?.(row.id);
-      setAssignments(prev => prev.filter(a => a.id !== row.id));
+      if (selectedAssignment.assigneeEmployeeId !== employeeId) return;
+      const updated = await api.updateAssignment?.(selectedAssignment.id, { assigneeEmployeeId: null });
+      if (updated) setAssignments(prev => prev.map(a => a.id === selectedAssignment.id ? { ...a, assigneeEmployeeId: null } : a));
     } catch (e: any) {
       setErr(e?.message || 'Failed to unassign');
     } finally { setBusy(false); }
@@ -522,7 +528,8 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
     try {
       const created = await api.createAssignment?.(departmentId, { shiftId, requiredPositionId: selectedPositionId, areaId: selectedAreaId || undefined });
       if (created) {
-        setAssignments(prev => [...prev, { id: created.id, requiredPositionId: created.requiredPositionId, assigneeEmployeeId: created.assigneeEmployeeId ?? null }]);
+        setAssignments(prev => [...prev, { id: created.id, requiredPositionId: created.requiredPositionId, assigneeEmployeeId: created.assigneeEmployeeId ?? null, areaId: created.areaId ?? null }]);
+        setSelectedAssignmentId(created.id);
       }
     } catch (e: any) {
       setErr(e?.message || 'Failed to add slot');
@@ -531,24 +538,28 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
     }
   };
 
+  const deleteAssignmentLocal = async (assignmentId: string) => {
+    const row = assignments.find(a => a.id === assignmentId);
+    const posName = row ? (positions.find(p => p.id === row.requiredPositionId)?.name || row.requiredPositionId) : '';
+    const ok = window.confirm(`Delete assignment${posName ? ` for ${posName}` : ''}? This cannot be undone.`);
+    if (!ok || !row) return;
+    try {
+      await api.deleteAssignment?.(assignmentId);
+      setAssignments(prev => prev.filter(a => a.id !== assignmentId));
+      if (selectedAssignmentId === assignmentId) setSelectedAssignmentId('');
+    } catch (e: any) {
+      setErr(e?.message || 'Failed to delete assignment');
+    }
+  };
+
   // Stats and derived lists
   const totalSlots = assignments.length;
   const totalAssigned = assignments.filter(a => a.assigneeEmployeeId).length;
-  const positionStats = useMemo(() => {
-    const byId = new Map<string, { id: string; name: string; total: number; assigned: number; open: number }>();
-    positions.forEach(p => byId.set(p.id, { id: p.id, name: p.name, total: 0, assigned: 0, open: 0 }));
-    assignments.forEach(a => {
-      const s = byId.get(a.requiredPositionId) || { id: a.requiredPositionId, name: positions.find(p => p.id === a.requiredPositionId)?.name || a.requiredPositionId, total: 0, assigned: 0, open: 0 };
-      s.total += 1;
-      if (a.assigneeEmployeeId) s.assigned += 1; else s.open += 1;
-      byId.set(a.requiredPositionId, s);
-    });
-    // Ensure at least some positions exist
-    return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [positions, assignments]);
-
-  const [showOnlyUsed, setShowOnlyUsed] = useState<boolean>(false);
-  const visiblePositions = useMemo(() => showOnlyUsed ? positionStats.filter(s => s.total > 0) : positionStats, [positionStats, showOnlyUsed]);
+  const positionById = useMemo(() => {
+    const map = new Map<string, PositionRecord>();
+    positions.forEach(p => map.set(p.id, p));
+    return map;
+  }, [positions]);
 
   const rollupSummary = (
     <div className="flex items-center gap-2">
@@ -565,33 +576,55 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <div className="text-xs text-muted-foreground">Positions</div>
-                <Button size="sm" variant={showOnlyUsed ? 'default' : 'outline'} onClick={() => setShowOnlyUsed(v => !v)}>{showOnlyUsed ? 'Showing used' : 'Show used'}</Button>
+                <div className="text-xs text-muted-foreground">Assignments</div>
               </div>
               <div className="rounded-md border divide-y">
-                {visiblePositions.length === 0 ? (
-                  <div className="p-3 text-sm text-muted-foreground">No positions</div>
+                {assignments.length === 0 ? (
+                  <div className="p-3 text-sm text-muted-foreground">No assignments</div>
                 ) : (
-                  visiblePositions.map(s => {
-                    const areaName = areas.find(a => a.id === selectedAreaId)?.name;
-                    const label = areaName ? `${areaName} - ${s.name}` : s.name;
+                  assignments.map(a => {
+                    const posName = positionById.get(a.requiredPositionId)?.name || a.requiredPositionId;
+                    const areaName = a.areaId ? (areas.find(ar => ar.id === a.areaId)?.name) : undefined;
+                    const assigneeName = a.assigneeEmployeeId ? (employeesById[a.assigneeEmployeeId] || a.assigneeEmployeeId) : 'Unassigned';
                     return (
-                      <button
-                        key={s.id}
-                        className={`w-full text-left p-2 hover:bg-muted/50 ${selectedPositionId === s.id ? 'bg-muted/50' : ''}`}
-                        onClick={() => setSelectedPositionId(s.id)}
+                      <div
+                        key={a.id}
+                        className={`w-full p-2 hover:bg-muted/50 ${selectedAssignmentId === a.id ? 'bg-muted/50' : ''}`}
                       >
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 truncate text-sm">{label}</div>
+                          <button className="flex-1 text-left truncate text-sm" onClick={() => { setSelectedAssignmentId(a.id); setSelectedPositionId(a.requiredPositionId); setSelectedAreaId(a.areaId || ''); }}>
+                            <div className="truncate">{areaName ? `${areaName} - ${posName}` : posName}</div>
+                            <div className="text-xs text-muted-foreground truncate">{assigneeName}</div>
+                          </button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="size-6 inline-flex items-center justify-center rounded hover:bg-accent" onClick={(e) => e.stopPropagation()}>
+                                <MoreVertical className="size-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); void deleteAssignmentLocal(a.id); }}>
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                      </button>
+                      </div>
                     );
                   })
                 )}
               </div>
               <div className="mt-2 flex items-center gap-2">
                 <select
-                  className="border rounded px-2 py-1 text-sm flex-1"
+                  className="border rounded px-2 py-1 text-sm w-[46%]"
+                  value={selectedAreaId}
+                  onChange={(e) => setSelectedAreaId(e.target.value)}
+                >
+                  <option value="">Area…</option>
+                  {areas.map(a => (<option key={a.id} value={a.id}>{a.name}</option>))}
+                </select>
+                <select
+                  className="border rounded px-2 py-1 text-sm w-[46%]"
                   value={selectedPositionId}
                   onChange={(e) => setSelectedPositionId(e.target.value)}
                 >
@@ -600,26 +633,20 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
-                <select
-                  className="border rounded px-2 py-1 text-sm"
-                  value={selectedAreaId}
-                  onChange={(e) => setSelectedAreaId(e.target.value)}
-                >
-                  <option value="">Area…</option>
-                  {areas.map(a => (<option key={a.id} value={a.id}>{a.name}</option>))}
-                </select>
-                <Button size="sm" onClick={addSlot} disabled={busy || !selectedPositionId}>Add slot</Button>
+              </div>
+              <div className="mt-2">
+                <Button size="sm" onClick={addSlot} disabled={busy || !selectedPositionId}>+Add</Button>
               </div>
             </div>
             <div>
-              {!selectedPositionId ? (
-                <div className="p-3 text-sm text-muted-foreground border rounded-md">Select a position to manage assignments</div>
+              {!selectedAssignment ? (
+                <div className="p-3 text-sm text-muted-foreground border rounded-md">Select an assignment to choose an employee</div>
               ) : (
                 <AssignmentPicker
                   items={pickerItems}
-                  isSelected={(id) => assignedEmployeeIds.has(id)}
+                  isSelected={(id) => selectedAssignment?.assigneeEmployeeId === id}
                   onAdd={assignEmployee}
-                  onRemove={unassignEmployee}
+                  onRemove={(id) => unassignEmployee(id)}
                   searchPlaceholder="Search employees"
                   rowClickMode
                 />

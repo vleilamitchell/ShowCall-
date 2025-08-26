@@ -18,7 +18,8 @@
     "deploy": "cd server && wrangler deploy && echo 'Frontend deployment: Connect your Git repo to Cloudflare Pages'",
     "db:backup": "node scripts/db-backup.js",
     "db:import:latest": "node scripts/db-import-latest.js",
-    "db:import:legacy": "node scripts/db-import-legacy.js"
+    "db:import:legacy": "node scripts/db-import-legacy.js",
+    "db:migrate": "bash scripts/run-migrations.sh"
   },
   "engines": {
     "node": ">=20.0.0",

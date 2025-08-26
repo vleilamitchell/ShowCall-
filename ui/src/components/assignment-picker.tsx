@@ -53,7 +53,7 @@ export function AssignmentPicker({
                 return (
                   <div
                     key={i.id}
-                    className={`flex items-center gap-2 p-2 hover:bg-muted/50 ${rowClickMode ? 'cursor-pointer' : ''}`}
+                    className={`flex items-center gap-2 p-2 transition-colors hover:bg-accent/20 ${rowClickMode ? 'cursor-pointer' : ''} ${selected ? 'bg-accent/30' : ''}`}
                     onClick={rowClickMode ? (e) => { e.preventDefault(); void (selected ? onRemove(i.id) : onAdd(i.id)); } : undefined}
                   >
                     <div className="flex-1">
