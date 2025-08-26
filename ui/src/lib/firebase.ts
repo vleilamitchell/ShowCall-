@@ -31,13 +31,14 @@ declare global {
   }
 }
 
-if (typeof window !== 'undefined' && import.meta.env.VITE_EXPOSE_AUTH === 'true') {
+if (typeof window !== 'undefined') {
   try {
     window.__scAuth = auth;
     window.__scGetToken = async () => {
       const user = getAuth(app).currentUser;
       return user ? await user.getIdToken(true) : null;
     };
+    // eslint-disable-next-line no-console
     console.log('🔎 Exposed __scAuth and __scGetToken for debugging');
   } catch {}
 }
