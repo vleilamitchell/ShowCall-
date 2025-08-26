@@ -93,20 +93,57 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
     const db = await getDatabase(databaseUrl);
 
     // Upsert: insert if not exists, do nothing if exists
-    await db.insert(users)
-      .values({
-        id: firebaseUser.id,
-        email: firebaseUser.email!,
-        display_name: null,
-        photo_url: null,
-      })
-      .onConflictDoNothing();
+    try {
+      await db.insert(users)
+        .values({
+          id: firebaseUser.id,
+          email: firebaseUser.email!,
+          display_name: null,
+          photo_url: null,
+        })
+        .onConflictDoNothing();
+    } catch (e: any) {
+      if (getEnv('DEBUG_AUTH') === '1') {
+        console.error('[AUTH] DB insert users failed', { reason: e?.message || String(e) });
+      }
+      throw e;
+    }
 
     // Get the user (either just created or already existing)
-    const [user] = await db.select()
-      .from(users)
-      .where(eq(users.id, firebaseUser.id))
-      .limit(1);
+    let user;
+    try {
+      [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, firebaseUser.id))
+        .limit(1);
+    } catch (e: any) {
+      if (getEnv('DEBUG_AUTH') === '1') {
+        console.error('[AUTH] DB select user failed', { reason: e?.message || String(e) });
+      }
+      throw e;
+    }
+
+    // Fallback: legacy datasets may have a different user id but same email (unique)
+    if (!user && firebaseUser.email) {
+      try {
+        const rows = await db.select()
+          .from(users)
+          .where(eq(users.email, firebaseUser.email))
+          .limit(1);
+        user = rows[0];
+        if (getEnv('DEBUG_AUTH') === '1' && user) {
+          console.warn('[AUTH] Using email-based user mapping due to id mismatch', {
+            tokenUserId: firebaseUser.id,
+            mappedUserId: user.id,
+          });
+        }
+      } catch (e: any) {
+        if (getEnv('DEBUG_AUTH') === '1') {
+          console.error('[AUTH] DB email lookup failed', { reason: e?.message || String(e) });
+        }
+        throw e;
+      }
+    }
 
     if (!user) {
       throw new Error('Failed to create or retrieve user');
@@ -114,13 +151,26 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
 
     c.set('user', user);
     await next();
-  } catch (error) {
+  } catch (error: any) {
+    // If verification failed or header missing, return 401. Otherwise, rethrow to be handled upstream.
+    const msg = String(error?.message || error);
+    const isAuthProblem =
+      msg.includes('Missing or invalid Authorization header') ||
+      msg.includes('Invalid token') ||
+      msg.includes('Invalid emulator token') ||
+      msg.includes('Failed to create or retrieve user');
+
     if (getEnv('DEBUG_AUTH') === '1') {
-      console.error('[AUTH] Unauthorized', {
+      console.error('[AUTH] Auth middleware error', {
         requestId: (c as any).get?.('requestId') || undefined,
-        reason: (error as any)?.message || String(error),
+        reason: msg,
       });
     }
-    throw new AuthError('Unauthorized');
+
+    if (isAuthProblem) {
+      throw new AuthError('Unauthorized');
+    }
+    // Non-auth errors should not be mapped to 401
+    throw error;
   }
 }; 

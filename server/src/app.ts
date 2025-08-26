@@ -35,7 +35,8 @@ export function buildApp(options: BuildAppOptions = {}) {
     origin: '*',
     allowMethods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     // Explicitly allow Authorization for Firebase ID tokens and Content-Type for JSON bodies
-    allowHeaders: ['Authorization', 'Content-Type'],
+    // Include lowercase 'authorization' for preflight header checks in some browsers
+    allowHeaders: ['Authorization', 'authorization', 'Content-Type'],
     maxAge: 86400,
   }));
 
@@ -51,7 +52,7 @@ export function buildApp(options: BuildAppOptions = {}) {
   app.notFound((c) => c.json(errorBody('not_found', 'Not Found'), 404));
   app.onError((err, c) => {
     const mapped = mapErrorToResponse(err);
-    return c.json(mapped.body, mapped.status);
+    return c.json(mapped.body as any, { status: mapped.status as any });
   });
 
   // Route-level error handler wrapper
