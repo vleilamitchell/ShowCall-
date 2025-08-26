@@ -15,6 +15,9 @@ import { ListDetailLayout, List, FilterBar, useListDetail, useDebouncedPatch, ty
 
 // Cache event areas in-memory to avoid repeated fetches while navigating
 const eventAreasCache = new Map<string, Area[]>();
+// Track an in-flight bulk fetch to prevent per-item waterfalls
+let eventAreasBulkPromise: Promise<void> | null = null;
+let eventAreasBulkIds = new Set<string>();
 
 function formatDateMMDD(dateStr: string): string {
   // Expecting YYYY-MM-DD; fallback to original if unexpected
@@ -48,23 +51,39 @@ function EventAreaChips({ eventId }: { eventId: string }) {
         window.removeEventListener('event-areas-updated', onAreasUpdated as EventListener);
       };
     }
+    // If a bulk fetch is in-flight for this event, wait for it rather than issuing an individual call
+    if (eventAreasBulkPromise && eventAreasBulkIds.has(eventId)) {
+      setLoading(true);
+      return () => {
+        ignore = true;
+        window.removeEventListener('event-areas-updated', onAreasUpdated as EventListener);
+      };
+    }
+
+    // Small delay to allow parent bulk prefetch effect to schedule before falling back to individual request
     setLoading(true);
-    getEventAreas(eventId)
-      .then((res) => {
-        if (ignore) return;
-        eventAreasCache.set(eventId, res);
-        setAreas(res);
-      })
-      .catch(() => {
-        if (ignore) return;
-        setAreas([]);
-      })
-      .finally(() => {
-        if (ignore) return;
-        setLoading(false);
-      });
+    const t = setTimeout(() => {
+      if (ignore) return;
+      // If bulk started during the delay and includes this id, just wait for event
+      if (eventAreasBulkPromise && eventAreasBulkIds.has(eventId)) return;
+      getEventAreas(eventId)
+        .then((res) => {
+          if (ignore) return;
+          eventAreasCache.set(eventId, res);
+          setAreas(res);
+        })
+        .catch(() => {
+          if (ignore) return;
+          setAreas([]);
+        })
+        .finally(() => {
+          if (ignore) return;
+          setLoading(false);
+        });
+    }, 50);
     return () => {
       ignore = true;
+       clearTimeout(t as any);
       window.removeEventListener('event-areas-updated', onAreasUpdated as EventListener);
     };
   }, [eventId]);
@@ -167,7 +186,8 @@ export function Events() {
       .map((e) => e.id)
       .filter((id) => !eventAreasCache.has(id));
     if (idsToFetch.length === 0) return;
-    getAreasForEvents(idsToFetch)
+    eventAreasBulkIds = new Set(idsToFetch);
+    eventAreasBulkPromise = getAreasForEvents(idsToFetch)
       .then((map) => {
         Object.entries(map).forEach(([eventId, areas]) => {
           eventAreasCache.set(eventId, areas);
@@ -175,7 +195,11 @@ export function Events() {
           window.dispatchEvent(evt);
         });
       })
-      .catch(() => { /* ignore; per-item components will fallback to individual fetch */ });
+      .catch(() => { /* ignore; per-item components will fallback to individual fetch */ })
+      .finally(() => {
+        eventAreasBulkPromise = null;
+        eventAreasBulkIds.clear();
+      });
   }, [items]);
 
   const onSaveDraft = async () => {
