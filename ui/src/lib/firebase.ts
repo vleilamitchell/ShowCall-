@@ -1,11 +1,13 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, connectAuthEmulator, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import firebaseConfig from '../../firebase-config.json';
 
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+// Ensure auth state persists and is restored reliably across reloads
+setPersistence(auth, browserLocalPersistence).catch(() => {});
 export const googleProvider = new GoogleAuthProvider();
 
 // Connect to Firebase Auth emulator only when explicitly enabled
