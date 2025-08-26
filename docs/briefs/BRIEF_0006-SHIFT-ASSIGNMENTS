@@ -1,0 +1,112 @@
+You have a weighted bipartite assignment with extra constraints (roles, departments, leads, hours/rest). Model it once as an ILP for correctness and also ship a fast greedy+swap heuristic that uses the same scoring so results are consistent.
+
+Data model (minimal)
+
+Employees e with: availability windows; lead flag; per-(role,department) score prio[e,r,d] ∈ [0,9.9]; hour caps; cooldown/rest rules; existing assignments for fairness history.
+Events k with priority evtprio[k] ∈ [1,5], each yielding one or more shifts s carrying (k, role r, department d, start, end, need count, lead_required? bool).
+
+Define normalized employee priority P_e = prio[e,r,d]/9.9 for the relevant (r,d). Define normalized event priority W_k = evtprio[k]/5.
+
+Objective (shared by ILP and heuristic)
+
+Score assigning employee e to shift s as:
+
+U(e,s) = W_k * ( α * P_e + β * LeadBonus(e,s) ) - γ * Fatigue(e,s) - δ * Unfairness(e)
+
+
+LeadBonus is 1 if shift requires a lead and e is lead, else 0; you can also add a smaller bonus when the shift doesn’t require a lead but having one helps. Fatigue can be 0/1 for violations like short-turnaround risks or scaled with hours this week. Unfairness is the deviation from target hours or number of premium shifts for fairness smoothing. Typical starting weights: α=1.0, β=0.3, γ=0.2, δ=0.1; tune per venue.
+
+Hard constraints: employee must be available; skill/role match; at most one overlapping shift per employee; required leads satisfied when flagged; coverage: assigned count for (s) must meet need; legal rest and max-hours limits respected.
+
+ILP (gold standard)
+
+Binary x_{e,s} ∈ {0,1} meaning “assign employee e to shift s”. Maximize ∑_{e,s} U(e,s) x_{e,s} subject to:
+
+Coverage: for each shift s, ∑_e x_{e,s} = need[s] (or ≥ with slack and penalty if partial coverage allowed).
+
+One-at-a-time: for each e, any overlapping shifts s1,s2: x_{e,s1}+x_{e,s2} ≤ 1.
+
+Availability/skills: forbid x_{e,s} where e unavailable or lacks (r,d).
+
+Lead coverage: for each lead-required shift s, ∑_{e∈leads} x_{e,s} ≥ 1.
+
+Hours caps: for each e, ∑_s hours[s] x_{e,s} ≤ maxHours[e].
+
+Rest windows: encode as additional pairwise constraints or prefilter edges.
+This fits standard solvers (CBC, OR-Tools CP-SAT). Use slack variables with big-M penalties to allow graceful underfill when impossible.
+
+Heuristic (fast, near-optimal in practice)
+
+Precompute candidate lists per shift by filtering availability/skills/rest. Score each candidate with U(e,s).
+
+Order shifts by difficulty: primary key W_k descending, then “rarity” (fewest eligible candidates), then lead_required first, then earliest start.
+
+Greedy pass: for each shift in order, assign the top-scoring candidates up to need[s] while respecting per-employee conflicts; break ties by lower assigned hours then higher P_e.
+
+Improvement loop: local search with swaps:
+
+Single swap: if an unassigned e beats the worst assigned for s and doesn’t violate constraints, swap.
+
+Pair swap: try 2-opt between two shifts s1,s2 with employees e1,e2 to improve total U.
+
+Kempe-chain style reassignments: limited breadth-first reflow from a blocked high-priority shift.
+
+Anneal for 200–1000 iterations with a cooling schedule; accept uphill moves with decaying probability to escape local optima.
+
+Fairness polishing: compute each employee’s deviation from target hours; iteratively replace marginal assignments with close-scoring alternatives that reduce variance without hurting high-priority coverage.
+
+Pseudocode sketch:
+
+def schedule(shifts, employees):
+    C = {s: [e for e in employees if feasible(e,s)] for s in shifts}
+    score = lambda e,s: U(e,s)
+    order = sorted(shifts, key=lambda s: (-W[s.event], len(C[s]), not s.lead_required, s.start))
+
+    assign = {s: [] for s in shifts}
+    hours = defaultdict(float)
+
+    for s in order:
+        candidates = sorted(C[s], key=lambda e: (-score(e,s), hours[e], -P[e,s.role,s.dept]))
+        for e in candidates:
+            if len(assign[s]) == s.need: break
+            if not conflicts(e, s, assign): 
+                assign[s].append(e); hours[e] += s.hours
+
+    best = objective(assign)
+    T = 1.0
+    for it in range(MAX_ITERS):
+        s = pick_shift_weighted_by_priority(order)
+        e_out = pick_worst(assign[s], score)
+        e_in = best_alt_candidate(C[s], assign, e_out, score, hours)
+        if e_in and improves_or_anneals(assign, s, e_out, e_in, T):
+            swap(assign, s, e_out, e_in); update(hours)
+        T *= 0.995
+
+    assign = fairness_polish(assign, score, hours)
+    return assign
+
+Handling your priority scales
+
+Your employee priority is continuous 0.0–9.9 per-role-per-dept and event priority is 1–5. Multiplying W_k * P_e gives the intended effect: a 5-priority event roughly quintuples the influence of employee fit versus a 1-priority event. If you want diminishing returns at the top end, replace P_e with sqrt(P_e) or a piecewise function (e.g., linear up to 0.7 then taper).
+
+Leads
+
+Treat lead-required like a hard constraint with a bonus for surplus leads to encourage depth on complex shows. If leads are scarce, allow a soft violation with a heavy penalty so the solver can still produce a roster while flagging the miss.
+
+Fairness and stability
+
+Track rolling targets per employee (weekly hours, number of premium shifts, weekends). Put a small penalty on variance so schedules don’t whip-saw week to week. Add a “previous assignment inertia” bonus if you want stability for recurring events.
+
+Edge cases
+
+If a shift has zero eligible leads, lower the requirement to soft with a visible flag rather than failing the whole run. If coverage is impossible due to availability, underfill the lowest W_k shifts first by penalizing uncovered slots with Penalty_uncovered = W_k * big.
+
+Performance notes
+
+The greedy+swap heuristic runs in O(S·E log E + iterations·local_ops). With 200–1000 iterations you usually land within a few percent of ILP optimum. Use the ILP in nightly batches and the heuristic in the UI for “what-if” interactivity.
+
+Determinism
+
+Seed the RNG per schedule run and include it in the schedule metadata so replays reproduce results unless inputs change. Tie-breakers should be deterministic on (employee_id, shift_id) hashing to avoid jitter.
+
+This gives you a clear mathematical definition, a solvable exact form, and a practical heuristic that respects your lead flag and both priority scales.
