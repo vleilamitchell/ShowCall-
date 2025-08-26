@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, connectAuthEmulator, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, connectAuthEmulator, setPersistence, browserLocalPersistence, onAuthStateChanged } from 'firebase/auth';
 import firebaseConfig from '../../firebase-config.json';
 
 
@@ -30,6 +30,7 @@ declare global {
   interface Window {
     __scAuth?: ReturnType<typeof getAuth>;
     __scGetToken?: () => Promise<string | null>;
+    __scDebugAuth?: () => Promise<any>;
   }
 }
 
@@ -39,6 +40,32 @@ if (typeof window !== 'undefined') {
     window.__scGetToken = async () => {
       const user = getAuth(app).currentUser;
       return user ? await user.getIdToken(true) : null;
+    };
+    window.__scDebugAuth = async () => {
+      const out: any = {
+        appName: app.name,
+        projectId: (app.options as any)?.projectId,
+        hasAuth: !!auth,
+        currentUserNull: auth.currentUser == null,
+      };
+      if (!auth.currentUser) {
+        out.waitedForUser = true;
+        const user = await new Promise<any>((resolve) => {
+          const t = setTimeout(() => { try { unsub(); } catch {} ; resolve(null); }, 3000);
+          const unsub = onAuthStateChanged(auth, (u: any) => { clearTimeout(t); try { unsub(); } catch {} ; resolve(u); });
+        });
+        out.userAfterWait = !!user;
+      }
+      if (auth.currentUser) {
+        try {
+          const token = await auth.currentUser.getIdToken();
+          out.tokenPrefix = token.slice(0, 12);
+          out.tokenLength = token.length;
+        } catch (e: any) {
+          out.tokenError = String(e?.message || e);
+        }
+      }
+      return out;
     };
     // eslint-disable-next-line no-console
     console.log('🔎 Exposed __scAuth and __scGetToken for debugging');
