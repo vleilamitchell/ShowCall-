@@ -338,6 +338,11 @@ async function main() {
       findExact('positions') ||
       (await findCandidateTable(legacy, { nameIncludes: ['position', 'role', 'title'] })) ||
       null;
+    const employeePositionsJoinTableName =
+      findExact('employee_positions') ||
+      findExact('employee_position') ||
+      (await findCandidateTable(legacy, { columnsAll: ['employee_id', 'position_id'] })) ||
+      null;
     const areasTableName =
       findExact('areas') || (await findCandidateTable(legacy, { nameIncludes: ['area'] })) || null;
     const schedulesTableName =
@@ -349,7 +354,10 @@ async function main() {
     const eventAreasTableName =
       findExact('event_areas') || (await findCandidateTable(legacy, { nameIncludes: ['event_area'] })) || null;
     const seriesTableName =
-      findExact('event_series') || (await findCandidateTable(legacy, { nameIncludes: ['series'] })) || null;
+      findExact('event_series') ||
+      findExact('recurring_series') ||
+      (await findCandidateTable(legacy, { nameIncludes: ['series'] })) ||
+      null;
     const seriesRulesTableName =
       findExact('event_series_rules') || (await findCandidateTable(legacy, { nameIncludes: ['rule'] })) || null;
     const seriesAreasTableName =
@@ -365,7 +373,7 @@ async function main() {
     const unitConvTableName = findExact('unit_conversion') || (await findCandidateTable(legacy, { nameIncludes: ['conversion'] })) || null;
     const valuationAvgTableName = findExact('valuation_avg') || (await findCandidateTable(legacy, { nameIncludes: ['valuation'] })) || null;
 
-    console.log('Discovered legacy tables:', { deptTable, employeeTable, positionTable, areasTableName, schedulesTableName, shiftsTableName, eventsTableName, eventAreasTableName, seriesTableName, seriesRulesTableName, seriesAreasTableName, itemTableName, assetSpecsTableName, locationTableName, inventoryTxnTableName, reservationTableName, policyTableName, unitConvTableName, valuationAvgTableName });
+    console.log('Discovered legacy tables:', { deptTable, employeeTable, positionTable, employeePositionsJoinTableName, areasTableName, schedulesTableName, shiftsTableName, eventsTableName, eventAreasTableName, seriesTableName, seriesRulesTableName, seriesAreasTableName, itemTableName, assetSpecsTableName, locationTableName, inventoryTxnTableName, reservationTableName, policyTableName, unitConvTableName, valuationAvgTableName });
 
     const legacyDepartments = deptTable ? await loadLegacyRows(legacy, deptTable) : [];
     const legacyEmployees = employeeTable ? await loadLegacyRows(legacy, employeeTable) : [];
@@ -378,6 +386,7 @@ async function main() {
     const legacySeries = seriesTableName ? await loadLegacyRows(legacy, seriesTableName) : [];
     const legacySeriesRules = seriesRulesTableName ? await loadLegacyRows(legacy, seriesRulesTableName) : [];
     const legacySeriesAreas = seriesAreasTableName ? await loadLegacyRows(legacy, seriesAreasTableName) : [];
+    const legacyEmployeePositionsJoin = employeePositionsJoinTableName ? await loadLegacyRows(legacy, employeePositionsJoinTableName) : [];
     const legacyItems = itemTableName ? await loadLegacyRows(legacy, itemTableName) : [];
     const legacyAssetSpecs = assetSpecsTableName ? await loadLegacyRows(legacy, assetSpecsTableName) : [];
     const legacyLocations = locationTableName ? await loadLegacyRows(legacy, locationTableName) : [];
@@ -390,9 +399,11 @@ async function main() {
     await withTransaction(async (db) => {
       const nameToDeptId = await buildNameToDepartmentId(db);
       const nameToPosId = await buildNameToPositionId(db);
+      const legacyPosIdToNew = new Map<string, string>();
       const legacyDeptIdToNew = new Map<string, string>();
       const legacyItemIdToNew = new Map<string, string>();
       const legacyLocationIdToNew = new Map<string, string>();
+      const legacyEmpIdToDeptId = new Map<string, string>();
 
       // 1) Departments (from legacy table, else derive from employee department fields)
       if (legacyDepartments.length) {
@@ -428,25 +439,34 @@ async function main() {
       const unknownDeptId = await upsertDepartment(db, nameToDeptId, 'Unknown');
 
       // 2) Positions
-      const posTuples: Array<{ name: string; departmentName?: string }> = [];
+      const posTuples: Array<{ name: string; departmentId: string; legacyId?: string }> = [];
       for (const r of legacyPositions) {
         const name = pick(r, ['name', 'position', 'role', 'title']);
         const deptName = pick(r, ['department', 'dept']);
-        if (name) posTuples.push({ name: String(name).trim(), departmentName: deptName ? String(deptName).trim() : undefined });
+        const legacyDeptRef = pick(r, ['department_id', 'dept_id']);
+        let departmentId = unknownDeptId;
+        if (legacyDeptRef != null) {
+          const mapped = legacyDeptIdToNew.get(String(legacyDeptRef));
+          if (mapped) departmentId = mapped;
+        } else if (deptName) {
+          departmentId = nameToDeptId.get(toKey(String(deptName))) || unknownDeptId;
+        }
+        if (name) posTuples.push({ name: String(name).trim(), departmentId, legacyId: pick(r, ['id', 'position_id']) as any });
       }
       if (!posTuples.length) {
         for (const r of legacyEmployees) {
           const list = splitMulti(pick(r, ['position', 'positions', 'role', 'roles', 'title']));
           const deptName = pick(r, ['department', 'dept']);
-          for (const p of list) posTuples.push({ name: p, departmentName: deptName ? String(deptName).trim() : undefined });
+          const mappedDept = deptName ? (nameToDeptId.get(toKey(String(deptName))) || unknownDeptId) : unknownDeptId;
+          for (const p of list) posTuples.push({ name: p, departmentId: mappedDept });
         }
       }
-      for (const { name, departmentName } of posTuples) {
+      for (const { name, departmentId, legacyId } of posTuples) {
         if (!name) continue;
-        const deptId = departmentName ? nameToDeptId.get(toKey(departmentName)) || unknownDeptId : unknownDeptId;
         if (!options.dryRun) {
-          const id = await upsertPosition(db, nameToPosId, name, deptId);
+          const id = await upsertPosition(db, nameToPosId, name, departmentId);
           if (id) stats.positionsInserted += 1;
+          if (legacyId != null) legacyPosIdToNew.set(String(legacyId), id);
         }
       }
 
@@ -466,8 +486,15 @@ async function main() {
         const postalCode4 = pick(r, ['zip4', 'postal_code4']);
         const priority = pick(r, ['priority', 'rank']);
         const deptName = pick(r, ['department', 'dept', 'division', 'team']);
+        const maybeLegacyDeptId = pick(r, ['department_id', 'dept_id']);
 
-        const departmentId = deptName ? nameToDeptId.get(toKey(String(deptName))) || unknownDeptId : unknownDeptId;
+        let departmentId = unknownDeptId;
+        if (maybeLegacyDeptId != null) {
+          const legacyKey = String(maybeLegacyDeptId);
+          departmentId = legacyDeptIdToNew.get(legacyKey) || nameToDeptId.get(toKey(legacyKey)) || unknownDeptId;
+        } else if (deptName) {
+          departmentId = nameToDeptId.get(toKey(String(deptName))) || unknownDeptId;
+        }
 
         const composedName = fullName
           ? String(fullName)
@@ -499,6 +526,8 @@ async function main() {
           }).onConflictDoNothing();
           stats.employeesInserted += 1;
         }
+        const legacyKey = legacyId != null ? String(legacyId) : composedName;
+        legacyEmpIdToDeptId.set(legacyKey, departmentId);
 
         const empPositions = splitMulti(pick(r, ['position', 'positions', 'role', 'roles', 'title']));
         for (const posName of empPositions) {
@@ -516,6 +545,31 @@ async function main() {
             stats.employeePositionsInserted += 1;
           }
         }
+      // 3b) Legacy employee_position join table
+      for (const j of legacyEmployeePositionsJoin) {
+        const legacyEmp = pick(j, ['employee_id', 'emp_id']);
+        const legacyPos = pick(j, ['position_id', 'pos_id']);
+        if (!legacyEmp || !legacyPos) continue;
+        const employeeId = ensureId('legacy-emp', legacyEmp);
+        const positionId = legacyPosIdToNew.get(String(legacyPos));
+        if (!positionId) {
+          stats.warnings.push(`Skipped employee_position join; unmapped legacy position_id=${legacyPos}`);
+          continue;
+        }
+        const departmentId = legacyEmpIdToDeptId.get(String(legacyEmp)) || unknownDeptId;
+        if (!options.dryRun) {
+          const joinId = ensureId('legacy-emp-pos', `${employeeId}-${positionId}`);
+          await db.insert(employeePositionsTable).values({
+            id: joinId,
+            departmentId,
+            employeeId,
+            positionId,
+            priority: null as any,
+            isLead: false,
+          }).onConflictDoNothing();
+          stats.employeePositionsInserted += 1;
+        }
+      }
       }
 
       // 4) Areas

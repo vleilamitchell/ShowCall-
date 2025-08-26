@@ -773,6 +773,7 @@ export type AssignmentRecord = {
   shiftId: string;
   requiredPositionId: string;
   assigneeEmployeeId?: string | null;
+  areaId?: string | null;
   updatedAt?: string;
 };
 
@@ -784,7 +785,7 @@ export async function listAssignments(departmentId: string, shiftId?: string) {
   return response.json() as Promise<AssignmentRecord[]>;
 }
 
-export async function createAssignment(departmentId: string, payload: { shiftId: string; requiredPositionId: string; assigneeEmployeeId?: string | null }) {
+export async function createAssignment(departmentId: string, payload: { shiftId: string; requiredPositionId: string; assigneeEmployeeId?: string | null; areaId?: string | null }) {
   const response = await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(departmentId)}/assignments`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
   });

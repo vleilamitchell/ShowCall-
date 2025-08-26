@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Check } from 'lucide-react';
 
 export type AssignmentItem = {
   id: string;
@@ -16,6 +17,7 @@ export function AssignmentPicker({
   searchPlaceholder = 'Search',
   filterControls,
   heightPx = 420,
+  rowClickMode = false,
 }: {
   items: AssignmentItem[];
   isSelected: (id: string) => boolean;
@@ -24,6 +26,7 @@ export function AssignmentPicker({
   searchPlaceholder?: string;
   filterControls?: React.ReactNode;
   heightPx?: number;
+  rowClickMode?: boolean;
 }) {
   const [q, setQ] = useState('');
 
@@ -48,20 +51,28 @@ export function AssignmentPicker({
               {filtered.map((i) => {
                 const selected = isSelected(i.id);
                 return (
-                  <div key={i.id} className="flex items-center gap-2 p-2 hover:bg-muted/50">
+                  <div
+                    key={i.id}
+                    className={`flex items-center gap-2 p-2 hover:bg-muted/50 ${rowClickMode ? 'cursor-pointer' : ''}`}
+                    onClick={rowClickMode ? (e) => { e.preventDefault(); void (selected ? onRemove(i.id) : onAdd(i.id)); } : undefined}
+                  >
                     <div className="flex-1">
                       <div className="text-sm font-medium truncate">{i.label}</div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant={selected ? 'secondary' : 'outline'}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        void (selected ? onRemove(i.id) : onAdd(i.id));
-                      }}
-                    >
-                      {selected ? 'Remove' : 'Add'}
-                    </Button>
+                    {rowClickMode ? (
+                      selected ? <Check className="h-4 w-4 text-green-600" /> : null
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant={selected ? 'secondary' : 'outline'}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          void (selected ? onRemove(i.id) : onAdd(i.id));
+                        }}
+                      >
+                        {selected ? 'Remove' : 'Add'}
+                      </Button>
+                    )}
                   </div>
                 );
               })}

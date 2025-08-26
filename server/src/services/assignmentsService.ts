@@ -18,6 +18,7 @@ export async function create(departmentId: string, body: any) {
   const shiftId = String(body.shiftId || '').trim();
   const requiredPositionId = String(body.requiredPositionId || '').trim();
   const assigneeEmployeeId = String(body.assigneeEmployeeId || '').trim() || null;
+  const areaId = body.areaId == null || String(body.areaId).trim() === '' ? null : String(body.areaId).trim();
   if (!shiftId || !requiredPositionId) throw new Error('shiftId and requiredPositionId required');
 
   let id: string | undefined;
@@ -26,7 +27,7 @@ export async function create(departmentId: string, body: any) {
   if (!id) { try { const nodeCrypto = await import('node:crypto'); if (nodeCrypto.randomUUID) id = nodeCrypto.randomUUID(); } catch {} }
   if (!id) id = `asg_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
 
-  const inserted = await db.insert(schema.assignments).values({ id, departmentId, shiftId, requiredPositionId, assigneeEmployeeId: assigneeEmployeeId as any }).returning();
+  const inserted = await db.insert(schema.assignments).values({ id, departmentId, shiftId, requiredPositionId, assigneeEmployeeId: assigneeEmployeeId as any, areaId: areaId as any }).returning();
   return inserted[0]!;
 }
 
@@ -34,6 +35,7 @@ export async function patch(id: string, body: any) {
   const db = await conn();
   const patch: any = {};
   if ('assigneeEmployeeId' in body) patch.assigneeEmployeeId = (body.assigneeEmployeeId == null || String(body.assigneeEmployeeId).trim() === '') ? null : String(body.assigneeEmployeeId).trim();
+  if ('areaId' in body) patch.areaId = (body.areaId == null || String(body.areaId).trim() === '') ? null : String(body.areaId).trim();
   patch.updatedAt = new Date();
   const updated = await db.update(schema.assignments).set(patch).where(eq(schema.assignments.id, id)).returning();
   return updated[0] ?? null;

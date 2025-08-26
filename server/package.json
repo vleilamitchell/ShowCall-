@@ -16,7 +16,9 @@
     "test:ci": "vitest run --coverage",
     "db:push": "drizzle-kit push:pg",
     "db:migrate:sql": "node scripts/setup-private-schema.mjs && node scripts/apply-sql-migrations.mjs",
-    "import:legacy": "tsx src/scripts/import-legacy.ts"
+    "import:legacy": "tsx src/scripts/import-legacy.ts",
+    "db:truncate": "tsx src/scripts/truncate-public.ts",
+    "verify:import": "tsx src/scripts/verify-import.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.12.0",

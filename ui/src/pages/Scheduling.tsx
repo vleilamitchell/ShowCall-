@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
-import { api, DepartmentRecord, ScheduleRecord, ShiftRecord, PositionRecord, EligibleEmployee } from '@/lib/serverComm';
+import { api, DepartmentRecord, ScheduleRecord, ShiftRecord, PositionRecord, EligibleEmployee, Area } from '@/lib/serverComm';
 import { ListDetailLayout } from '@/features/listDetail/components/ListDetailLayout';
 import { List } from '@/features/listDetail';
 import { Input } from '@/components/ui/input';
@@ -424,24 +424,39 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
   const [positions, setPositions] = useState<PositionRecord[]>([]);
   const [eligible, setEligible] = useState<Record<string, EligibleEmployee[]>>({});
   const [selectedPositionId, setSelectedPositionId] = useState<string>('');
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [selectedAreaId, setSelectedAreaId] = useState<string>('');
   const [busy, setBusy] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
 
   const load = async () => {
     try {
-      const [rows, pos] = await Promise.all([
+      const [rows, pos, evtAreas] = await Promise.all([
         api.listAssignments?.(departmentId, shiftId),
         api.listPositions?.(departmentId),
+        (async () => {
+          try {
+            const shift = await api.getShift?.(shiftId);
+            if (shift?.eventId) {
+              const list = await api.getEventAreas?.(shift.eventId);
+              return list || [];
+            }
+          } catch {}
+          return [] as Area[];
+        })(),
       ]);
       setAssignments((rows || []).map((r) => ({ id: r.id, requiredPositionId: r.requiredPositionId, assigneeEmployeeId: r.assigneeEmployeeId ?? null })));
       const ps = pos || [];
       setPositions(ps);
+      setAreas(evtAreas || []);
       // Default selected position: first with any assignment or first available
       setSelectedPositionId((prev) => {
         if (prev) return prev;
         const firstWithAssignment = (rows || []).find((r) => !!r.requiredPositionId)?.requiredPositionId;
         return firstWithAssignment || (ps[0]?.id || '');
       });
+      // Default area: first area if present
+      setSelectedAreaId((prev) => prev || (evtAreas && evtAreas.length > 0 ? evtAreas[0].id : ''));
     } catch (e: any) {
       setErr(e?.message || 'Failed to load assignments');
     }
@@ -478,7 +493,7 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
         const updated = await api.updateAssignment?.(open.id, { assigneeEmployeeId: employeeId });
         if (updated) setAssignments(prev => prev.map(a => a.id === open.id ? { ...a, assigneeEmployeeId: updated.assigneeEmployeeId ?? null } : a));
       } else {
-        const created = await api.createAssignment?.(departmentId, { shiftId, requiredPositionId: selectedPositionId, assigneeEmployeeId: employeeId });
+        const created = await api.createAssignment?.(departmentId, { shiftId, requiredPositionId: selectedPositionId, assigneeEmployeeId: employeeId, areaId: selectedAreaId || undefined });
         if (created) setAssignments(prev => [...prev, { id: created.id, requiredPositionId: created.requiredPositionId, assigneeEmployeeId: created.assigneeEmployeeId ?? null }]);
       }
     } catch (e: any) {
@@ -505,7 +520,7 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
     setBusy(true);
     setErr(null);
     try {
-      const created = await api.createAssignment?.(departmentId, { shiftId, requiredPositionId: selectedPositionId });
+      const created = await api.createAssignment?.(departmentId, { shiftId, requiredPositionId: selectedPositionId, areaId: selectedAreaId || undefined });
       if (created) {
         setAssignments(prev => [...prev, { id: created.id, requiredPositionId: created.requiredPositionId, assigneeEmployeeId: created.assigneeEmployeeId ?? null }]);
       }
@@ -547,31 +562,31 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
       <Rollup title="Assignments" summary={rollupSummary} storageKey="assignmentsRollupOpen">
         <div className="px-3 pb-3 pt-2">
           {err ? <div className="text-xs text-red-600 mb-2">{err}</div> : null}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-xs text-muted-foreground">Positions</div>
-                <Button size="sm" variant={showOnlyUsed ? 'default' : 'outline'} onClick={() => setShowOnlyUsed(v => !v)}>
-                  {showOnlyUsed ? 'Showing used' : 'Show used'}
-                </Button>
+                <Button size="sm" variant={showOnlyUsed ? 'default' : 'outline'} onClick={() => setShowOnlyUsed(v => !v)}>{showOnlyUsed ? 'Showing used' : 'Show used'}</Button>
               </div>
               <div className="rounded-md border divide-y">
                 {visiblePositions.length === 0 ? (
                   <div className="p-3 text-sm text-muted-foreground">No positions</div>
                 ) : (
-                  visiblePositions.map(s => (
-                    <button
-                      key={s.id}
-                      className={`w-full text-left p-2 hover:bg-muted/50 ${selectedPositionId === s.id ? 'bg-muted/50' : ''}`}
-                      onClick={() => setSelectedPositionId(s.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 truncate text-sm">{s.name}</div>
-                        <Badge variant="secondary" className="text-[10px]">{s.assigned}/{s.total}</Badge>
-                        {s.open > 0 ? <span className="text-[10px] text-amber-700">+{s.open}</span> : null}
-                      </div>
-                    </button>
-                  ))
+                  visiblePositions.map(s => {
+                    const areaName = areas.find(a => a.id === selectedAreaId)?.name;
+                    const label = areaName ? `${areaName} - ${s.name}` : s.name;
+                    return (
+                      <button
+                        key={s.id}
+                        className={`w-full text-left p-2 hover:bg-muted/50 ${selectedPositionId === s.id ? 'bg-muted/50' : ''}`}
+                        onClick={() => setSelectedPositionId(s.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 truncate text-sm">{label}</div>
+                        </div>
+                      </button>
+                    );
+                  })
                 )}
               </div>
               <div className="mt-2 flex items-center gap-2">
@@ -585,10 +600,18 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
+                <select
+                  className="border rounded px-2 py-1 text-sm"
+                  value={selectedAreaId}
+                  onChange={(e) => setSelectedAreaId(e.target.value)}
+                >
+                  <option value="">Area…</option>
+                  {areas.map(a => (<option key={a.id} value={a.id}>{a.name}</option>))}
+                </select>
                 <Button size="sm" onClick={addSlot} disabled={busy || !selectedPositionId}>Add slot</Button>
               </div>
             </div>
-            <div className="sm:col-span-2">
+            <div>
               {!selectedPositionId ? (
                 <div className="p-3 text-sm text-muted-foreground border rounded-md">Select a position to manage assignments</div>
               ) : (
@@ -598,6 +621,7 @@ function AssignmentsPanel({ departmentId, shiftId }: { departmentId: string; shi
                   onAdd={assignEmployee}
                   onRemove={unassignEmployee}
                   searchPlaceholder="Search employees"
+                  rowClickMode
                 />
               )}
             </div>

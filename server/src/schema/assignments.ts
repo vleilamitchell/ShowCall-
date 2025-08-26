@@ -3,6 +3,7 @@ import { departments } from './departments';
 import { shifts } from './shifts';
 import { positions } from './positions';
 import { employees } from './employees';
+import { areas } from './areas';
 import { relations } from 'drizzle-orm';
 
 export const assignments = pgTable('assignments', {
@@ -11,6 +12,7 @@ export const assignments = pgTable('assignments', {
   shiftId: text('shift_id').notNull().references(() => shifts.id, { onDelete: 'cascade' }),
   requiredPositionId: text('required_position_id').notNull().references(() => positions.id, { onDelete: 'restrict' }),
   assigneeEmployeeId: text('assignee_employee_id').references(() => employees.id, { onDelete: 'set null' }),
+  areaId: text('area_id').references(() => areas.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
 }, (table) => ({
@@ -24,6 +26,7 @@ export const assignmentsRelations = relations(assignments, ({ one }) => ({
   shift: one(shifts, { fields: [assignments.shiftId], references: [shifts.id] }),
   requiredPosition: one(positions, { fields: [assignments.requiredPositionId], references: [positions.id] }),
   assignee: one(employees, { fields: [assignments.assigneeEmployeeId], references: [employees.id] }),
+  area: one(areas, { fields: [assignments.areaId], references: [areas.id] }),
 }));
 
 
