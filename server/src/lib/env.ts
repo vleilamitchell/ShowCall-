@@ -78,6 +78,24 @@ export function getFirebaseProjectId(): string {
 }
 
 /**
+ * Novu configuration accessors
+ */
+export function getNovuApiKey(): string | undefined {
+  return getEnv('NOVU_API_KEY');
+}
+
+export function getNovuAppId(): string | undefined {
+  return getEnv('NOVU_APP_ID');
+}
+
+/**
+ * Public base URL used to generate absolute links in notifications
+ */
+export function getPublicAppBaseUrl(): string | undefined {
+  return getEnv('PUBLIC_APP_BASE_URL');
+}
+
+/**
  * For Node.js environments - get process.env
  */
 export function getNodeEnv() {

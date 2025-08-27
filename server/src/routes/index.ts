@@ -19,6 +19,9 @@ import { assignmentsRouter } from './assignments';
 import { schedulesRouter } from './schedules';
 import { contactsRouter } from './contacts';
 import { bootstrapRouter } from './bootstrap';
+import { novuWebhookRouter } from './webhooks/novu';
+import { notificationsRouter } from './notifications';
+import { usersRouter } from './users';
 
 /**
  * mountV1Routers mounts all v1 domain routers onto the provided API router.
@@ -47,6 +50,9 @@ export function mountV1Routers(api: Hono) {
   api.route('/inventory/locations', inventoryLocationsRouter);
   // Bootstrap aggregate endpoints
   api.route('/bootstrap', bootstrapRouter);
+  api.route('/', notificationsRouter);
+  api.route('/', novuWebhookRouter);
+  api.route('/', usersRouter);
   api.route('/', legacyRouter);
   // Mount new auth router under /protected alongside legacy routes
   api.route('/protected', authRouter);

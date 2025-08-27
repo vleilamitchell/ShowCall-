@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run -c vitest.config.ts \"src/**/*.{test,spec,unit}.ts\"",
-    "test:integration":  "vitest run -c vitest.integration.config.ts",
+    "test:integration": "vitest run -c vitest.integration.config.ts",
     "test:ci": "vitest run --coverage",
     "db:push": "drizzle-kit push:pg",
     "db:migrate:sql": "node scripts/setup-private-schema.mjs && node scripts/apply-sql-migrations.mjs",
@@ -23,6 +23,7 @@
   "dependencies": {
     "@hono/node-server": "^1.12.0",
     "@neondatabase/serverless": "^0.9.0",
+    "@novu/node": "^2.6.6",
     "dotenv": "^16.0.0",
     "drizzle-orm": "^0.30.1",
     "firebase-admin": "^12.0.0",
@@ -33,13 +34,13 @@
     "tsx": "^4.7.0"
   },
   "devDependencies": {
-    "esbuild": "^0.23.0",
     "@cloudflare/workers-types": "^4.20240208.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.15.21",
     "@vitest/coverage-v8": "^1.2.2",
     "dotenv-cli": "^7.3.0",
     "drizzle-kit": "^0.20.14",
+    "esbuild": "^0.23.0",
     "typescript": "^5.3.3",
     "vitest": "^1.2.2",
     "wrangler": "^4.16.0"
