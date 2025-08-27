@@ -14,6 +14,7 @@ import Areas from '@/pages/Areas';
 import Inventory from '@/pages/Inventory';
 import Employees from '@/pages/Employees';
 import Scheduling from '@/pages/Scheduling';
+import Schedules from '@/pages/Schedules';
 // Inventory UI removed
 import InventoryAssetsTable from '@/pages/InventoryAssetsTable';
 import EventsCalendar from '@/pages/EventsCalendar';
@@ -53,6 +54,8 @@ function AppContent() {
                     <Route path="/events/calendar" element={<EventsCalendar />} />
                     <Route path="/events/:eventId" element={<Events />} />
                     {null}
+                    <Route path="/schedules" element={<Schedules />} />
+                    <Route path="/schedules/:scheduleId" element={<Schedules />} />
                     <Route path="/scheduling" element={<Scheduling />} />
                     <Route path="/scheduling/:shiftId" element={<Scheduling />} />
                     <Route path="/departments" element={<Departments />} />

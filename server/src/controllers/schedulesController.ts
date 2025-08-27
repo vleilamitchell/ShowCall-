@@ -84,4 +84,15 @@ export async function generateShifts(c: Context) {
   }
 }
 
+export async function remove(c: Context) {
+  const id = c.req.param('scheduleId');
+  try {
+    await service.remove(id);
+    return c.body(null, 204);
+  } catch (e: any) {
+    if (String(e?.code) === 'NotFound') return c.json({ error: 'Not found' }, 404);
+    throw e;
+  }
+}
+
 

@@ -102,4 +102,11 @@ export async function generateShifts(scheduleId: string, departmentId: string, r
   return { created, skipped, shifts: createdShifts };
 }
 
+export async function remove(id: string) {
+  const db = await conn();
+  const ok = await repo.deleteScheduleById(db, id);
+  if (!ok) { const e: any = new Error('NotFound'); e.code = 'NotFound'; throw e; }
+  return true;
+}
+
 

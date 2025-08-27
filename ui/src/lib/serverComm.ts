@@ -687,6 +687,10 @@ export async function updateSchedule(id: string, patch: Partial<ScheduleRecord>)
   return response.json() as Promise<ScheduleRecord>;
 }
 
+export async function deleteSchedule(id: string) {
+  await fetchWithAuth(`/api/v1/schedules/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
 export async function publishSchedule(id: string) {
   const response = await fetchWithAuth(`/api/v1/schedules/${encodeURIComponent(id)}/publish`, { method: 'POST' });
   return response.json() as Promise<ScheduleRecord>;
@@ -811,6 +815,7 @@ api.getSchedule = getSchedule;
 api.updateSchedule = updateSchedule;
 api.publishSchedule = publishSchedule;
 api.unpublishSchedule = unpublishSchedule;
+api.deleteSchedule = deleteSchedule as any;
 api.listShifts = listShifts as any;
 api.listAllShifts = listAllShifts as any;
 api.generateShiftsForSchedule = generateShiftsForSchedule as any;

@@ -31,4 +31,16 @@ export async function updateScheduleById(db: Database, id: string, patch: Partia
   return updated[0] ?? null;
 }
 
+export async function deleteScheduleById(db: Database, id: string) {
+  // Delete dependent assignments and shifts, then the schedule
+  const shiftIds = await db.select({ id: schema.shifts.id }).from(schema.shifts).where(eq(schema.shifts.scheduleId, id));
+  const ids = shiftIds.map((r: any) => r.id);
+  if (ids.length > 0) {
+    await db.delete(schema.assignments).where((schema as any).inArray(schema.assignments.shiftId, ids));
+    await db.delete(schema.shifts).where((schema as any).inArray(schema.shifts.id, ids));
+  }
+  const deleted = await db.delete(schema.schedules).where(eq(schema.schedules.id, id)).returning();
+  return deleted.length > 0;
+}
+
 
