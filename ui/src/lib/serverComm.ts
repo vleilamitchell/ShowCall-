@@ -161,6 +161,25 @@ export async function bootstrapEventDetail(eventId: string) {
   return response.json() as Promise<EventDetailBootstrapResponse>;
 }
 
+// Schedules bootstrap aggregate
+export type ScheduleDetailPayload = {
+  schedule: ScheduleRecord;
+  shifts: ShiftRecord[];
+  assignments: AssignmentRecord[];
+  employeesByDept: Record<string, Array<{ id: string; name: string }>>;
+  positionsByDept: Record<string, Array<{ id: string; name: string }>>;
+  areasByEvent: Record<string, Area[]>;
+  eventsById?: Record<string, { id: string; title: string }>; // optional convenience
+};
+
+export async function getScheduleDetail(params: { scheduleId: string; departmentId?: string }): Promise<ScheduleDetailPayload> {
+  const query = new URLSearchParams();
+  query.set('scheduleId', params.scheduleId);
+  if (params.departmentId) query.set('departmentId', params.departmentId);
+  const response = await fetchWithAuth(`/api/v1/bootstrap/schedule-detail?${query.toString()}`);
+  return response.json() as Promise<ScheduleDetailPayload>;
+}
+
 export async function createEvent(payload: Partial<EventRecord> & { title: string }) {
   const response = await fetchWithAuth('/api/v1/events', {
     method: 'POST',
@@ -292,6 +311,7 @@ export const api: {
   reorderAreas?: typeof reorderAreas;
   bootstrapEvents?: typeof bootstrapEvents;
   bootstrapEventDetail?: typeof bootstrapEventDetail;
+  getScheduleDetail?: typeof getScheduleDetail;
   // Contacts
   listContacts?: typeof listContacts;
   createContact?: typeof createContact;
@@ -1074,6 +1094,7 @@ api.getAreasForEvents = getAreasForEvents as any;
 api.reorderAreas = reorderAreas as any;
 api.bootstrapEvents = bootstrapEvents as any;
 api.bootstrapEventDetail = bootstrapEventDetail as any;
+api.getScheduleDetail = getScheduleDetail as any;
 api.getEventAreas = getEventAreas as any;
 api.replaceEventAreas = replaceEventAreas as any;
 api.addEventArea = addEventArea as any;

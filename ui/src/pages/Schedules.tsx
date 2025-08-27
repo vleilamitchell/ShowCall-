@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ListDetailLayout } from '@/features/listDetail/components/ListDetailLayout';
 import { List } from '@/features/listDetail';
-import { api, type ScheduleRecord, type ShiftRecord, type EmployeeRecord, type DepartmentRecord, type Area, type PositionRecord } from '@/lib/serverComm';
+import { api, type ScheduleRecord, type ShiftRecord, type DepartmentRecord, type Area } from '@/lib/serverComm';
 import { formatTimeTo12Hour } from '@/lib/time';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Trash2 } from 'lucide-react';
+import { buildAssignedByShift } from './Schedules.utils';
 
 function formatScheduleRange(startISO: string, endISO: string) {
   const start = new Date(startISO + 'T00:00:00');
@@ -157,11 +158,8 @@ function ScheduleDetail({ schedule, departmentId }: { schedule: ScheduleRecord |
   const [shifts, setShifts] = useState<ShiftRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [employeesByDept, setEmployeesByDept] = useState<Record<string, Record<string, string>>>({});
   const [eventTitles, setEventTitles] = useState<Record<string, string>>({});
   const [assignedByShift, setAssignedByShift] = useState<Record<string, Array<{ areaName?: string; positionName?: string; employeeName?: string }>>>({});
-  const [areasByEvent, setAreasByEvent] = useState<Record<string, Area[]>>({});
-  const [positionsByDept, setPositionsByDept] = useState<Record<string, Record<string, string>>>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -170,70 +168,23 @@ function ScheduleDetail({ schedule, departmentId }: { schedule: ScheduleRecord |
       if (!schedule) { setShifts([]); return; }
       setLoading(true); setError(null);
       try {
-        const rows = await api.listAllShifts?.({ scheduleId: schedule.id, departmentId });
-        if (!rows) { if (!cancelled) { setShifts([]); } return; }
-        if (!cancelled) setShifts(rows);
+        const payload = await api.getScheduleDetail?.({ scheduleId: schedule.id, departmentId });
+        if (!payload) { if (!cancelled) { setShifts([]); setAssignedByShift({}); setEventTitles({}); } return; }
+        if (!cancelled) setShifts(payload.shifts || []);
 
-        const uniqueDepartments = Array.from(new Set(rows.map(r => r.departmentId).filter(Boolean)));
-        const deptEmployeesEntries = await Promise.all(uniqueDepartments.map(async (deptId) => {
-          try {
-            const emps = await api.listEmployees?.(deptId);
-            const map: Record<string, string> = {};
-            (emps || []).forEach((e: EmployeeRecord) => { map[e.id] = e.fullName || (e as any).name || e.id; });
-            return [deptId, map] as const;
-          } catch {
-            return [deptId, {} as Record<string, string>] as const;
-          }
-        }));
-        const employeesMap = Object.fromEntries(deptEmployeesEntries);
-        if (!cancelled) setEmployeesByDept(employeesMap);
+        const eventsMap: Record<string, string> = {};
+        const eventsById = payload.eventsById || {};
+        Object.keys(eventsById).forEach((id) => { eventsMap[id] = eventsById[id]!.title || id; });
+        if (!cancelled) setEventTitles(eventsMap);
 
-        const uniqueEventIds = Array.from(new Set(rows.map(r => r.eventId).filter(Boolean))) as string[];
-        const evtEntries = await Promise.all(uniqueEventIds.map(async (id) => {
-          try {
-            const evt = await api.getEvent?.(id);
-            return [id, evt?.title || id] as const;
-          } catch { return [id, id] as const; }
-        }));
-        const evtMap = Object.fromEntries(evtEntries);
-        if (!cancelled) setEventTitles(evtMap);
-
-        const areasEntries = await Promise.all(uniqueEventIds.map(async (id) => {
-          try {
-            const list = await api.getEventAreas?.(id);
-            return [id, list || []] as const;
-          } catch { return [id, [] as Area[]] as const; }
-        }));
-        const areasMap = Object.fromEntries(areasEntries);
-        if (!cancelled) setAreasByEvent(areasMap);
-
-        const positionsEntries = await Promise.all(uniqueDepartments.map(async (deptId) => {
-          try {
-            const list = await api.listPositions?.(deptId);
-            const map: Record<string, string> = {};
-            (list || []).forEach((p: PositionRecord) => { map[p.id] = p.name; });
-            return [deptId, map] as const;
-          } catch { return [deptId, {} as Record<string, string>] as const; }
-        }));
-        const positionsMap = Object.fromEntries(positionsEntries);
-        if (!cancelled) setPositionsByDept(positionsMap);
-
-        const assignmentEntries = await Promise.all(rows.map(async (shift) => {
-          try {
-            const assigns = await api.listAssignments?.(shift.departmentId, shift.id);
-            const areaList = shift.eventId ? (areasMap[shift.eventId] || []) : [];
-            const areaNameById = Object.fromEntries(areaList.map(a => [a.id, a.name] as const));
-            const items = (assigns || []).map(a => ({
-              areaName: a.areaId ? areaNameById[a.areaId] : undefined,
-              positionName: positionsMap[shift.departmentId]?.[a.requiredPositionId] || undefined,
-              employeeName: a.assigneeEmployeeId ? (employeesMap[shift.departmentId]?.[a.assigneeEmployeeId] || undefined) : undefined,
-            }));
-            return [shift.id, items] as const;
-          } catch {
-            return [shift.id, [] as Array<{ areaName?: string; positionName?: string; employeeName?: string }>] as const;
-          }
-        }));
-        if (!cancelled) setAssignedByShift(Object.fromEntries(assignmentEntries));
+        const grouped = buildAssignedByShift(
+          payload.assignments || [],
+          payload.areasByEvent || {},
+          payload.positionsByDept || {},
+          payload.employeesByDept || {},
+          (payload.shifts || []).map(s => ({ id: s.id, departmentId: s.departmentId, eventId: s.eventId }))
+        );
+        if (!cancelled) setAssignedByShift(grouped);
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load schedule');
       } finally {
