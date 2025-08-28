@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowUpDown, Plus } from 'lucide-react';
-import { listDepartments, listEmployees, createEmployee, updateEmployee, type EmployeeRecord, type DepartmentRecord } from '@/lib/serverComm';
+import { ArrowUpDown, Plus, ChevronDown } from 'lucide-react';
+import { listDepartments, listEmployees, createEmployee, updateEmployee, type EmployeeRecord, type DepartmentRecord, api } from '@/lib/serverComm';
 import { ListDetailLayout, List, CreateInline, useListDetail, useDebouncedPatch, type ResourceAdapter } from '@/features/listDetail';
 import { useParams } from 'react-router-dom';
 
@@ -168,14 +168,17 @@ export default function Employees() {
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-2 text-sm">
                 <span>Department</span>
-                <select
-                  className="border rounded px-2 py-1 max-w-[180px]"
-                  value={(filterState as EmployeeFilters).departmentId || ''}
-                  onChange={(e) => setFilterState(prev => ({ ...prev, departmentId: e.target.value }))}
-                >
-                  <option value="-">All</option>
-                  {departments.map(d => (<option key={d.id} value={d.id}>{d.name}</option>))}
-                </select>
+                <div className="relative max-w-[180px]">
+                  <select
+                    className="border-input h-9 w-full appearance-none rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                    value={(filterState as EmployeeFilters).departmentId || ''}
+                    onChange={(e) => setFilterState(prev => ({ ...prev, departmentId: e.target.value }))}
+                  >
+                    <option value="-">All</option>
+                    {departments.map(d => (<option key={d.id} value={d.id}>{d.name}</option>))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                </div>
               </label>
             </div>
             <div className="flex justify-end mt-2">
@@ -248,27 +251,42 @@ export default function Employees() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Email</label>
-                  <Input value={selected.email || ''} readOnly />
+                  <label className="block text-xs text-muted-foreground mb-1">Department</label>
+                  <div className="relative">
+                    <select
+                      className="border-input h-9 w-full appearance-none rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                      value={selected.departmentId}
+                      onChange={(e) => onDepartmentChange(e.target.value)}
+                    >
+                      {departments.map(d => (<option key={d.id} value={d.id}>{d.name}</option>))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1">Phone</label>
                   <Input value={selected.primaryPhone || ''} readOnly />
                 </div>
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Department</label>
-                  <select
-                    className="border rounded px-2 py-1 w-full"
-                    value={selected.departmentId}
-                    onChange={(e) => onDepartmentChange(e.target.value)}
-                  >
-                    {departments.map(d => (<option key={d.id} value={d.id}>{d.name}</option>))}
-                  </select>
+                  <label className="block text-xs text-muted-foreground mb-1">Email</label>
+                  <Input value={selected.email || ''} readOnly />
                 </div>
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Priority</label>
-                  <Input value={String(selected.priority ?? '')} readOnly />
+                  <label className="block text-xs text-muted-foreground mb-1">Linked Account</label>
+                  <div className="flex items-center gap-2">
+                    <Input value={selected.userId || ''} placeholder="Not linked" readOnly />
+                    <Button size="sm" variant="outline" onClick={async () => {
+                      if (!selected) return;
+                      try {
+                        const updated = await (api as any).createEmployeeAccount?.(selected.id);
+                        if (updated) mutateItems(prev => prev.map(i => (i.id === selected.id ? updated : i)));
+                      } catch (e: any) {
+                        alert(e?.message || 'Failed to create account');
+                      }
+                    }}>Create</Button>
+                  </div>
                 </div>
+                
                 <div className="col-span-2 grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs text-muted-foreground mb-1">Address 1</label>

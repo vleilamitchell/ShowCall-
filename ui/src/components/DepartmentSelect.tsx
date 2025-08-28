@@ -1,3 +1,4 @@
+import { Select } from '@/components/ui/select';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api, type DepartmentRecord } from '@/lib/serverComm';
@@ -29,15 +30,12 @@ export default function DepartmentSelect({ className }: { className?: string }) 
   return (
     <label className={className ? className + ' flex items-center gap-2 text-sm' : 'flex items-center gap-2 text-sm'}>
       <span className="text-muted-foreground">Department</span>
-      <select className="border rounded px-2 py-1"
-        value={departmentId}
-        onChange={(e) => onChange(e.target.value)}
-      >
+      <Select value={departmentId} onChange={(e) => onChange((e.target as HTMLSelectElement).value)}>
         <option value="">All</option>
         {departments.map((d) => (
           <option key={d.id} value={d.id}>{d.name}</option>
         ))}
-      </select>
+      </Select>
     </label>
   );
 }

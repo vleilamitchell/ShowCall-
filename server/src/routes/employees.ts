@@ -29,4 +29,8 @@ employeesRouter.post('/employees', async (c) => {
 employeesRouter.patch('/employees/:employeeId', ctrl.patch);
 employeesRouter.delete('/employees/:employeeId', ctrl.remove);
 
+// Account management for employees
+employeesRouter.post('/employees/:employeeId/create-account', ctrl.createAccount);
+employeesRouter.post('/employees/:employeeId/link-account', ctrl.linkAccount);
+
 

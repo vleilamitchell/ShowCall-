@@ -20,6 +20,7 @@ import Schedules from '@/pages/Schedules';
 import InventoryAssetsTable from '@/pages/InventoryAssetsTable';
 import EventsCalendar from '@/pages/EventsCalendar';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import Accounts from '@/pages/Accounts';
 import {
   SidebarProvider,
   SidebarInset,
@@ -78,6 +79,8 @@ function AppContent() {
                     <Route path="/contacts" element={<Contacts />} />
                     <Route path="/contacts/:contactId" element={<Contacts />} />
                     <Route path="/areas/:areaId" element={<Areas />} />
+                    <Route path="/accounts" element={<Accounts />} />
+                    <Route path="/accounts/:userId" element={<Accounts />} />
                   </Routes>
                 </div>
               </main>

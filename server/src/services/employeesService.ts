@@ -5,6 +5,8 @@ import * as repo from '../repositories/employeesRepo';
 import * as depts from '../repositories/departmentsRepo';
 import * as empPos from '../repositories/employeePositionsRepo';
 import * as schema from '../schema';
+import * as usersRepo from '../repositories/usersRepo';
+import { getFirebaseAdmin } from '../lib/firebase-admin';
 
 export async function listByDepartment(departmentId: string) {
   const db = await getDatabase();
@@ -31,6 +33,7 @@ export async function create(departmentId: string, body: any) {
     id,
     departmentId,
     name,
+    userId: f(body.userId),
     priority: (typeof body.priority === 'number' ? body.priority : null) as any,
     firstName: f(body.firstName),
     middleName: f(body.middleName),
@@ -67,6 +70,7 @@ export async function patch(id: string, body: any) {
   if ('postalCode4' in body) patch.postalCode4 = f(body.postalCode4);
   if ('primaryPhone' in body) patch.primaryPhone = f(body.primaryPhone);
   if ('email' in body) patch.email = f(body.email);
+  if ('userId' in body) patch.userId = f(body.userId);
   if ('emergencyContactName' in body) patch.emergencyContactName = f(body.emergencyContactName);
   if ('emergencyContactPhone' in body) patch.emergencyContactPhone = f(body.emergencyContactPhone);
   if ('departmentId' in body) patch.departmentId = f(body.departmentId);
@@ -116,6 +120,80 @@ export async function patch(id: string, body: any) {
 export async function remove(id: string) {
   const db = await getDatabase();
   await repo.deleteEmployeeById(db, id);
+}
+
+// Create Firebase user (and local app user if needed) from employee's email, then link to employee.userId
+export async function createAccountForEmployee(employeeId: string) {
+  const db = await getDatabase();
+  const employee = await repo.getEmployeeById(db, employeeId);
+  if (!employee) { const e: any = new Error('Employee not found'); e.code = 'NotFound'; throw e; }
+  const email = (employee.email || '').trim();
+  if (!email) throw new Error('email required');
+
+  // If already linked, just return current
+  if (employee.userId) {
+    const user = await usersRepo.getUserById(db as any, employee.userId);
+    return { employeeId, user }; 
+  }
+
+  // Try to find existing local user by email
+  let user = await usersRepo.getUserByEmail(db as any, email);
+
+  // Create Firebase user if not exists via Admin (skip in dev if admin not available)
+  let firebaseId: string | null = null;
+  const adminApp = getFirebaseAdmin();
+  try {
+    if (adminApp) {
+      // Attempt to get existing by email; if not exists, create
+      try {
+        const existing = await adminApp.auth().getUserByEmail(email);
+        firebaseId = existing.uid;
+      } catch {
+        const created = await adminApp.auth().createUser({ email });
+        firebaseId = created.uid;
+      }
+    }
+  } catch (e: any) {
+    // Surface admin errors explicitly
+    throw new Error(`admin not available: ${e?.message || String(e)}`);
+  }
+
+  // Ensure local app user exists
+  if (!user) {
+    const id = firebaseId || (globalThis as any)?.crypto?.randomUUID?.() || `usr_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+    user = await usersRepo.insertUser(db as any, { id, email } as any);
+  }
+
+  // Link employee to user
+  const updated = await repo.updateEmployeeById(db, employeeId, { userId: user.id } as any);
+  if (!updated) { const e: any = new Error('NotFound'); e.code = 'NotFound'; throw e; }
+  const fullName = `${String(updated.firstName ?? '').trim()}${updated.firstName && updated.lastName ? ' ' : ''}${String(updated.lastName ?? '').trim()}`.trim() || updated.name;
+  return { ...updated, fullName };
+}
+
+// Link employee to an existing account, by userId or email
+export async function linkEmployeeToAccount(employeeId: string, args: { userId?: string; email?: string }) {
+  const db = await getDatabase();
+  const employee = await repo.getEmployeeById(db, employeeId);
+  if (!employee) { const e: any = new Error('Employee not found'); e.code = 'NotFound'; throw e; }
+
+  let user = null as Awaited<ReturnType<typeof usersRepo.getUserById>> | null;
+  if (args.userId) {
+    user = await usersRepo.getUserById(db as any, String(args.userId));
+    if (!user) throw new Error('User not found');
+  } else if (args.email) {
+    const email = String(args.email).trim();
+    if (!email) throw new Error('email required');
+    user = await usersRepo.getUserByEmail(db as any, email);
+    if (!user) throw new Error('No account found for that email');
+  } else {
+    throw new Error('userId or email required');
+  }
+
+  const updated = await repo.updateEmployeeById(db, employeeId, { userId: user!.id } as any);
+  if (!updated) { const e: any = new Error('NotFound'); e.code = 'NotFound'; throw e; }
+  const fullName = `${String(updated.firstName ?? '').trim()}${updated.firstName && updated.lastName ? ' ' : ''}${String(updated.lastName ?? '').trim()}`.trim() || updated.name;
+  return { ...updated, fullName };
 }
 
 

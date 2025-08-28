@@ -93,6 +93,47 @@ export async function getCurrentUser() {
   return response.json();
 }
 
+// Users (Accounts) API helpers
+export type AccountRecord = {
+  id: string;
+  email: string;
+  display_name?: string | null;
+  photo_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export async function listAccounts(params?: { q?: string }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/users${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<AccountRecord[]>;
+}
+
+export async function getAccount(userId: string) {
+  const response = await fetchWithAuth(`/api/v1/users/${encodeURIComponent(userId)}`);
+  return response.json() as Promise<AccountRecord>;
+}
+
+export async function updateAccount(userId: string, patch: Partial<Pick<AccountRecord, 'display_name' | 'photo_url'>>) {
+  const response = await fetchWithAuth(`/api/v1/users/${encodeURIComponent(userId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  return response.json() as Promise<AccountRecord>;
+}
+
+export async function deleteAccount(userId: string) {
+  const response = await fetchWithAuth(`/api/v1/users/${encodeURIComponent(userId)}`, { method: 'DELETE' });
+  if (response.status === 204) return;
+  const data = await response.json().catch(() => null);
+  if (data && (data as any).error) {
+    throw new APIError(response.status, (data as any).error);
+  }
+}
+
 // Events API helpers
 export type EventRecord = {
   id: string;
@@ -513,6 +554,7 @@ export type EmployeeRecord = {
   id: string;
   departmentId: string;
   name: string;
+  userId?: string | null;
   priority?: number | null;
   firstName?: string | null;
   middleName?: string | null;
@@ -557,10 +599,24 @@ export async function deleteEmployee(employeeId: string) {
   await fetchWithAuth(`/api/v1/employees/${encodeURIComponent(employeeId)}`, { method: 'DELETE' });
 }
 
+export async function createEmployeeAccount(employeeId: string) {
+  const response = await fetchWithAuth(`/api/v1/employees/${encodeURIComponent(employeeId)}/create-account`, { method: 'POST' });
+  return response.json() as Promise<EmployeeRecord>;
+}
+
+export async function linkEmployeeAccount(employeeId: string, payload: { userId?: string; email?: string }) {
+  const response = await fetchWithAuth(`/api/v1/employees/${encodeURIComponent(employeeId)}/link-account`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  return response.json() as Promise<EmployeeRecord>;
+}
+
 api.listEmployees = listEmployees as any;
 api.createEmployee = createEmployee as any;
 api.updateEmployee = updateEmployee as any;
 api.deleteEmployee = deleteEmployee as any;
+api.createEmployeeAccount = createEmployeeAccount as any;
+api.linkEmployeeAccount = linkEmployeeAccount as any;
 
 // Positions API helpers
 export type PositionRecord = {

@@ -8,6 +8,7 @@ import {
   Boxes,
   ChevronRight,
   Contact2,
+  UserCircle2,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -438,6 +439,15 @@ export function AppSidebar() {
                     <NavLink to="/contacts" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
                       <Contact2 className="w-4 h-4" />
                       <span className="truncate">Contacts</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/accounts')}
+                    className="px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary">
+                    <NavLink to="/accounts" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}` }>
+                      <UserCircle2 className="w-4 h-4" />
+                      <span className="truncate">Accounts</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

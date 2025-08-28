@@ -4,6 +4,7 @@ export const employees = pgTable('employees', {
   id: text('id').primaryKey(),
   departmentId: text('department_id').notNull(),
   name: text('name').notNull(),
+  userId: text('user_id'),
   priority: integer('priority'),
   firstName: text('first_name'),
   middleName: text('middle_name'),

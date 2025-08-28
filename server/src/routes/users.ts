@@ -4,10 +4,17 @@ import { getDatabase } from '../lib/db';
 import { getDatabaseUrl } from '../lib/env';
 import { upsertPushToken } from '../repositories/pushTokensRepo';
 import { ensureSubscriber } from '../services/notifications/subscribers';
+import * as ctrl from '../controllers/usersController';
 
 export const usersRouter = new Hono();
 
 usersRouter.use('*', authMiddleware);
+
+// Users management
+usersRouter.get('/users', ctrl.list);
+usersRouter.get('/users/:userId', ctrl.get);
+usersRouter.patch('/users/:userId', ctrl.patch);
+usersRouter.delete('/users/:userId', ctrl.remove);
 
 // POST /me/push-tokens { token, provider, platform }
 usersRouter.post('/me/push-tokens', async (c) => {

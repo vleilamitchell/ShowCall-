@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MoreVertical } from 'lucide-react';
+import { Select } from '@/components/ui/select';
 
 type Filters = { active?: boolean };
 
@@ -234,12 +235,15 @@ export default function Templates() {
                   <div className="mb-2 grid grid-cols-6 gap-2 items-end">
                     <div className="col-span-3">
                       <label className="block text-xs text-muted-foreground mb-1">Department</label>
-                      <select className="w-full h-9 rounded-md border bg-background px-3 text-sm" value={selectedDepartmentId} onChange={(e) => setSelectedDepartmentId(e.target.value)}>
+                      <Select
+                        value={selectedDepartmentId}
+                        onChange={(e) => setSelectedDepartmentId((e.target as HTMLSelectElement).value)}
+                      >
                         <option value="__all__">- All -</option>
                         {departments.map((d) => (
                           <option key={d.id} value={d.id}>{d.name}</option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground mb-2">Add rows with required area, position, and count.</div>
