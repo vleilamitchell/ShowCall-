@@ -2,9 +2,14 @@ import { Context } from 'hono';
 import * as service from '../services/employeesService';
 
 export async function listByDepartment(c: Context) {
-  const departmentId = c.req.param('departmentId');
-  const rows = await service.listByDepartment(departmentId);
-  return c.json(rows);
+  try {
+    const departmentId = c.req.param('departmentId');
+    const rows = await service.listByDepartment(departmentId);
+    return c.json(rows);
+  } catch (error) {
+    console.error('List employees by department error:', error);
+    return c.json({ error: 'Failed to list employees' }, 500);
+  }
 }
 
 export async function create(c: Context) {
