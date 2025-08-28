@@ -98,6 +98,7 @@ export async function patch(c: Context) {
   if ('titleTemplate' in body) patch.titleTemplate = (typeof body.titleTemplate === 'string' ? body.titleTemplate.trim() : null);
   if ('promoterTemplate' in body) patch.promoterTemplate = (typeof body.promoterTemplate === 'string' ? body.promoterTemplate.trim() : null);
   if ('templateJson' in body) patch.templateJson = body.templateJson ?? null;
+  if ('templateVersionId' in body) patch.templateVersionId = (typeof body.templateVersionId === 'string' && body.templateVersionId.trim()) ? String(body.templateVersionId).trim() : null;
   patch.updatedAt = new Date();
   if (patch.startDate && patch.endDate && patch.startDate > patch.endDate) return c.json({ error: 'startDate must be <= endDate' }, 400);
   const updated = await db.update(schema.eventSeries).set(patch).where(eq(schema.eventSeries.id, seriesId)).returning();
@@ -193,7 +194,21 @@ export async function preview(c: Context) {
   // Default fromDate to series.startDate if not provided
   if (!fromDate && series.startDate) fromDate = series.startDate as any;
   const dates = computeOccurrences(series as any, rule as any, { fromDate, untilDate });
-  return c.json({ dates, template: ((): any => { const t = (series as any); return { status: t.defaultStatus, startTime: t.defaultStartTime, endTime: t.defaultEndTime, title: t.titleTemplate, promoter: t.promoterTemplate }; })() });
+  // Compute assignment counts from template requirements if a template version is associated
+  let assignmentCounts: { total: number; byPositionId: Record<string, number> } | undefined;
+  const seriesTemplateVersionId = (series as any).templateVersionId as string | undefined;
+  if (seriesTemplateVersionId) {
+    const reqs = await db.select({ requiredPositionId: schema.eventTemplateRequirements.requiredPositionId, count: schema.eventTemplateRequirements.count }).from(schema.eventTemplateRequirements).where(eq(schema.eventTemplateRequirements.templateVersionId, seriesTemplateVersionId));
+    const byPositionId: Record<string, number> = {};
+    let total = 0;
+    for (const r of reqs as any[]) {
+      const c = Math.max(1, Number(r.count || 1));
+      total += c;
+      byPositionId[r.requiredPositionId] = (byPositionId[r.requiredPositionId] || 0) + c;
+    }
+    assignmentCounts = { total, byPositionId };
+  }
+  return c.json({ dates, template: ((): any => { const t = (series as any); return { status: t.defaultStatus, startTime: t.defaultStartTime, endTime: t.defaultEndTime, title: t.titleTemplate, promoter: t.promoterTemplate }; })(), assignmentCounts });
 }
 
 export async function generate(c: Context) {

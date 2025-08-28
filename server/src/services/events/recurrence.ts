@@ -162,6 +162,16 @@ export async function upsertEventsForSeries(seriesId: string, params: { fromDate
               await client.insert(schema.eventAreas).values({ eventId: ev.id, areaId: aid });
             }
           }
+          // If series is configured with a template version, apply it to this event
+          const seriesTemplateVersionId = (series as any).templateVersionId;
+          if (seriesTemplateVersionId) {
+            try {
+              const { applyTemplateToEvent } = await import('./templateApplication');
+              await applyTemplateToEvent(ev.id as any, seriesTemplateVersionId as any, { mode: 'replace', createAssignments: true });
+            } catch (e) {
+              // swallow template application errors to not block creation
+            }
+          }
         }
       } else {
         if (params.overwriteExisting) {

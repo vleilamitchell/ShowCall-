@@ -89,6 +89,30 @@ Notes:
   - macOS example: `psql postgresql://postgres:password@localhost:<port>/showcall_import`
 - The script path is `scripts/db-import-latest.js`.
 
+### SQL Migrations (Drizzle .sql files)
+
+Apply the SQL migrations in `server/drizzle/` to the database specified in your chosen env file:
+
+```bash
+# Default: loads server/.env if present
+pnpm run db:migrate
+
+# Use a named env file (.env.dev, .env.staging). Searched in repo root and server/.
+pnpm run db:migrate dev
+pnpm run db:migrate --env dev
+
+# Or point to an explicit env file path
+pnpm run db:migrate --env-file /absolute/path/to/.env.dev
+
+# You can also set ENV_FILE or DOTENV_CONFIG_PATH
+ENV_FILE=.env.dev pnpm run db:migrate
+DOTENV_CONFIG_PATH=/absolute/path/to/.env.staging pnpm run db:migrate
+```
+
+Notes:
+- The script sets `DOTENV_CONFIG_PATH`, so the Node scripts under `server/scripts/` that import `dotenv/config` load the selected file.
+- Ensure the chosen env file defines `DATABASE_URL`.
+
 ### Legacy Import (from showcall_import to active DB)
 
 ```bash

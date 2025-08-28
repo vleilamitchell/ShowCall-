@@ -1,6 +1,6 @@
 {
-  "name": "VoloApp",
-  "short_name": "VoloApp",
+  "name": "ShowCall",
+  "short_name": "ShowCall",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",

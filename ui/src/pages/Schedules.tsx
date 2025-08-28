@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ListDetailLayout } from '@/features/listDetail/components/ListDetailLayout';
 import { List } from '@/features/listDetail';
-import { api, type ScheduleRecord, type ShiftRecord, type DepartmentRecord, type Area } from '@/lib/serverComm';
+import { api, type ScheduleRecord, type ShiftRecord, type DepartmentRecord } from '@/lib/serverComm';
 import { formatTimeTo12Hour } from '@/lib/time';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Trash2 } from 'lucide-react';
 import { buildAssignedByShift } from './Schedules.utils';
+import { Button } from '@/components/ui/button';
+import { DateField } from '@/components/date-field';
 
 function formatScheduleRange(startISO: string, endISO: string) {
   const start = new Date(startISO + 'T00:00:00');
@@ -31,6 +33,12 @@ export default function Schedules() {
   const [loadingSchedules, setLoadingSchedules] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [departments, setDepartments] = useState<DepartmentRecord[]>([]);
+  const [newScheduleOpen, setNewScheduleOpen] = useState(false);
+  const [newScheduleName, setNewScheduleName] = useState('');
+  const [newScheduleStart, setNewScheduleStart] = useState('');
+  const [newScheduleEnd, setNewScheduleEnd] = useState('');
+  const [newScheduleBusy, setNewScheduleBusy] = useState(false);
+  const [newScheduleMessage, setNewScheduleMessage] = useState<string | null>(null);
 
   const departmentId = useMemo(() => {
     const fromSearch = searchParams.get('departmentId') || undefined;
@@ -89,6 +97,70 @@ export default function Schedules() {
     <ListDetailLayout
       left={(
         <div className="space-y-3">
+          <div className="p-3 border-b">
+            <div className="flex items-center justify-end gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setNewScheduleOpen(v => !v)} disabled={!departmentId} className="gap-1">
+                {newScheduleOpen ? 'Close' : 'Make schedule'}
+              </Button>
+            </div>
+          </div>
+          {error ? (
+            <div className="px-3 text-xs text-red-600">{error}</div>
+          ) : null}
+          <div className="px-3">
+            {newScheduleOpen && (
+              <div className="border rounded p-2 mb-2 space-y-2">
+                {!departmentId ? (
+                  <div className="text-xs text-muted-foreground">Select a department to create a schedule.</div>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap items-end gap-2">
+                      <div>
+                        <label className="block text-xs text-muted-foreground">Name</label>
+                        <input className="border rounded px-2 py-1 text-sm" value={newScheduleName} onChange={(e) => setNewScheduleName(e.target.value)} placeholder="Schedule name" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground">Start</label>
+                        <DateField value={newScheduleStart} onChange={(v) => setNewScheduleStart(v || '')} />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground">End</label>
+                        <DateField value={newScheduleEnd} onChange={(v) => setNewScheduleEnd(v || '')} />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="outline" onClick={() => { if (!newScheduleStart) return; const d = new Date(newScheduleStart); d.setDate(d.getDate()+6); const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); setNewScheduleEnd(`${y}-${m}-${day}`); }}>Week</Button>
+                        <Button size="sm" variant="outline" onClick={() => { if (!newScheduleStart) return; const d = new Date(newScheduleStart); const y=d.getFullYear(); const m=d.getMonth(); const last = new Date(y, m+1, 0); const yy=last.getFullYear(); const mm=String(last.getMonth()+1).padStart(2,'0'); const dd=String(last.getDate()).padStart(2,'0'); setNewScheduleEnd(`${yy}-${mm}-${dd}`); }}>Month</Button>
+                      </div>
+                      <Button size="sm" onClick={async () => {
+                        if (!departmentId) return;
+                        if (!newScheduleName || !newScheduleStart || !newScheduleEnd) { setNewScheduleMessage('Fill name, start, end'); return; }
+                        setNewScheduleBusy(true); setNewScheduleMessage(null);
+                        try {
+                          const sched = await api.createSchedule?.({ name: newScheduleName, startDate: newScheduleStart, endDate: newScheduleEnd });
+                          if (!sched) throw new Error('Create schedule failed');
+                          const existing = await api.listShifts?.(departmentId!, { scheduleId: sched.id });
+                          if (existing && existing.length > 0) {
+                            const ok = window.confirm('Replace existing shifts for this schedule?');
+                            if (!ok) { setNewScheduleBusy(false); return; }
+                            await (api as any).generateShiftsForSchedule?.(sched.id, { departmentId: departmentId!, regenerate: true });
+                          } else {
+                            await (api as any).generateShiftsForSchedule?.(sched.id, { departmentId: departmentId! });
+                          }
+                          const schs = await api.listSchedules?.();
+                          setSchedules(schs || []);
+                          setNewScheduleMessage('Schedule created and shifts generated');
+                          setNewScheduleName(''); setNewScheduleStart(''); setNewScheduleEnd(''); setNewScheduleOpen(false);
+                        } catch (e: any) {
+                          setNewScheduleMessage(e?.message || 'Failed to make schedule');
+                        } finally { setNewScheduleBusy(false); }
+                      }} disabled={newScheduleBusy}>{newScheduleBusy ? 'Working…' : 'Create & generate'}</Button>
+                    </div>
+                    {newScheduleMessage ? <div className="text-xs text-muted-foreground">{newScheduleMessage}</div> : null}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
           <div className="p-3 border-b">
             <div className="flex items-center justify-between gap-2">
               <label className="flex items-center gap-2 text-sm shrink-0">

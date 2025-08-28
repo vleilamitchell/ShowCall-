@@ -7,9 +7,11 @@ import {
   getDepartment,
   createDepartment,
   updateDepartment,
-  
+  deleteDepartment,
 } from '@/lib/serverComm';
 import { ListDetailLayout, List, FilterBar, CreateInline, useListDetail, useDebouncedPatch, type ResourceAdapter } from '@/features/listDetail';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { MoreVertical } from 'lucide-react';
 
 type CreateForm = {
   name: string;
@@ -118,6 +120,34 @@ export function Departments() {
             selectedId={selectedId}
             onSelect={select}
             loading={loading}
+            renderActions={(d) => (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="size-6 inline-flex items-center justify-center rounded hover:bg-accent">
+                    <MoreVertical className="size-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={async () => {
+                      const confirmed = window.confirm('Delete this department and cascade related records?');
+                      if (!confirmed) return;
+                      try {
+                        await deleteDepartment(d.id);
+                        mutateItems(prev => prev.filter(i => i.id !== d.id));
+                        if (selectedId === d.id) select(undefined as any);
+                      } catch (err) {
+                        console.error('Delete department failed', err);
+                        alert('Failed to delete department');
+                      }
+                    }}
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             renderItem={(d) => (
               <>
                 <div className="text-sm font-medium truncate">{d.name}</div>

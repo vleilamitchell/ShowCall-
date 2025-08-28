@@ -9,6 +9,7 @@ import { inventoryLocationsRouter } from './inventory/locations';
 import { eventsRouter } from './events';
 import { eventAreasRouter } from './eventAreas';
 import { recurringSeriesRouter } from './recurringSeries';
+import { eventTemplatesRouter } from './eventTemplates';
 import { areasRouter } from './areas';
 import { departmentsRouter } from './departments';
 import { employeesRouter } from './employees';
@@ -33,6 +34,7 @@ export function mountV1Routers(api: Hono) {
   // Events domain
   api.route('/events', eventsRouter);
   api.route('/events', eventAreasRouter);
+  api.route('/', eventTemplatesRouter);
   api.route('/event-series', recurringSeriesRouter);
   api.route('/areas', areasRouter);
   api.route('/departments', departmentsRouter);

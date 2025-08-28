@@ -32,12 +32,7 @@ export default function Scheduling() {
   // Inline new shift state
   const [creating, setCreating] = useState(false);
   // no-op flag removed
-  const [newScheduleOpen, setNewScheduleOpen] = useState(false);
-  const [newScheduleName, setNewScheduleName] = useState('');
-  const [newScheduleStart, setNewScheduleStart] = useState('');
-  const [newScheduleEnd, setNewScheduleEnd] = useState('');
-  const [newScheduleBusy, setNewScheduleBusy] = useState(false);
-  const [newScheduleMessage, setNewScheduleMessage] = useState<string | null>(null);
+  // moved schedule creation to Schedules page
   const [creatingShift, setCreatingShift] = useState(false);
   const [newShiftDate, setNewShiftDate] = useState('');
   const [newShiftStart, setNewShiftStart] = useState('');
@@ -169,72 +164,7 @@ export default function Scheduling() {
     <ListDetailLayout
       left={
         <div className="space-y-3">
-          <div className="p-3 border-b">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex-1" />
-              <Button size="sm" variant="secondary" onClick={() => setNewScheduleOpen(v => !v)} disabled={!filters.departmentId} className="gap-1">
-                {newScheduleOpen ? 'Close' : 'Make schedule'}
-              </Button>
-            </div>
-          </div>
-          <div className="px-3">
-            {newScheduleOpen && (
-              <div className="border rounded p-2 mb-2 space-y-2">
-                {!filters.departmentId ? (
-                  <div className="text-xs text-muted-foreground">Select a department to create a schedule.</div>
-                ) : (
-                  <>
-                    <div className="flex flex-wrap items-end gap-2">
-                      <div>
-                        <label className="block text-xs text-muted-foreground">Name</label>
-                        <input className="border rounded px-2 py-1 text-sm" value={newScheduleName} onChange={(e) => setNewScheduleName(e.target.value)} placeholder="Schedule name" />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-muted-foreground">Start</label>
-                        <DateField value={newScheduleStart} onChange={(v) => setNewScheduleStart(v || '')} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-muted-foreground">End</label>
-                        <DateField value={newScheduleEnd} onChange={(v) => setNewScheduleEnd(v || '')} />
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button size="sm" variant="outline" onClick={() => { if (!newScheduleStart) return; const d = new Date(newScheduleStart); d.setDate(d.getDate()+6); const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); setNewScheduleEnd(`${y}-${m}-${day}`); }}>Week</Button>
-                        <Button size="sm" variant="outline" onClick={() => { if (!newScheduleStart) return; const d = new Date(newScheduleStart); const y=d.getFullYear(); const m=d.getMonth(); const last = new Date(y, m+1, 0); const yy=last.getFullYear(); const mm=String(last.getMonth()+1).padStart(2,'0'); const dd=String(last.getDate()).padStart(2,'0'); setNewScheduleEnd(`${yy}-${mm}-${dd}`); }}>Month</Button>
-                      </div>
-                      <Button size="sm" onClick={async () => {
-                        if (!filters.departmentId) return;
-                        if (!newScheduleName || !newScheduleStart || !newScheduleEnd) { setNewScheduleMessage('Fill name, start, end'); return; }
-                        setNewScheduleBusy(true); setNewScheduleMessage(null);
-                        try {
-                          const sched = await api.createSchedule?.({ name: newScheduleName, startDate: newScheduleStart, endDate: newScheduleEnd });
-                          if (!sched) throw new Error('Create schedule failed');
-                          const existing = await api.listShifts?.(filters.departmentId!, { scheduleId: sched.id });
-                          if (existing && existing.length > 0) {
-                            const ok = window.confirm('Replace existing shifts for this schedule?');
-                            if (!ok) { setNewScheduleBusy(false); return; }
-                            await (api as any).generateShiftsForSchedule?.(sched.id, { departmentId: filters.departmentId!, regenerate: true });
-                          } else {
-                            await (api as any).generateShiftsForSchedule?.(sched.id, { departmentId: filters.departmentId! });
-                          }
-                          const [schs, rows] = await Promise.all([
-                            api.listSchedules?.(),
-                            api.listShifts?.(filters.departmentId!, { scheduleId: sched.id }),
-                          ]);
-                          setSchedules(schs || []);
-                          setShifts(rows || []);
-                          setNewScheduleMessage('Schedule created and shifts generated');
-                          setNewScheduleName(''); setNewScheduleStart(''); setNewScheduleEnd(''); setNewScheduleOpen(false);
-                        } catch (e: any) {
-                          setNewScheduleMessage(e?.message || 'Failed to make schedule');
-                        } finally { setNewScheduleBusy(false); }
-                      }} disabled={newScheduleBusy}>{newScheduleBusy ? 'Working…' : 'Create & generate'}</Button>
-                    </div>
-                    {newScheduleMessage ? <div className="text-xs text-muted-foreground">{newScheduleMessage}</div> : null}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+          
           <div className="p-3 border-b">
             <div className="mb-2">
               <Input placeholder="Search shifts" value={filters.q || ''} onChange={(e) => updateQuery({ q: e.target.value || undefined })} />

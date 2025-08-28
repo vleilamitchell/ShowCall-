@@ -109,6 +109,8 @@ export type EventRecord = {
   eventPageUrl?: string | null;
   promoAssetsUrl?: string | null;
   seriesId?: string | null;
+  templateId?: string | null;
+  templateVersionId?: string | null;
   updatedAt?: string;
 };
 
@@ -229,6 +231,22 @@ export const api: {
   getEvent: typeof getEvent;
   updateEvent: typeof updateEvent;
   listEventShifts: typeof listEventShifts;
+  // Templates
+  listEventTemplates?: typeof listEventTemplates;
+  createEventTemplate?: typeof createEventTemplate;
+  getEventTemplate?: typeof getEventTemplate;
+  updateEventTemplate?: typeof updateEventTemplate;
+  listTemplateVersions?: typeof listTemplateVersions;
+  createTemplateVersion?: typeof createTemplateVersion;
+  activateTemplateVersion?: typeof activateTemplateVersion;
+  getTemplateRequirements?: typeof getTemplateRequirements;
+  putTemplateRequirements?: typeof putTemplateRequirements;
+  applyTemplateToEvent?: typeof applyTemplateToEvent;
+  // Template Version Areas
+  getTemplateVersionAreas?: (versionId: string) => Promise<Area[]>;
+  putTemplateVersionAreas?: (versionId: string, areaIds: string[]) => Promise<Area[]>;
+  addTemplateVersionArea?: (versionId: string, areaId: string) => Promise<Area[]>;
+  removeTemplateVersionArea?: (versionId: string, areaId: string) => Promise<Area[]>;
   // Event Series
   listEventSeries?: typeof listEventSeries;
   createEventSeries?: typeof createEventSeries;
@@ -250,6 +268,7 @@ export const api: {
   updateSchedule?: typeof updateSchedule;
   publishSchedule?: typeof publishSchedule;
   unpublishSchedule?: typeof unpublishSchedule;
+  deleteSchedule?: typeof deleteSchedule;
   listShifts?: typeof listShifts;
   listAllShifts?: typeof listAllShifts;
   createShift?: typeof createShift;
@@ -327,6 +346,116 @@ export const api: {
   listEventShifts,
 }; 
 
+// Templates API helpers
+export type EventTemplate = { id: string; name: string; description?: string | null; active: boolean; updatedAt?: string };
+export type EventTemplateVersion = { id: string; templateId: string; versionNumber: number; titleTemplate: string; notes?: string | null; isCurrent: boolean; updatedAt?: string };
+
+export async function listEventTemplates(params?: { q?: string; active?: boolean }) {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.active != null) query.set('active', params.active ? 'true' : 'false');
+  const qs = query.toString();
+  const response = await fetchWithAuth(`/api/v1/event-templates${qs ? `?${qs}` : ''}`);
+  return response.json() as Promise<EventTemplate[]>;
+}
+
+export async function createEventTemplate(payload: { name: string; description?: string | null; titleTemplate: string }) {
+  const response = await fetchWithAuth('/api/v1/event-templates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  return response.json() as Promise<{ id: string } & EventTemplate>;
+}
+
+export async function getEventTemplate(templateId: string) {
+  const response = await fetchWithAuth(`/api/v1/event-templates/${encodeURIComponent(templateId)}`);
+  return response.json() as Promise<EventTemplate & { versions: EventTemplateVersion[]; currentVersionId?: string | null }>;
+}
+
+export async function updateEventTemplate(templateId: string, patch: Partial<EventTemplate>) {
+  const response = await fetchWithAuth(`/api/v1/event-templates/${encodeURIComponent(templateId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+  return response.json() as Promise<EventTemplate>;
+}
+
+export async function listTemplateVersions(templateId: string) {
+  const response = await fetchWithAuth(`/api/v1/event-templates/${encodeURIComponent(templateId)}/versions`);
+  return response.json() as Promise<EventTemplateVersion[]>;
+}
+
+export async function createTemplateVersion(templateId: string, payload: { cloneFromVersionId?: string; titleTemplate?: string; notes?: string | null }) {
+  const response = await fetchWithAuth(`/api/v1/event-templates/${encodeURIComponent(templateId)}/versions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  return response.json() as Promise<EventTemplateVersion>;
+}
+
+export async function activateTemplateVersion(versionId: string) {
+  const response = await fetchWithAuth(`/api/v1/event-template-versions/${encodeURIComponent(versionId)}/activate`, { method: 'POST' });
+  return response.json() as Promise<EventTemplateVersion>;
+}
+
+export type TemplateRequirementRow = { id?: string; requiredPositionId: string; count: number; allowedAreaIds?: string[] };
+
+export async function getTemplateRequirements(versionId: string) {
+  const response = await fetchWithAuth(`/api/v1/event-template-versions/${encodeURIComponent(versionId)}/requirements`);
+  return response.json() as Promise<TemplateRequirementRow[]>;
+}
+
+export async function putTemplateRequirements(versionId: string, items: TemplateRequirementRow[]) {
+  const response = await fetchWithAuth(`/api/v1/event-template-versions/${encodeURIComponent(versionId)}/requirements`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(items) });
+  return response.json() as Promise<{ created: number; ids: string[] }>;
+}
+
+export async function applyTemplateToEvent(eventId: string, payload: { templateVersionId?: string; mode?: 'replace' | 'add'; shiftIds?: string[]; createAssignments?: boolean }) {
+  const response = await fetchWithAuth(`/api/v1/events/${encodeURIComponent(eventId)}/apply-template`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  return response.json() as Promise<{ created: number; replaced: number; skipped: number; assignmentIds: string[]; warning?: string }>;
+}
+
+// Template Version Areas API helpers
+export async function getTemplateVersionAreaIds(versionId: string) {
+  const response = await fetchWithAuth(`/api/v1/event-template-versions/${encodeURIComponent(versionId)}/areas`);
+  return response.json() as Promise<string[]>;
+}
+
+export async function getTemplateVersionAreas(versionId: string) {
+  const [ids, all] = await Promise.all([
+    getTemplateVersionAreaIds(versionId),
+    listAreas(),
+  ]);
+  const set = new Set(ids);
+  return (all || []).filter(a => set.has(a.id));
+}
+
+export async function putTemplateVersionAreas(versionId: string, areaIds: string[]) {
+  await fetchWithAuth(`/api/v1/event-template-versions/${encodeURIComponent(versionId)}/areas`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(areaIds),
+  });
+  return getTemplateVersionAreas(versionId);
+}
+
+export async function addTemplateVersionArea(versionId: string, areaId: string) {
+  const current = await getTemplateVersionAreaIds(versionId);
+  if (!current.includes(areaId)) current.push(areaId);
+  return putTemplateVersionAreas(versionId, current);
+}
+
+export async function removeTemplateVersionArea(versionId: string, areaId: string) {
+  const current = await getTemplateVersionAreaIds(versionId);
+  const next = current.filter(id => id !== areaId);
+  return putTemplateVersionAreas(versionId, next);
+}
+
+api.listEventTemplates = listEventTemplates as any;
+api.createEventTemplate = createEventTemplate as any;
+api.getEventTemplate = getEventTemplate as any;
+api.updateEventTemplate = updateEventTemplate as any;
+api.listTemplateVersions = listTemplateVersions as any;
+api.createTemplateVersion = createTemplateVersion as any;
+api.activateTemplateVersion = activateTemplateVersion as any;
+api.getTemplateRequirements = getTemplateRequirements as any;
+api.putTemplateRequirements = putTemplateRequirements as any;
+api.applyTemplateToEvent = applyTemplateToEvent as any;
+// Template Version Areas
+api.getTemplateVersionAreas = getTemplateVersionAreas as any;
+api.putTemplateVersionAreas = putTemplateVersionAreas as any;
+api.addTemplateVersionArea = addTemplateVersionArea as any;
+api.removeTemplateVersionArea = removeTemplateVersionArea as any;
+
 // Departments API helpers
 export type DepartmentRecord = {
   id: string;
@@ -368,6 +497,10 @@ export async function updateDepartment(id: string, patch: Partial<DepartmentReco
     body: JSON.stringify(patch),
   });
   return response.json() as Promise<DepartmentRecord>;
+}
+
+export async function deleteDepartment(id: string) {
+  await fetchWithAuth(`/api/v1/departments/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 api.listDepartments = listDepartments;
@@ -536,6 +669,7 @@ export type EventSeries = {
   titleTemplate?: string | null;
   promoterTemplate?: string | null;
   templateJson?: any;
+  templateVersionId?: string | null;
   updatedAt?: string;
 };
 

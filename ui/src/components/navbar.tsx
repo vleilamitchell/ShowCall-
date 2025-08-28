@@ -15,7 +15,16 @@ export function Navbar() {
         <SidebarTrigger className="size-8">
           <Menu className="w-5 h-5" />
         </SidebarTrigger>
-        <span className="font-semibold ml-3 brand">Showcall</span>
+        <img
+          src="/header_day.png"
+          alt="Showcall"
+          className="ml-3 h-[43px] w-auto dark:hidden select-none pointer-events-none"
+        />
+        <img
+          src="/header_night.png"
+          alt="Showcall"
+          className="ml-3 h-[43px] w-auto hidden dark:block select-none pointer-events-none"
+        />
       </div>
       <div className="flex items-center gap-2 ml-auto controlGroup">
         {user && (

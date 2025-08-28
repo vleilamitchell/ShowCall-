@@ -13,6 +13,7 @@ export const assignments = pgTable('assignments', {
   requiredPositionId: text('required_position_id').notNull().references(() => positions.id, { onDelete: 'restrict' }),
   assigneeEmployeeId: text('assignee_employee_id').references(() => employees.id, { onDelete: 'set null' }),
   areaId: text('area_id').references(() => areas.id, { onDelete: 'set null' }),
+  sourceTemplateVersionId: text('source_template_version_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
 }, (table) => ({

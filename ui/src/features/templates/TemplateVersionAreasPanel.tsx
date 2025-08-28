@@ -1,0 +1,113 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import { Rollup } from '@/components/ui/rollup';
+import { listAreas, type Area } from '@/lib/serverComm';
+import { addTemplateVersionArea, getTemplateVersionAreas, removeTemplateVersionArea } from '@/lib/serverComm';
+
+export function TemplateVersionAreasPanel({ versionId, onAreasUpdated }: { versionId: string; onAreasUpdated?: (areas: Area[]) => void }) {
+  const [error, setError] = useState<string | null>(null);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [allAreas, setAllAreas] = useState<Area[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+    setError(null);
+    Promise.all([
+      getTemplateVersionAreas(versionId),
+      listAreas({ active: true }),
+    ])
+      .then(([attached, all]) => { if (ignore) return; setAreas(attached); setAllAreas(all); try { onAreasUpdated && onAreasUpdated(attached); } catch {} })
+      .catch((e: any) => { if (ignore) return; setError(e?.message || 'Failed to load areas'); });
+    return () => { ignore = true; };
+  }, [versionId]);
+
+  const available = useMemo(() => {
+    const attachedIds = new Set(areas.map(a => a.id));
+    return allAreas.filter(a => !attachedIds.has(a.id));
+  }, [allAreas, areas]);
+
+  const onRemove = async (areaId: string) => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const updated = await removeTemplateVersionArea(versionId, areaId);
+      setAreas(updated);
+      try { onAreasUpdated && onAreasUpdated(updated); } catch {}
+    } catch (e: any) {
+      alert(e?.message || 'Failed to remove area');
+    } finally { setSubmitting(false); }
+  };
+
+  const summaryChips = (
+    <div className="flex items-center gap-1.5 max-w-[360px] overflow-hidden">
+      {areas.length === 0 ? (
+        <Badge variant="secondary" className="text-xs">0</Badge>
+      ) : (
+        <>
+          {areas.slice(0, 6).map((a) => (
+            <span key={a.id} className="inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] text-foreground/80 bg-muted/30">
+              {a.color ? <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: a.color }} /> : null}
+              <span className="truncate max-w-[80px]">{a.name}</span>
+            </span>
+          ))}
+          {areas.length > 6 ? (
+            <Badge variant="secondary" className="text-[10px]">+{areas.length - 6}</Badge>
+          ) : null}
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="mt-6">
+      <Rollup title="Areas" summary={summaryChips} storageKey="tplVersionAreasRollupOpen">
+        {error ? (
+          <div className="text-xs text-destructive">{error}</div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {areas.length === 0 ? (
+                <div className="text-xs text-muted-foreground">No areas attached yet</div>
+              ) : (
+                areas.map((a) => (
+                  <Badge key={a.id} variant="secondary" className="inline-flex items-center gap-1">
+                    {a.color ? <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} /> : null}
+                    <span>{a.name}</span>
+                    <button className="ml-1 inline-flex" onClick={() => onRemove(a.id)} aria-label={`Remove ${a.name}`}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))
+              )}
+            </div>
+            {available.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {available.slice(0, 12).map((a) => (
+                  <Button key={a.id} variant="outline" size="sm" onClick={async () => {
+                    if (submitting) return; setSubmitting(true);
+                    try {
+                      const updated = await addTemplateVersionArea(versionId, a.id);
+                      setAreas(updated);
+                      try { onAreasUpdated && onAreasUpdated(updated); } catch {}
+                    } catch (e: any) { alert(e?.message || 'Failed to add area'); }
+                    finally { setSubmitting(false); }
+                  }} disabled={submitting}>
+                    {a.color ? <span className="inline-block w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: a.color }} /> : null}
+                    {a.name}
+                  </Button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        )}
+      </Rollup>
+    </div>
+  );
+}
+
+export default TemplateVersionAreasPanel;
+
+

@@ -14,6 +14,7 @@ import { EventAreasPanel } from '@/features/events/EventAreasPanel';
 import { EventMarketingPanel } from '@/features/events/EventMarketingPanel';
 import { ListDetailLayout, List, FilterBar, useListDetail, useDebouncedPatch, type ResourceAdapter } from '@/features/listDetail';
 import SeriesAutocomplete from '@/components/SeriesAutocomplete';
+import TemplateAutocomplete from '@/components/TemplateAutocomplete';
 // removed time formatting from list row
 
 // Cache event areas in-memory to avoid repeated fetches while navigating
@@ -212,6 +213,10 @@ export function Events() {
     resourceKey: 'events',
     adapter: eventsAdapter,
   });
+
+  // Template section removed
+
+  // Template section removed
 
   // Prefetch area chips in bulk to avoid N requests on first render
   useEffect(() => {
@@ -579,16 +584,28 @@ export function Events() {
                       <TimeField value={selected.endTime} onChange={(v) => { const val = v || ''; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, endTime: val } : i))); onEndChange({ endTime: val }); onEndBlur(); }} />
                     </div>
                   </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs text-muted-foreground mb-1">Recurring Series</label>
-                    <SeriesAutocomplete
-                      value={selected.seriesId || null}
-                      onChange={(id) => {
-                        mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, seriesId: id } : i)));
-                        onSeriesChange({ seriesId: id || null });
-                        onSeriesBlur();
-                      }}
-                    />
+                  <div className="col-span-2 grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Recurring Series</label>
+                      <SeriesAutocomplete
+                        value={selected.seriesId || null}
+                        onChange={(id) => {
+                          mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, seriesId: id } : i)));
+                          onSeriesChange({ seriesId: id || null });
+                          onSeriesBlur();
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Template</label>
+                      <TemplateAutocomplete
+                        value={selected.templateId || null}
+                        onChange={(id) => {
+                          mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, templateId: id || undefined, templateVersionId: null } : i)));
+                          updateEvent(selected.id, { templateId: (id || undefined) as any, templateVersionId: null as any });
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="col-span-2">
                     <label className="block text-xs text-muted-foreground mb-1">Description</label>
@@ -601,6 +618,7 @@ export function Events() {
                   mutateItems={mutateItems as any}
                 />
                 <EventAreasPanel eventId={selected.id} />
+                {/* Template section removed */}
                 <EventShiftsPanel eventId={selected.id} />
               </>
             ) : null}

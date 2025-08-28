@@ -144,6 +144,69 @@ button {
   }
 }
 
+@layer utilities {
+  @keyframes rollDown {
+    0% { opacity: 0; transform: translateY(-4px); clip-path: inset(0 0 100% 0); }
+    60% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(0); clip-path: inset(0 0 0 0); }
+  }
+  @keyframes rollUp {
+    0% { opacity: 1; transform: translateY(0); clip-path: inset(0 0 0 0); }
+    100% { opacity: 0; transform: translateY(-4px); clip-path: inset(0 0 100% 0); }
+  }
+  .animate-rollDown { animation: rollDown 600ms cubic-bezier(0.22, 1, 0.36, 1) both; will-change: transform, opacity, clip-path; }
+  .animate-rollUp { animation: rollUp 480ms cubic-bezier(0.22, 1, 0.36, 1) both; will-change: transform, opacity, clip-path; }
+  /* Attribute-driven animation for Rollup */
+  /* Apply the open/close animation to the body, not only its content */
+  .rollupContent[data-state="open"] .rollupBody { animation: rollDown 600ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .rollupContent[data-state="closed"] .rollupBody { animation: rollUp 480ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  /* Animate only the rollup body background, not the header */
+  .rollupBody { position: relative; border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); overflow: hidden; transition: border-color 600ms cubic-bezier(0.22, 1, 0.36, 1); background: transparent; }
+  .rollupBody::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, var(--card), color-mix(in oklch, var(--muted) 22%, transparent));
+    transform-origin: top;
+    transform: scaleY(0);
+    transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .dark .rollupBody::before {
+    background: linear-gradient(180deg,
+      color-mix(in oklch, var(--card) 85%, black 15%),
+      color-mix(in oklch, var(--secondary) 12%, black 40%)
+    );
+  }
+  .rollupContent { position: relative; margin-top: -1px; }
+  /* Fake header bottom border to avoid pop: grows with content */
+  .rollupContent::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: color-mix(in oklch, var(--foreground) 10%, transparent);
+    opacity: 0; transform-origin: top; transform: scaleY(0);
+    transition: opacity 120ms ease-out, transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 1; pointer-events: none;
+  }
+  .rollupContent[data-state="open"]::after { opacity: 1; transform: scaleY(1); }
+  /* Underlay to include any solid base color in the animation (beneath gradient) */
+  .rollupContent::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius);
+    background: var(--card);
+    transform-origin: top; transform: scaleY(0);
+    transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 0; pointer-events: none;
+  }
+  .dark .rollupContent::before { background: color-mix(in oklch, var(--card) 85%, black 15%); }
+  .rollupContent[data-state="open"]::before { transform: scaleY(1); }
+  .rollupContent[data-state="open"] .rollupBody { border-top: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent); }
+  .rollupContent[data-state="open"] .rollupBody::before { transform: scaleY(1); }
+  .rollupContent[data-state="closed"] .rollupBody { border-top-color: transparent; }
+  .rollupBody > * { position: relative; z-index: 1; }
+}
+
 /* --- v1 design tokens (aliases) ------------------------------------------------ */
 /* These map v1 variable names to the current theme variables to enable
    v1-style utility classes without breaking ShadCN/Tailwind integration. */
@@ -516,7 +579,7 @@ textarea.input { width: 100%; resize: vertical; }
     color-mix(in oklch, var(--foreground) 8%, var(--content-surface))
   );
   box-shadow: 0 1px 0 rgb(0 0 0 / 0.04) inset, 0 1px 3px rgb(0 0 0 / 0.06);
-  transition: background-color 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+  transition: background-color 160ms ease, filter 160ms ease, box-shadow 160ms ease, border-color 600ms cubic-bezier(0.22, 1, 0.36, 1), border-bottom-left-radius 600ms cubic-bezier(0.22, 1, 0.36, 1), border-bottom-right-radius 600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .rollupHeader:hover {
   background: linear-gradient(
@@ -535,6 +598,9 @@ textarea.input { width: 100%; resize: vertical; }
   );
   box-shadow: 0 1px 0 rgb(255 255 255 / 0.02) inset, 0 1px 6px rgb(0 0 0 / 0.18);
 }
+/* Seam: animate header's bottom corner radius so outline looks connected on open */
+/* Keep header outline static; no radius/border changes on expand */
+
 .dark .rollupHeader:hover {
   background: linear-gradient(
     180deg,

@@ -28,24 +28,30 @@ export function Rollup({ title, summary, summaryText, storageKey, defaultOpen = 
 
   return (
     <div className={className || ''}>
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <CollapsibleTrigger asChild>
-          <button className={`rollupHeader ${headerClassName || ''}`} aria-expanded={open}>
-            <span className="text-sm font-semibold">{title}</span>
-            <div className="flex items-center gap-2">
-              {summary != null ? (
-                <span className="text-xs inline-flex items-center">{summary}</span>
-              ) : summaryText != null ? (
-                <Badge variant="secondary" className="text-xs">{String(summaryText)}</Badge>
-              ) : null}
-              <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : 'rotate-0'}`} />
+      <div
+        className={`relative overflow-hidden rounded-lg border transition-colors bg-transparent`}
+      >
+        <Collapsible open={open} onOpenChange={setOpen}>
+          <CollapsibleTrigger asChild>
+            <button className={`rollupHeader ${headerClassName || ''}`} aria-expanded={open}>
+              <span className="text-sm font-semibold">{title}</span>
+              <div className="flex items-center gap-2">
+                {summary != null ? (
+                  <span className="text-xs inline-flex items-center">{summary}</span>
+                ) : summaryText != null ? (
+                  <Badge variant="secondary" className="text-xs">{String(summaryText)}</Badge>
+                ) : null}
+                <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : 'rotate-0'}`} />
+              </div>
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="rollupContent overflow-hidden transition-[max-height,opacity] duration-500 ease-out data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:max-h-[2000px] data-[state=closed]:max-h-0">
+            <div className="rollupBody px-3 pt-3 pb-3">
+              {children}
             </div>
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden transition-[max-height,opacity] duration-400 ease-out data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:max-h-[2000px] data-[state=closed]:max-h-0" style={{ willChange: 'opacity, maxHeight' as any }}>
-          <div className="mt-3">{children}</div>
-        </CollapsibleContent>
-      </Collapsible>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
     </div>
   );
 }

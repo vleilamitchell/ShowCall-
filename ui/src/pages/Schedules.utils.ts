@@ -1,4 +1,4 @@
-import type { AssignmentRecord, Area, PositionRecord } from '@/lib/serverComm';
+import type { AssignmentRecord, Area } from '@/lib/serverComm';
 
 export function buildAssignedByShift(
   assignments: AssignmentRecord[],

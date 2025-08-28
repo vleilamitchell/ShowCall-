@@ -167,6 +167,10 @@ export default function EventsRecurring() {
                       <label className="block text-xs text-muted-foreground mb-1">Promoter</label>
                       <Input value={selected.promoterTemplate || ''} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, promoterTemplate: v } : i))); updateEventSeries(selected.id, { promoterTemplate: v || null }); }} />
                     </div>
+                    <div className="col-span-2">
+                      <label className="block text-xs text-muted-foreground mb-1">Template Version Id</label>
+                      <Input value={(selected as any).templateVersionId || ''} onChange={(e) => { const v = e.target.value; mutateItems(prev => prev.map(i => (i.id === selected.id ? { ...i, templateVersionId: v || null } : i))); updateEventSeries(selected.id, { templateVersionId: (v || null) as any }); }} placeholder="tpv_…" />
+                    </div>
                   </div>
                 </Rollup>
 

@@ -16,6 +16,8 @@ export const events = pgTable('events', {
   eventPageUrl: text('event_page_url'),
   promoAssetsUrl: text('promo_assets_url'),
   seriesId: text('series_id'),
+  templateId: text('template_id'),
+  templateVersionId: text('template_version_id'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

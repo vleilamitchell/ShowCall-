@@ -8,6 +8,7 @@ import { Home } from '@/pages/Home';
 import { Settings } from '@/pages/Settings';
 import Events from '@/pages/Events';
 import EventsRecurring from '@/pages/EventsRecurring';
+import Templates from '@/pages/Templates';
 import Departments from '@/pages/Departments';
 import Contacts from '@/pages/Contacts';
 import Areas from '@/pages/Areas';
@@ -49,6 +50,10 @@ function AppContent() {
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/events" element={<Events />} />
+                    <Route path="/templates" element={<Templates />} />
+                    <Route path="/templates/:templateId" element={<Templates />} />
+                    <Route path="/events/templates" element={<Templates />} />
+                    <Route path="/events/templates/:templateId" element={<Templates />} />
                     <Route path="/events/recurring" element={<EventsRecurring />} />
                     <Route path="/events/recurring/:seriesId" element={<EventsRecurring />} />
                     <Route path="/events/calendar" element={<EventsCalendar />} />

@@ -71,7 +71,7 @@ export function AppSidebar() {
   const isDepartmentsRouteActive = isActive('/departments') && !isSchedulingRoute;
 
   const inventoryOpen = isActive('/inventory');
-  const eventsOpen = isActive('/events');
+  const eventsOpen = isActive('/events') || isActive('/templates');
   const staffOpen = isSchedulingRoute || isActive('/employees') || isActive('/schedules');
   const adminOpen = isDepartmentsRouteActive || isActive('/areas');
   const inventoryIsOpen = inventoryOpen || hoverInventory || expandInventory;
@@ -278,6 +278,17 @@ export function AppSidebar() {
                                   <span className="pointer-events-none absolute inset-0 bg-black/10" />
                                 ) : null}
                                 <span className="truncate">Recurring</span>
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                          <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={isActive('/events/templates') || isActive('/templates')}
+                              className={`relative px-3 py-2 rounded text-[14px] font-medium text-foreground hover:bg-sidebar-accent/10 data-[active=true]:text-sidebar-primary`}>
+                              <NavLink to="/events/templates" className={({isActive}) => `navLink flex items-center gap-1.5${isActive ? ' navLink--active' : ''}`}>
+                                {isActive('/events/templates') || isActive('/templates') ? (
+                                  <span className="pointer-events-none absolute inset-0 bg-black/10" />
+                                ) : null}
+                                <span className="truncate">Templates</span>
                               </NavLink>
                             </SidebarMenuButton>
                           </SidebarMenuItem>
