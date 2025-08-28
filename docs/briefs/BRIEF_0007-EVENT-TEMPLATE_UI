@@ -1,0 +1,41 @@
+Tighten hierarchy. Give each block (“Areas,” “Requirements,” “Versions”) its own card surface with stronger headers, subtle dividers, and 16–20px padding. Use a consistent elevation scale (e.g., base, raised-1) so sections don’t blend together.
+
+Rehome search. Move “Search templates” into the Templates column header and add sort (A–Z, recently edited) and filters (status: Active/Archived, department). Scope the field visually to that column.
+
+Clarify context labels. Rename ambiguous fields: “Department” → “Department for requirements” (if metadata) or “Filter by department” (if it filters the grid). Add helper text under the control stating exactly what changes when it’s set.
+
+Promote primary actions. Restyle “New Template,” “Add requirement,” and “New Version” as primary buttons with higher-contrast fills. Add a persistent footer bar in the editor with “Save” and “Discard” and show last-saved time; support ⌘/Ctrl+S.
+
+Make sections scannable. Add concise section descriptions (one line max). Keep collapse affordances but show item counts in words: “Requirements · 6 roles,” “Areas · 5 selected.”
+
+Refine the Areas control. Replace free-floating chips with a searchable multi-select. Keep color dots for each Area, add “Select all / Clear,” and show a compact legend icon that reveals the color map on hover.
+
+Rework the requirements grid. Set explicit column sizing: Area (flex-grow, min 280), Position (min 220), Quantity (80, right-aligned). Keep the area color dot in-cell. Put “Add requirement” at top-right of the grid, not below it.
+
+Improve grid interactions. Enable inline add (press Enter adds a row), multi-select with Shift/⌘, duplicate row, and bulk delete. Provide row drag to reorder and an optional “Group by Area” toggle.
+
+Validate in-place. Quantity only accepts positive integers; show inline error with short text. Unknown Position shows warning and typeahead suggestions. Prevent losing edits with a leave-guard.
+
+Decode role shorthand. Add tooltips or info chips explaining L1/V1/A1 on hover and a link to a short glossary modal.
+
+Upgrade Versions UX. Replace pagination-like pills with a segmented list showing version name, author, and timestamp (two-line items). Highlight “Current,” allow “Make current,” “Duplicate,” “Compare,” “Rename,” and “Lock.” Keep “New Version” as a primary action.
+
+Breadcrumb and context. Add a breadcrumb above the editor: Events ▸ Templates ▸ Small Event. Include a small “Back to Templates” link near it.
+
+Empty, loading, and error states. For each section, design explicit empty states (e.g., “No requirements yet—add your first role”), skeleton loaders for the table, and friendly retry blocks for fetch errors.
+
+Keyboard and power-user flows. Tab order follows visual order. Typeahead on Area and Position. Shortcuts: ⌘/Ctrl+S save, ⌘/Ctrl+D duplicate row, Delete removes selected rows, ⌘/Ctrl+K focuses template search.
+
+Accessibility. Ensure 4.5:1 contrast on text, visible focus rings, ARIA roles for tabs, lists, and tables, proper labels for chips and dropdowns, and color-blind–safe area colors (don’t rely on color alone; include text labels).
+
+Visual system. Lock an 8px spacing grid, font sizes 12/14/16/20 with 600 weight for section headers, button heights 36–40, card radii 8–12. Define tokens for surface, border, accent, and focus states to keep the theme consistent.
+
+Responsive behavior. At ≤1280px, collapse the Templates list into a drawer; keep the editor full-width with the footer bar sticky. Table columns collapse to two lines per cell and Quantity becomes a stepper.
+
+Performance. Virtualize long template lists and requirement tables. Debounce search. Use optimistic updates for row adds/edits with clear “syncing/saved” states.
+
+Copy cleanup. Make labels noun-first and consistent (“Positions,” “Quantity,” “Selected Areas”). Keep helper text under 80 characters, sentence case, no punctuation unless needed.
+
+Instrumentation and QA. Track time-to-create-template, time-to-add-first-requirement, save errors, undo usage, and bounce from Versions. Set success criteria: new users create a template with 2+ roles in ≤3 minutes, error rate <2%, SUS ≥80.
+
+Rollout plan. Phase 1 (quick wins): promote CTAs, section counts, grid column sizing, footer save bar, tooltips for role codes. Phase 2: Areas control overhaul, versions redesign, keyboard shortcuts, empty/loading states. Phase 3: grouping, diff/compare for versions, optimistic edits, full accessibility pass and performance work.
