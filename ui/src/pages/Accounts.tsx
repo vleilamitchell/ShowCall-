@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ListDetailLayout, List, useListDetail, useDebouncedPatch, type ResourceAdapter } from '@/features/listDetail';
@@ -17,6 +17,9 @@ export default function Accounts() {
       return sorted;
     },
     get: async (id: string) => getAccount(String(id)),
+    create: async (_partial) => {
+      throw new Error('Account creation is not supported from this screen.');
+    },
     update: async (id: string, patch) => updateAccount(String(id), patch as any),
     searchableFields: ['display_name', 'email']
   }), []);
@@ -42,8 +45,6 @@ export default function Accounts() {
       mutateItems(prev => prev.map(i => (i.id === updated.id ? updated : i)));
     }
   });
-
-  const [photoUrl, setPhotoUrl] = useState('');
 
   return (
     <ListDetailLayout

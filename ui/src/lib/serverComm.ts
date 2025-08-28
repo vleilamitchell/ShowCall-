@@ -331,6 +331,8 @@ export const api: {
   createEmployee?: (departmentId: string, payload: any) => Promise<any>;
   updateEmployee?: (employeeId: string, patch: any) => Promise<any>;
   deleteEmployee?: (employeeId: string) => Promise<void>;
+  createEmployeeAccount?: typeof createEmployeeAccount;
+  linkEmployeeAccount?: typeof linkEmployeeAccount;
   // Positions
   listPositions?: (departmentId: string, params?: { q?: string }) => Promise<PositionRecord[]>;
   createPosition?: (departmentId: string, payload: { name: string }) => Promise<PositionRecord>;
